@@ -1,0 +1,805 @@
+'use client';
+
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { StatsRow } from '@/components/stats/StatsRow';
+import toast from 'react-hot-toast';
+
+export default function DashboardPage() {
+  const [timeframe, setTimeframe] = useState('this month');
+  const [customFrom, setCustomFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(1);
+    return d.toISOString().split('T')[0];
+  });
+  const [customTo, setCustomTo] = useState(() => new Date().toISOString().split('T')[0]);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const router = useRouter();
+
+  // Listen for sidebar collapse state changes
+  useEffect(() => {
+    const handleSidebarChange = (e: CustomEvent) => {
+      setSidebarCollapsed(e.detail.collapsed);
+    };
+
+    window.addEventListener('sidebarToggle', handleSidebarChange as EventListener);
+    return () => window.removeEventListener('sidebarToggle', handleSidebarChange as EventListener);
+  }, []);
+
+  const handleAddBooking    = () => router.push('/booking-calendar');
+  const handleAdjustPricing = () => router.push('/properties');
+  const handleBlockDates    = () => router.push('/booking-calendar');
+  const handleMessageGuest  = () => router.push('/guests');
+  const handleGenerateReport = () => router.push('/reports');
+  const handleAddProperty   = () => router.push('/properties');
+
+  const [stats, setStats] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [trends, setTrends] = useState<any>(null);
+  const [trendsLoading, setTrendsLoading] = useState(true);
+  const [alertsSummary, setAlertsSummary] = useState<{ checkIns: number; checkOuts: number; unpaid: number; upcoming: number } | null>(null);
+  const [activeSeries, setActiveSeries] = useState({ revenue: true, expenses: true, profit: true, occupancy: true });
+
+  const getDateRange = useCallback(() => {
+    const today = new Date();
+    const fmt = (d: Date) => d.toISOString().split('T')[0];
+    if (timeframe === 'today') { const t = fmt(today); return { from: t, to: t }; }
+    if (timeframe === 'this week') {
+      const day = today.getDay();
+      const mon = new Date(today);
+      mon.setDate(today.getDate() - (day === 0 ? 6 : day - 1));
+      return { from: fmt(mon), to: fmt(today) };
+    }
+    if (timeframe === 'this month') {
+      return { from: fmt(new Date(today.getFullYear(), today.getMonth(), 1)), to: fmt(today) };
+    }
+    if (timeframe === 'this year') {
+      return { from: fmt(new Date(today.getFullYear(), 0, 1)), to: fmt(today) };
+    }
+    return { from: customFrom, to: customTo };
+  }, [timeframe, customFrom, customTo]);
+
+  useEffect(() => {
+    const { from, to } = getDateRange();
+    setLoading(true);
+    fetch(`/api/dashboard/stats?from=${from}&to=${to}`)
+      .then(r => r.json())
+      .then(data => { if (!data.error) setStats(data); })
+      .finally(() => setLoading(false));
+  }, [getDateRange]);
+
+  useEffect(() => {
+    fetch('/api/dashboard/trends')
+      .then(r => r.json())
+      .then(d => { if (!d.error) setTrends(d); })
+      .finally(() => setTrendsLoading(false));
+    fetch('/api/alerts')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.error) setAlertsSummary({
+          checkIns: d.checkIns?.length  ?? 0,
+          checkOuts: d.checkOuts?.length ?? 0,
+          unpaid:   d.unpaid?.length    ?? 0,
+          upcoming: d.upcoming?.length  ?? 0,
+        });
+      });
+  }, []);
+
+  const periodLabel = timeframe === 'custom'
+    ? `${customFrom.split('-').reverse().join('/')} – ${customTo.split('-').reverse().join('/')}`
+    : timeframe.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+
+  return (
+    <div className="space-y-0">
+      {/* Desktop Sticky Header + Action Buttons */}
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 hidden lg:block">
+        <div className={`flex items-center h-[80px] px-3 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
+          {/* Action Buttons - scrollable */}
+          <div className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAddBooking();
+            }}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M12 5v14m7-7H5"/>
+            </svg>
+            Add Booking
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleAdjustPricing();
+            }}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="1"/>
+              <circle cx="19" cy="12" r="1"/>
+              <circle cx="5" cy="12" r="1"/>
+            </svg>
+            Adjust Pricing
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleBlockDates();
+            }}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <path d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>
+            Block Dates
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              handleMessageGuest();
+            }}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Message Guest
+          </button>
+          <button
+            type="button"
+            onClick={handleGenerateReport}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+              <polyline points="13 2 13 9 20 9"/>
+            </svg>
+            Generate Report
+          </button>
+          <button
+            type="button"
+            onClick={handleAddProperty}
+            className="flex items-center justify-center gap-1.5 px-4 py-2 border border-teal-500 text-teal-500 rounded-full hover:bg-teal-500 hover:text-white transition-colors font-medium text-xs whitespace-nowrap flex-shrink-0 min-w-[140px]"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+              <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Add Property
+          </button>
+          </div>
+          {/* Upgrade + email */}
+          <div className="flex items-center gap-2 ml-3 flex-shrink-0">
+            <a href="/upgrade" className="bg-gray-900 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium text-xs md:text-sm hover:bg-gray-800 transition-colors">
+              Upgrade
+            </a>
+            <span className="text-xs text-gray-600">kogelosutes@gmail.com</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className={`py-4 md:py-6 px-3 sm:px-4 md:px-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Host Dashboard</h2>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
+              {['Today', 'This Week', 'This Month', 'This Year', 'Custom'].map((period) => (
+                <button
+                  key={period}
+                  onClick={() => setTimeframe(period.toLowerCase())}
+                  className={`px-3 py-1 rounded-lg font-medium text-sm transition-colors ${
+                    timeframe === period.toLowerCase()
+                      ? 'bg-teal-500 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+            {timeframe === 'custom' && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm text-gray-600 font-medium">From</span>
+                <input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+                <span className="text-sm text-gray-600 font-medium">To</span>
+                <input
+                  type="date"
+                  value={customTo}
+                  min={customFrom}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          {/* Occupancy Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Occupancy</h3>
+            
+            {/* Stats Cards - Responsive Grid */}
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {/* Rate Card */}
+              <div className="bg-red-50 rounded-xl p-5 border border-red-200 hover:shadow-md transition-shadow duration-300 flex flex-col items-center justify-center gap-3">
+                <p className="text-xs font-semibold text-red-600 uppercase tracking-wide">Rate</p>
+                <p className="text-3xl font-bold text-red-600">{loading ? '…' : `${stats?.occupancy.rate ?? 0}%`}</p>
+                <div className="w-16 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-red-500 h-full rounded-full transition-all duration-500" style={{ width: `${Math.min(100, stats?.occupancy.rate ?? 0)}%` }}></div>
+                </div>
+              </div>
+
+              {/* Occupied Card */}
+              <div className="bg-green-50 rounded-xl p-5 border border-green-200 hover:shadow-md transition-shadow duration-300 flex flex-col items-center justify-center gap-3">
+                <p className="text-xs font-semibold text-green-600 uppercase tracking-wide">Occupied</p>
+                <p className="text-3xl font-bold text-green-600">{loading ? '…' : stats?.occupancy.occupied ?? 0}</p>
+                <div className="w-16 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-green-500 h-full rounded-full transition-all duration-500" style={{ width: (stats?.properties?.length ?? 0) > 0 ? `${Math.round(((stats?.occupancy.occupied ?? 0) / stats.properties.length) * 100)}%` : '0%' }}></div>
+                </div>
+              </div>
+
+              {/* Available Card */}
+              <div className="bg-blue-50 rounded-xl p-5 border border-blue-200 hover:shadow-md transition-shadow duration-300 flex flex-col items-center justify-center gap-3">
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wide">Available</p>
+                <p className="text-3xl font-bold text-blue-600">{loading ? '…' : stats?.occupancy.available ?? 0}</p>
+                <div className="w-16 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-blue-500 h-full rounded-full transition-all duration-500" style={{ width: (stats?.properties?.length ?? 0) > 0 ? `${Math.round(((stats?.occupancy.available ?? 0) / stats.properties.length) * 100)}%` : '0%' }}></div>
+                </div>
+              </div>
+
+              {/* Blocked Card */}
+              <div className="bg-amber-50 rounded-xl p-5 border border-amber-200 hover:shadow-md transition-shadow duration-300 flex flex-col items-center justify-center gap-3">
+                <p className="text-xs font-semibold text-amber-600 uppercase tracking-wide">Blocked</p>
+                <p className="text-3xl font-bold text-amber-600">{loading ? '…' : stats?.occupancy.blocked ?? 0}</p>
+                <div className="w-16 bg-gray-300 rounded-full h-1.5 overflow-hidden">
+                  <div className="bg-amber-500 h-full rounded-full transition-all duration-500" style={{ width: '0%' }}></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Unit Status Section */}
+            <div className="pt-4 border-t border-gray-200 mb-4">
+              <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Unit Status</h4>
+              {(stats?.properties ?? []).length === 0 ? (
+                <p className="text-xs text-gray-400">No properties yet.</p>
+              ) : (stats.properties as any[]).map((p: any) => (
+                <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mb-1">
+                  <span className="text-sm text-gray-700 font-medium truncate max-w-[130px]">{p.name}</span>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${p.status === 'available' ? 'bg-green-500' : p.status === 'occupied' ? 'bg-red-500' : 'bg-amber-500'}`}></div>
+                    <span className={`text-xs font-medium capitalize ${p.status === 'available' ? 'text-green-700' : p.status === 'occupied' ? 'text-red-700' : 'text-amber-700'}`}>{p.status}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Booking Forecast */}
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-600 font-medium">Next 7 days</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold text-teal-700">{loading ? '…' : `${stats?.forecast.next7 ?? 0}%`}</p>
+                  <div className="w-12 h-2 bg-gray-300 rounded-full overflow-hidden">
+                    <div className="bg-teal-500 h-full" style={{ width: `${stats?.forecast.next7 ?? 0}%` }}></div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">booked</p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <p className="text-xs text-gray-600 font-medium">Next 30 days</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold text-gray-900">{loading ? '…' : `${stats?.forecast.next30 ?? 0}%`}</p>
+                  <div className="w-12 h-2 bg-gray-300 rounded-full overflow-hidden">
+                    <div className="bg-gray-700 h-full" style={{ width: `${stats?.forecast.next30 ?? 0}%` }}></div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500">booked</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Revenue Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Revenue</h3>
+            <div className="space-y-4">
+              {/* Total Revenue */}
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <p className="text-xs text-gray-600 uppercase tracking-wide font-medium">TOTAL REVENUE</p>
+                <p className="text-3xl font-bold text-teal-600 mt-2">{loading ? '…' : `KSH ${(stats?.revenue.total ?? 0).toLocaleString()}`}</p>
+              </div>
+
+              {/* Revenue Breakdown - Stacked Progress Bar */}
+              <div>
+                <p className="text-xs text-gray-600 font-medium mb-2">Revenue breakdown — KSH {(stats?.revenue.total ?? 0).toLocaleString()} total</p>
+                
+                {/* Stacked Progress Bar */}
+                <div className="flex h-3 bg-gray-200 rounded-full overflow-hidden mb-3">
+                  <div className="bg-teal-500 h-full" style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((stats.revenue.stay / stats.revenue.total) * 100)}%` : '0%' }}></div>
+                  <div className="bg-purple-500 h-full" style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((stats.revenue.cleaning / stats.revenue.total) * 100)}%` : '0%' }}></div>
+                  <div className="bg-red-500 h-full" style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((stats.revenue.extra / stats.revenue.total) * 100)}%` : '0%' }}></div>
+                </div>
+
+                {/* Legend */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-teal-500 rounded-full"></div>
+                    <span className="text-xs text-gray-700">Stay KSH {(stats?.revenue.stay ?? 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                    <span className="text-xs text-gray-700">Cleaning KSH {(stats?.revenue.cleaning ?? 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-xs text-gray-700">Extra KSH {(stats?.revenue.extra ?? 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Warning Alert */}
+              {!loading && (
+                (stats?.occupancy.rate ?? 0) < 60 ? (
+                  <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200 flex gap-2">
+                    <span className="text-lg">🔴</span>
+                    <p className="text-sm text-red-800">Occupancy is {stats?.occupancy.rate ?? 0}%. A 10-15% discount could fill more nights.</p>
+                  </div>
+                ) : (
+                  <div className="mt-4 p-3 bg-green-50 rounded-lg border border-green-200 flex gap-2">
+                    <span className="text-lg">✅</span>
+                    <p className="text-sm text-green-800">Good occupancy at {stats?.occupancy.rate ?? 0}%. Keep it up!</p>
+                  </div>
+                )
+              )}
+
+              {/* Beautiful Area Chart */}
+              <div className="mt-6 h-32 bg-gradient-to-b from-gray-50 to-white rounded-lg p-4 flex items-end justify-between gap-1">
+                <svg
+                  viewBox="0 0 300 120"
+                  className="w-full h-full"
+                  preserveAspectRatio="none"
+                  style={{ overflow: 'visible' }}
+                >
+                  {/* Area fill */}
+                  <defs>
+                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.01" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* Smooth curve path */}
+                  <path
+                    d="M 0 80 Q 30 60 60 70 T 120 50 T 180 75 T 240 45 T 300 65 L 300 120 L 0 120 Z"
+                    fill="url(#areaGradient)"
+                  />
+                  
+                  {/* Line stroke */}
+                  <path
+                    d="M 0 80 Q 30 60 60 70 T 120 50 T 180 75 T 240 45 T 300 65"
+                    stroke="#14b8a6"
+                    strokeWidth="2.5"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Bookings Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-base font-semibold text-gray-900">Bookings</h3>
+              <span className="text-xs text-gray-500">{periodLabel}</span>
+            </div>
+
+            {/* Top Row - 3 Stat Boxes */}
+            <div className="grid grid-cols-3 gap-3 mb-4">
+              {/* Rooms Sold - Bed */}
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:shadow-sm transition-shadow">
+                <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M3 10h18M3 10v8a2 2 0 002 2h14a2 2 0 002-2v-8M3 10l1.5-3h15l1.5 3M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+                </svg>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '…' : stats?.bookings.roomsSold ?? 0}</p>
+                <p className="text-xs text-gray-600">Rooms Sold</p>
+              </div>
+
+              {/* New Today - Plus */}
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:shadow-sm transition-shadow">
+                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 5v14m7-7H5"/>
+                </svg>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '…' : stats?.bookings.newToday ?? 0}</p>
+                <p className="text-xs text-gray-600">New Today</p>
+              </div>
+
+              {/* Cancellations - X Circle */}
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:shadow-sm transition-shadow">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M15 9l-6 6M9 9l6 6"/>
+                </svg>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '…' : stats?.bookings.cancellations ?? 0}</p>
+                <p className="text-xs text-gray-600">Cancellations</p>
+              </div>
+            </div>
+
+            {/* Second Row - 2 Wider Stat Boxes */}
+            <div className="grid grid-cols-2 gap-3 mb-5">
+              {/* Check-ins - Login */}
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:shadow-sm transition-shadow">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M11 16l-4-4m0 0l4-4m-4 4h12.5M11 5h7a2 2 0 012 2v10a2 2 0 01-2 2h-7"/>
+                </svg>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '…' : stats?.bookings.checkInsToday ?? 0}</p>
+                <p className="text-xs text-gray-600">Check-ins</p>
+              </div>
+
+              {/* Check-outs - Door Exit */}
+              <div className="bg-gray-50 rounded-lg p-4 flex flex-col items-center justify-center gap-2 hover:shadow-sm transition-shadow">
+                <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <path d="M9 11l3 3 5-5M12 3v2"/>
+                </svg>
+                <p className="text-2xl font-bold text-gray-900">{loading ? '…' : stats?.bookings.checkOutsToday ?? 0}</p>
+                <p className="text-xs text-gray-600">Check-outs</p>
+              </div>
+            </div>
+
+            {/* Bottom Section - Donut Chart & Info */}
+            {(() => {
+              const sources = stats?.bookings.sources ?? {};
+              const total = stats?.bookings.roomsSold ?? 0;
+              const topEntry = Object.entries(sources).sort(([,a],[,b]) => (b as number) - (a as number))[0];
+              const topPct = total > 0 && topEntry ? Math.round(((topEntry[1] as number) / total) * 100) : 0;
+              return (
+                <div className="flex gap-4 items-center">
+                  <div className="flex-shrink-0">
+                    <svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="8"
+                        strokeDasharray={`${total > 0 ? 251.2 : 0} 251.2`} strokeDashoffset="0" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-2.5 h-2.5 bg-green-600 rounded-full"></div>
+                        <span className="text-sm font-semibold text-gray-900 capitalize">{topEntry?.[0] ?? 'Direct'}</span>
+                      </div>
+                      <p className="text-2xl font-bold text-green-600">{loading ? '…' : `${topPct}%`}</p>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-start gap-2">
+                      <svg className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <p className="text-xs text-amber-900 font-medium capitalize">{topEntry?.[0] ?? 'Direct'} is your #1 source</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* Bottom Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {/* Cashflow Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">💵 Cashflow — {periodLabel}</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-2 text-gray-600 font-medium">Period</th>
+                    <th className="text-center py-2 text-gray-600 font-medium">M-Pesa</th>
+                    <th className="text-center py-2 text-gray-600 font-medium">Cash</th>
+                    <th className="text-center py-2 text-gray-600 font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr><td colSpan={4} className="py-4 text-center text-gray-400 text-xs">Loading…</td></tr>
+                  ) : (stats?.cashflow ?? []).length === 0 ? (
+                    <tr><td colSpan={4} className="py-4 text-center text-gray-400 text-xs">No payments in this period.</td></tr>
+                  ) : (stats.cashflow as any[]).map((row: any) => (
+                    <tr key={row.date} className="border-b border-gray-100">
+                      <td className="py-2 text-gray-700">{new Date(row.date + 'T12:00:00').toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'short' })}</td>
+                      <td className="text-center text-gray-600">{row.mpesa > 0 ? `KSH ${row.mpesa.toLocaleString()}` : '—'}</td>
+                      <td className="text-center text-gray-600">{row.cash > 0 ? `KSH ${row.cash.toLocaleString()}` : '—'}</td>
+                      <td className="text-center font-medium text-gray-900">KSH {row.total.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Payment Methods Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">⏰ Payment Methods</h3>
+            <div className="space-y-4">
+              {[{ label: 'M-Pesa', val: stats?.revenue.mpesa ?? 0, color: 'bg-green-500' }, { label: 'Cash', val: stats?.revenue.cash ?? 0, color: 'bg-blue-500' }, { label: 'Other', val: Math.max(0, (stats?.revenue.total ?? 0) - (stats?.revenue.mpesa ?? 0) - (stats?.revenue.cash ?? 0)), color: 'bg-gray-400' }].map(item => (
+                <div key={item.label}>
+                  <div className="flex justify-between mb-1">
+                    <p className="text-sm font-medium text-gray-700">{item.label}</p>
+                    <p className="text-sm text-gray-600">KSH {item.val.toLocaleString()}</p>
+                  </div>
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`${item.color} h-full rounded-full`} style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((item.val / stats.revenue.total) * 100)}%` : '0%' }}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Unit Performance ── */}
+        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <h3 className="text-base font-semibold text-gray-900">Unit Performance</h3>
+            <span className="text-xs text-gray-400">{periodLabel}</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-100 text-xs text-gray-500 font-medium">
+                  <th className="text-left px-5 py-2.5">Unit</th>
+                  <th className="text-left px-4 py-2.5">Occupancy</th>
+                  <th className="text-left px-4 py-2.5">Revenue ↓</th>
+                  <th className="text-center px-4 py-2.5">Avg Stay</th>
+                  <th className="text-center px-4 py-2.5">St.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan={5} className="px-5 py-4 text-center text-gray-400 text-xs">Loading…</td></tr>
+                ) : (stats?.unitPerformance ?? []).length === 0 ? (
+                  <tr><td colSpan={5} className="px-5 py-4 text-center text-gray-400 text-xs">No properties yet.</td></tr>
+                ) : (stats.unitPerformance as any[]).map((u: any) => {
+                  const maxRev = stats.maxUnitRevenue ?? 1;
+                  return (
+                    <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${u.status === 'occupied' ? 'bg-blue-500' : 'bg-green-500'}`} />
+                          <span className="text-gray-800 font-medium truncate max-w-[140px]">{u.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.min(100, u.occupancyPct)}%` }} />
+                          </div>
+                          <span className="text-xs text-gray-600 w-7 text-right">{u.occupancyPct}%</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full ${u.revenue > 0 ? 'bg-blue-500' : 'bg-gray-300'}`}
+                              style={{ width: maxRev > 0 ? `${Math.round((u.revenue / maxRev) * 100)}%` : '0%' }} />
+                          </div>
+                          <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center text-xs text-gray-600">{u.avgStay.toFixed(1)}n</td>
+                      <td className="px-4 py-3 text-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-red-400 mx-auto" />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ── Alerts ── */}
+        <div className="mt-4 bg-white rounded-lg shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold text-gray-900">Alerts</h3>
+            <a href="/alerts" className="flex items-center gap-1 text-xs text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-colors font-medium">
+              All Alerts
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </a>
+          </div>
+          {alertsSummary === null ? (
+            <p className="text-sm text-gray-400">Loading…</p>
+          ) : (alertsSummary.checkIns + alertsSummary.checkOuts + alertsSummary.unpaid + alertsSummary.upcoming) === 0 ? (
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              No urgent alerts right now.
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-3">
+              {alertsSummary.checkIns > 0 && <span className="text-xs bg-green-50 text-green-700 border border-green-200 rounded-full px-3 py-1 font-medium">{alertsSummary.checkIns} Check-in{alertsSummary.checkIns !== 1 ? 's' : ''} today</span>}
+              {alertsSummary.checkOuts > 0 && <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-3 py-1 font-medium">{alertsSummary.checkOuts} Check-out{alertsSummary.checkOuts !== 1 ? 's' : ''} today</span>}
+              {alertsSummary.unpaid > 0 && <span className="text-xs bg-red-50 text-red-700 border border-red-200 rounded-full px-3 py-1 font-medium">{alertsSummary.unpaid} Unpaid balance{alertsSummary.unpaid !== 1 ? 's' : ''}</span>}
+              {alertsSummary.upcoming > 0 && <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-3 py-1 font-medium">{alertsSummary.upcoming} Upcoming this week</span>}
+            </div>
+          )}
+        </div>
+
+        {/* ── 12-Month Trends ── */}
+        <div className="mt-4 mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          {/* Header row */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+            <h3 className="text-base font-bold text-gray-900">12-Month Trends</h3>
+            <div className="flex flex-wrap gap-2">
+              {([
+                { key: 'revenue',   label: 'Revenue',     on: 'bg-green-50 border-green-400 text-green-700',  dot: 'bg-green-500'  },
+                { key: 'expenses',  label: 'Expenses',    on: 'bg-red-50 border-red-400 text-red-600',        dot: 'bg-red-500'    },
+                { key: 'profit',    label: 'Profit',      on: 'bg-orange-50 border-orange-400 text-orange-600', dot: 'bg-orange-500' },
+              ] as const).map(s => (
+                <button
+                  key={s.key}
+                  onClick={() => setActiveSeries(p => ({ ...p, [s.key]: !p[s.key] }))}
+                  className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border font-semibold transition-all ${
+                    activeSeries[s.key] ? s.on : 'bg-white border-gray-200 text-gray-300'
+                  }`}
+                >
+                  <div className={`w-2 h-2 rounded-full ${activeSeries[s.key] ? s.dot : 'bg-gray-200'}`} />
+                  {s.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {trendsLoading ? (
+            <div className="flex justify-center py-16">
+              <div className="w-7 h-7 border-4 border-gray-900 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (() => {
+            const monthly: any[] = trends?.monthly ?? [];
+            if (monthly.length === 0) return <p className="text-sm text-gray-400 py-8 text-center">No trend data yet.</p>;
+
+            const W = 820, H = 115;
+            const ML = 56, MR = 16, MT = 8, MB = 29;
+            const cW = W - ML - MR;
+            const cH = H - MT - MB;
+            const n  = monthly.length;
+
+            // Y scale
+            const kvs: number[] = [];
+            if (activeSeries.revenue)  monthly.forEach((m: any) => kvs.push(Number(m.revenue)  || 0));
+            if (activeSeries.expenses) monthly.forEach((m: any) => kvs.push(Number(m.expenses) || 0));
+            if (activeSeries.profit)   monthly.forEach((m: any) => kvs.push(Number(m.profit)   || 0));
+            const rawMax = kvs.length > 0 ? Math.max(...kvs, 1) : 10000;
+            const mag    = Math.pow(10, Math.floor(Math.log10(rawMax)));
+            const maxVal = Math.ceil(rawMax / (mag * 2)) * (mag * 2) || 10000;
+
+            const baseline = MT + cH;
+            const yOf = (v: number) => baseline - Math.max(0, Math.min(cH, (Math.max(0, v) / maxVal) * cH));
+            const hOf = (v: number) => Math.max(0, Math.min(cH, (Math.max(0, v) / maxVal) * cH));
+
+            // Grouped bar layout — 3 fixed slots per group
+            const groupW   = cW / n;
+            const pad      = groupW * 0.25;
+            const barsArea = groupW - pad * 2;
+            const barW     = barsArea / 3;
+
+            // Gridlines
+            const grids = [0, 0.25, 0.5, 0.75, 1].map(f => ({
+              y:     MT + cH * (1 - f),
+              label: f * maxVal >= 1000 ? `${((f * maxVal) / 1000).toFixed(0)}k` : (f * maxVal).toFixed(0),
+            }));
+
+            return (
+              <>
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}>
+                  {/* Gridlines + Y labels */}
+                  {grids.map(g => (
+                    <g key={g.label}>
+                      <line x1={ML} y1={g.y} x2={W - MR} y2={g.y}
+                        stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5,4" />
+                      <text x={ML - 6} y={g.y + 4} textAnchor="end"
+                        fontSize="8" fill="#9ca3af" fontFamily="system-ui,sans-serif">
+                        {g.label}
+                      </text>
+                    </g>
+                  ))}
+
+                  {/* Baseline */}
+                  <line x1={ML} y1={baseline} x2={W - MR} y2={baseline} stroke="#d1d5db" strokeWidth="1" />
+
+                  {/* Grouped bars + X labels */}
+                  {monthly.map((m: any, i: number) => {
+                    const gx = ML + i * groupW + pad;
+                    return (
+                      <g key={i}>
+                        {activeSeries.revenue && (
+                          <rect x={gx} y={yOf(Number(m.revenue) || 0)}
+                            width={barW - 1} height={hOf(Number(m.revenue) || 0)}
+                            fill="#16a34a" rx="2" opacity="0.85" />
+                        )}
+                        {activeSeries.expenses && (
+                          <rect x={gx + barW} y={yOf(Number(m.expenses) || 0)}
+                            width={barW - 1} height={hOf(Number(m.expenses) || 0)}
+                            fill="#ef4444" rx="2" opacity="0.8" />
+                        )}
+                        {activeSeries.profit && (
+                          <rect x={gx + barW * 2} y={yOf(Number(m.profit) || 0)}
+                            width={barW - 1} height={hOf(Number(m.profit) || 0)}
+                            fill="#ea580c" rx="2" opacity="0.9" />
+                        )}
+                        <text x={ML + i * groupW + groupW / 2} y={H - 10}
+                          textAnchor="middle" fontSize="8" fill="#9ca3af" fontFamily="system-ui,sans-serif">
+                          {m.label}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                </svg>
+
+                {/* Inline bottom legend */}
+                <div className="flex flex-wrap items-center justify-center gap-5 mt-2 mb-3 text-xs">
+                  {activeSeries.revenue && (
+                    <span className="flex items-center gap-1.5 text-green-700 font-medium">
+                      <span className="inline-block w-3 h-3 rounded-sm bg-green-500" />
+                      Revenue
+                    </span>
+                  )}
+                  {activeSeries.expenses && (
+                    <span className="flex items-center gap-1.5 text-red-600 font-medium">
+                      <span className="inline-block w-3 h-3 rounded-sm bg-red-500" />
+                      Expenses
+                    </span>
+                  )}
+                  {activeSeries.profit && (
+                    <span className="flex items-center gap-1.5 text-orange-600 font-medium">
+                      <span className="inline-block w-3 h-3 rounded-sm bg-orange-500" />
+                      Profit
+                    </span>
+                  )}
+                </div>
+
+                {/* Summary stats row */}
+                <div className="flex flex-wrap gap-6 pt-3 border-t border-gray-100 text-xs text-gray-600">
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-green-600" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v3H2V2zm4 0h3v3H6V2zm4 0h4v3h-4V2zM2 6h3v3H2V6zm4 0h3v3H6V6zm4 0h4v3h-4V6zM2 10h3v4H2v-4zm4 0h3v4H6v-4zm4 0h4v4h-4v-4z"/></svg>
+                    <span><strong>Best:</strong> {trends?.bestMonth ? `${trends.bestMonth.label} (Ksh ${Number(trends.bestMonth.revenue).toLocaleString()})` : '—'}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span><strong>Slowest:</strong> {trends?.slowestMonth?.label ?? '—'}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span><strong>Avg monthly:</strong> Ksh {Number(trends?.avgMonthly ?? 0).toLocaleString()}</span>
+                  </span>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+
+      </div>
+    </div>
+  );
+}
