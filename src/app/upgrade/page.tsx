@@ -92,8 +92,8 @@ function UpgradeContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HB</div>
-            <span className="text-white font-bold text-xl">HostBooks KE</span>
+            <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
+            <span className="text-white font-bold text-xl">Host Hive</span>
           </div>
           {isExpired && (
             <div className="mt-3 inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/30 rounded-full px-4 py-1.5">

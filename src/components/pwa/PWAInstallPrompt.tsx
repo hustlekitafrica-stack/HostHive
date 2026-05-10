@@ -30,7 +30,7 @@ export function PWAInstallPrompt() {
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setShowPrompt(false);
-      toast.success('HostBooks KE installed successfully!');
+      toast.success('Host Hive installed successfully!');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -66,7 +66,7 @@ export function PWAInstallPrompt() {
       <div className="flex items-start gap-3">
         <span className="text-2xl">📱</span>
         <div className="flex-1">
-          <h3 className="font-semibold text-surface-900">Install HostBooks KE</h3>
+          <h3 className="font-semibold text-surface-900">Install Host Hive</h3>
           <p className="text-sm text-surface-600 mt-1">
             Install our app for quick access and offline support
           </p>

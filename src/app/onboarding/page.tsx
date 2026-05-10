@@ -70,8 +70,8 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HB</div>
-            <span className="text-white font-bold text-xl">HostBooks KE</span>
+            <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
+            <span className="text-white font-bold text-xl">Host Hive</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             {STEPS.map((_, i) => (
@@ -94,7 +94,7 @@ export default function OnboardingPage() {
                   <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-1">Welcome to HostBooks KE</h2>
+              <h2 className="text-2xl font-bold text-white mb-1">Welcome to Host Hive</h2>
               <p className="text-slate-400 text-sm mb-5">Your 14-day free trial starts now. No payment needed to get started.</p>
 
               <div className="bg-slate-700/40 rounded-xl p-4 mb-6 space-y-2">

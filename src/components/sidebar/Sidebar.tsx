@@ -78,17 +78,25 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
       <div className="flex items-center justify-between px-4 py-6 border-b border-slate-800">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
-              HB
-            </div>
-            <span className="text-white font-bold text-lg">HostBooks KE</span>
+            {typeof window !== 'undefined' && localStorage.getItem('brand_logo') ? (
+              <img src={localStorage.getItem('brand_logo')!} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
+                HH
+              </div>
+            )}
+            <span className="text-white font-bold text-lg">Host Hive</span>
           </div>
         )}
         {collapsed && (
           <div className="w-full flex justify-center">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
-              HB
-            </div>
+            {typeof window !== 'undefined' && localStorage.getItem('brand_logo') ? (
+              <img src={localStorage.getItem('brand_logo')!} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
+                HH
+              </div>
+            )}
           </div>
         )}
 

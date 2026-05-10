@@ -124,7 +124,7 @@ export default function SettingsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="text-sm font-semibold text-gray-800">HostBooks KE Demo</span>
+            <span className="text-sm font-semibold text-gray-800">Host Hive</span>
           </div>
           <span className="text-xs text-blue-600">{userEmail}</span>
         </div>
@@ -324,7 +324,7 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-500 mb-5">How your brand colors look in the interface.</p>
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="px-4 py-3 text-white text-sm font-bold" style={{ backgroundColor: primaryColor }}>
-                  HostBooks KE
+                  Host Hive
                 </div>
                 <div className="bg-gray-50 px-4 py-3 space-y-2">
                   {['Dashboard', 'My Properties', 'Expenses', 'Reports Center'].map(item => (

@@ -93,7 +93,7 @@ export function Sidebar() {
       {/* Footer */}
       <div className="border-t border-surface-800 p-4">
         <p className="text-xs text-surface-400 text-center">
-          © 2025 HostBooks KE
+          © 2025 Host Hive
         </p>
       </div>
     </aside>
