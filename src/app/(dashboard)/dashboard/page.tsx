@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { StatsRow } from '@/components/stats/StatsRow';
 import toast from 'react-hot-toast';
@@ -797,7 +797,7 @@ export default function DashboardPage() {
                       <text x={ttW / 2} y="13" textAnchor="middle" fontSize="9.5" fontWeight="bold"
                         fill="#111827" fontFamily="system-ui,sans-serif">{hm.label}</text>
                       {(() => {
-                        const rows: JSX.Element[] = [];
+                        const rows: React.ReactElement[] = [];
                         let ry = 22;
                         if (activeSeries.revenue)  { rows.push(<g key="r" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#16a34a"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Rev: Ksh {Number(hm.revenue||0).toLocaleString()}</text></g>); ry+=16; }
                         if (activeSeries.expenses) { rows.push(<g key="e" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#ef4444"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Exp: Ksh {Number(hm.expenses||0).toLocaleString()}</text></g>); ry+=16; }
