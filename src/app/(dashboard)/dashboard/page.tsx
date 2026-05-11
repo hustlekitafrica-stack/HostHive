@@ -225,21 +225,22 @@ export default function DashboardPage() {
               ))}
             </div>
             {timeframe === 'custom' && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-sm text-gray-600 font-medium">From</span>
+              <div className="flex items-center gap-1.5 bg-gray-100 rounded-full px-3 py-1.5 w-fit border border-gray-200 shadow-sm">
                 <input
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="bg-transparent text-xs text-gray-700 font-medium focus:outline-none w-[108px] cursor-pointer"
                 />
-                <span className="text-sm text-gray-600 font-medium">To</span>
+                <svg className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                </svg>
                 <input
                   type="date"
                   value={customTo}
                   min={customFrom}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="bg-transparent text-xs text-gray-700 font-medium focus:outline-none w-[108px] cursor-pointer"
                 />
               </div>
             )}
