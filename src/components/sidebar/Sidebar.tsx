@@ -159,11 +159,12 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
 
       {/* Navigation - Scrollable */}
       <div 
-        className="flex-1 overflow-y-auto px-2 py-6 space-y-6"
+        className="flex-1 min-h-0 overflow-y-auto px-2 py-6 space-y-6"
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
         }}
       >
         <style>{`
