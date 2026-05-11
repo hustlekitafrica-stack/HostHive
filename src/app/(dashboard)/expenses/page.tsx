@@ -156,47 +156,34 @@ export default function ExpensesPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <table className="w-full">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-x-auto">
+          <table className="w-full min-w-[400px]">
             <thead>
               <tr className="border-b border-gray-200">
                 <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Date</th>
                 <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Category</th>
                 <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Vendor/Service</th>
-                <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Gross</th>
-                <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Tax</th>
-                <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Net</th>
-                <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Actions</th>
+                <th className="text-left px-4 py-3 text-sm text-gray-600 font-medium">Total</th>
               </tr>
             </thead>
             <tbody>
               {loadingExpenses ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16 text-sm text-gray-400">Loading expenses...</td>
+                  <td colSpan={4} className="text-center py-16 text-sm text-gray-400">Loading expenses...</td>
                 </tr>
               ) : expenses.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-16 text-sm text-gray-500">
+                  <td colSpan={4} className="text-center py-16 text-sm text-gray-500">
                     No expenses recorded yet. Click &quot;Add Expense&quot; to get started.
                   </td>
                 </tr>
               ) : (
                 expenses.map(expense => (
                   <tr key={expense.id} className="border-b border-gray-100 last:border-0 hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-700">{expense.date}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{expense.category_name}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">{expense.vendor}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">KSh {expense.gross.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-sm text-gray-700">KSh {expense.tax.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-gray-900">KSh {expense.net.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        className="text-red-500 hover:text-red-700 text-xs font-medium"
-                      >
-                        Delete
-                      </button>
-                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.date}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.category_name}</td>
+                    <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.vendor}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">KSh {expense.net.toLocaleString()}</td>
                   </tr>
                 ))
               )}
