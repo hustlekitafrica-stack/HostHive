@@ -577,7 +577,10 @@ export default function DashboardPage() {
 
           {/* Payment Methods Card */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">💳 Payment Methods — {periodLabel}</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              Payment Methods — {periodLabel}
+            </h3>
             <div className="space-y-4">
               {[
                 { label: 'M-Pesa', val: stats?.revenue.mpesa ?? 0, color: 'bg-green-500' },
