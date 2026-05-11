@@ -389,42 +389,66 @@ export default function DashboardPage() {
                 )
               )}
 
-              {/* Revenue sparkline — real data */}
-              <div className="mt-4">
-                <p className="text-xs text-gray-400 mb-1">Daily payments in period</p>
-                <div className="h-24 bg-gradient-to-b from-gray-50 to-white rounded-lg overflow-hidden">
-                  {loading ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              {/* Revenue sparkline — period-aware */}
+              {(() => {
+                const rangeDays = Math.round((new Date(_drTo).getTime() - new Date(_drFrom).getTime()) / 86400000) + 1;
+                const sparkLabel = rangeDays <= 60 ? 'Daily payments' : rangeDays <= 365 ? 'Weekly payments' : 'Monthly payments';
+
+                const buildSparkData = (cf: any[]): Array<{ total: number }> => {
+                  if (rangeDays <= 60) return cf.map((r: any) => ({ total: Number(r.total) || 0 }));
+                  if (rangeDays <= 365) {
+                    const wkMap: Record<string, number> = {};
+                    cf.forEach((r: any) => {
+                      const d = new Date(r.date + 'T12:00:00'); const day = d.getDay();
+                      const mon = new Date(d); mon.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
+                      const wk = mon.toISOString().split('T')[0];
+                      wkMap[wk] = (wkMap[wk] || 0) + (Number(r.total) || 0);
+                    });
+                    return Object.keys(wkMap).sort().map(k => ({ total: wkMap[k] }));
+                  }
+                  const moMap: Record<string, number> = {};
+                  cf.forEach((r: any) => { const ym = r.date.slice(0, 7); moMap[ym] = (moMap[ym] || 0) + (Number(r.total) || 0); });
+                  return Object.keys(moMap).sort().map(k => ({ total: moMap[k] }));
+                };
+
+                return (
+                  <div className="mt-4">
+                    <p className="text-xs text-gray-400 mb-1">{sparkLabel} — {periodLabel}</p>
+                    <div className="h-24 bg-gradient-to-b from-gray-50 to-white rounded-lg overflow-hidden">
+                      {loading ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                        </div>
+                      ) : (stats?.cashflow ?? []).length === 0 ? (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <p className="text-xs text-gray-400">No payments in this period</p>
+                        </div>
+                      ) : (() => {
+                        const pts = buildSparkData(stats.cashflow);
+                        const W = 300, H = 80;
+                        const maxVal = Math.max(...pts.map(p => p.total), 1);
+                        const n = pts.length;
+                        const xs = pts.map((_, i) => n > 1 ? Math.round((i / (n - 1)) * W) : W / 2);
+                        const ys = pts.map(p => Math.round(H - Math.max(3, (p.total / maxVal) * (H - 8))));
+                        const linePts = xs.map((x, i) => `${x},${ys[i]}`).join(' ');
+                        const areaD = `M ${xs[0]},${ys[0]} ` + xs.slice(1).map((x, i) => `L ${x},${ys[i + 1]}`).join(' ') + ` L ${xs[n - 1]},${H} L ${xs[0]},${H} Z`;
+                        return (
+                          <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
+                            <defs>
+                              <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.35" />
+                                <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.02" />
+                              </linearGradient>
+                            </defs>
+                            <path d={areaD} fill="url(#sparkGrad)" />
+                            <polyline points={linePts} stroke="#14b8a6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        );
+                      })()}
                     </div>
-                  ) : (stats?.cashflow ?? []).length === 0 ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <p className="text-xs text-gray-400">No payments in this period</p>
-                    </div>
-                  ) : (() => {
-                    const cf: any[] = stats.cashflow;
-                    const W = 300, H = 80;
-                    const maxVal = Math.max(...cf.map((r: any) => Number(r.total) || 0), 1);
-                    const n = cf.length;
-                    const xs = cf.map((_: any, i: number) => n > 1 ? Math.round((i / (n - 1)) * W) : W / 2);
-                    const ys = cf.map((r: any) => Math.round(H - Math.max(3, (Number(r.total) / maxVal) * (H - 8))));
-                    const linePts = xs.map((x: number, i: number) => `${x},${ys[i]}`).join(' ');
-                    const areaD = `M ${xs[0]},${ys[0]} ` + xs.slice(1).map((x: number, i: number) => `L ${x},${ys[i+1]}`).join(' ') + ` L ${xs[n-1]},${H} L ${xs[0]},${H} Z`;
-                    return (
-                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.35" />
-                            <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.02" />
-                          </linearGradient>
-                        </defs>
-                        <path d={areaD} fill="url(#sparkGrad)" />
-                        <polyline points={linePts} stroke="#14b8a6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    );
-                  })()}
-                </div>
-              </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
 
