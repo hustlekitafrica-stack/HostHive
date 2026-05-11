@@ -13,6 +13,15 @@ const COLOR_PRESETS = [
   { primary: '#1e3a5f', secondary: '#0ea5e9' },
 ];
 
+const QUICK_COLORS = [
+  '#1e293b','#111827','#1e3a5f','#7c3aed','#991b1b',
+  '#b45309','#065f46','#0e7490','#1d4ed8','#be185d',
+  '#16a34a','#f97316','#0ea5e9','#a855f7','#dc2626',
+  '#f59e0b','#14b8a6','#6366f1','#ec4899','#64748b',
+];
+
+function isValidHex(v: string) { return /^#[0-9a-fA-F]{6}$/.test(v); }
+
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 export default function SettingsPage() {
@@ -212,54 +221,98 @@ export default function SettingsPage() {
               {/* Brand Colors card */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h2 className="text-base font-bold text-gray-900 mb-1">Brand Colors</h2>
-                <p className="text-sm text-gray-500 mb-5">Personalize your dashboard with your business colors. Changes preview live and apply everywhere when you save.</p>
-                <div className="grid grid-cols-2 gap-5 mb-5">
+                <p className="text-sm text-gray-500 mb-5">Pick any color using the swatch, type a hex code, or choose from the palette below. Changes preview live.</p>
+
+                <div className="space-y-6 mb-6">
+                  {/* Primary Color */}
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-0.5">Primary Color</p>
-                    <p className="text-xs text-gray-400 mb-2">Used for sidebar, buttons, and headers.</p>
-                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
-                      <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)}
-                        className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent p-0" />
-                      <span className="text-sm text-gray-700 font-mono">{primaryColor}</span>
+                    <p className="text-sm font-semibold text-gray-700 mb-0.5">Primary Color</p>
+                    <p className="text-xs text-gray-400 mb-2">Sidebar, buttons, and headers.</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <label className="relative cursor-pointer group flex-shrink-0">
+                        <div className="w-11 h-11 rounded-xl border-2 border-gray-300 group-hover:border-gray-500 transition-colors shadow-sm"
+                          style={{ backgroundColor: isValidHex(primaryColor) ? primaryColor : '#1e293b' }} />
+                        <input type="color" value={isValidHex(primaryColor) ? primaryColor : '#1e293b'}
+                          onChange={e => setPrimaryColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                      </label>
+                      <input
+                        type="text"
+                        value={primaryColor}
+                        onChange={e => { const v = e.target.value; if (/^#?[0-9a-fA-F]{0,6}$/.test(v)) setPrimaryColor(v.startsWith('#') ? v : '#' + v); }}
+                        onBlur={() => { if (!isValidHex(primaryColor)) setPrimaryColor('#1e293b'); }}
+                        maxLength={7}
+                        spellCheck={false}
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-400"
+                        placeholder="#1e293b"
+                      />
+                      <span className="text-xs text-gray-400">Click swatch or type hex</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_COLORS.map(c => (
+                        <button key={c} onClick={() => setPrimaryColor(c)} title={c}
+                          className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 flex-shrink-0 ${primaryColor === c ? 'border-gray-700 scale-110 ring-2 ring-offset-1 ring-gray-400' : 'border-white shadow-sm'}`}
+                          style={{ backgroundColor: c }} />
+                      ))}
                     </div>
                   </div>
+
+                  {/* Secondary Color */}
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-0.5">Secondary Color</p>
-                    <p className="text-xs text-gray-400 mb-2">Used for accents and highlights.</p>
-                    <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
-                      <input type="color" value={secondaryColor} onChange={e => setSecondaryColor(e.target.value)}
-                        className="w-7 h-7 rounded cursor-pointer border-0 bg-transparent p-0" />
-                      <span className="text-sm text-gray-700 font-mono">{secondaryColor}</span>
+                    <p className="text-sm font-semibold text-gray-700 mb-0.5">Secondary Color</p>
+                    <p className="text-xs text-gray-400 mb-2">Accents, highlights, and badges.</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <label className="relative cursor-pointer group flex-shrink-0">
+                        <div className="w-11 h-11 rounded-xl border-2 border-gray-300 group-hover:border-gray-500 transition-colors shadow-sm"
+                          style={{ backgroundColor: isValidHex(secondaryColor) ? secondaryColor : '#16a34a' }} />
+                        <input type="color" value={isValidHex(secondaryColor) ? secondaryColor : '#16a34a'}
+                          onChange={e => setSecondaryColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                      </label>
+                      <input
+                        type="text"
+                        value={secondaryColor}
+                        onChange={e => { const v = e.target.value; if (/^#?[0-9a-fA-F]{0,6}$/.test(v)) setSecondaryColor(v.startsWith('#') ? v : '#' + v); }}
+                        onBlur={() => { if (!isValidHex(secondaryColor)) setSecondaryColor('#16a34a'); }}
+                        maxLength={7}
+                        spellCheck={false}
+                        className="w-32 px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-400"
+                        placeholder="#16a34a"
+                      />
+                      <span className="text-xs text-gray-400">Click swatch or type hex</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {QUICK_COLORS.map(c => (
+                        <button key={c} onClick={() => setSecondaryColor(c)} title={c}
+                          className={`w-6 h-6 rounded-full border-2 transition-transform hover:scale-110 flex-shrink-0 ${secondaryColor === c ? 'border-gray-700 scale-110 ring-2 ring-offset-1 ring-gray-400' : 'border-white shadow-sm'}`}
+                          style={{ backgroundColor: c }} />
+                      ))}
                     </div>
                   </div>
                 </div>
-                {/* Presets */}
-                <p className="text-sm font-medium text-gray-700 mb-2">Presets</p>
-                <div className="flex items-center gap-2 mb-5">
-                  {COLOR_PRESETS.map((p, i) => (
-                    <button
-                      key={i}
-                      onClick={() => { setPrimaryColor(p.primary); setSecondaryColor(p.secondary); }}
-                      className="w-7 h-7 rounded-full overflow-hidden border-2 border-transparent hover:border-gray-400 transition-colors flex-shrink-0"
-                      title={`${p.primary} / ${p.secondary}`}
-                      style={{ background: `linear-gradient(135deg, ${p.primary} 50%, ${p.secondary} 50%)` }}
-                    />
-                  ))}
-                  <button
-                    onClick={() => { setPrimaryColor('#1e293b'); setSecondaryColor('#16a34a'); }}
-                    className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
-                    title="Reset to default"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-                      <path d="M3 3v5h5"/>
-                    </svg>
-                  </button>
+
+                {/* Preset combos */}
+                <div className="pt-4 border-t border-gray-100">
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Quick Combos</p>
+                  <div className="flex items-center gap-2 mb-5">
+                    {COLOR_PRESETS.map((p, i) => (
+                      <button key={i} onClick={() => { setPrimaryColor(p.primary); setSecondaryColor(p.secondary); }}
+                        className="w-8 h-8 rounded-full overflow-hidden border-2 border-transparent hover:border-gray-400 transition-colors flex-shrink-0 shadow-sm"
+                        title={`${p.primary} / ${p.secondary}`}
+                        style={{ background: `linear-gradient(135deg, ${p.primary} 50%, ${p.secondary} 50%)` }} />
+                    ))}
+                    <button onClick={() => { setPrimaryColor('#1e293b'); setSecondaryColor('#16a34a'); }}
+                      className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors flex-shrink-0"
+                      title="Reset to default">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={handleSaveColors}
-                  className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
-                >
+
+                <button onClick={handleSaveColors}
+                  className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors">
                   Save Colors
                 </button>
               </div>
