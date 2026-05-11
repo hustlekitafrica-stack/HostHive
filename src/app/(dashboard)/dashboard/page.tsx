@@ -591,7 +591,7 @@ export default function DashboardPage() {
                   <tr className="border-b border-gray-100 text-xs text-gray-500 font-medium">
                     <th className="text-left px-5 py-2.5">Unit</th>
                     <th className="text-left px-4 py-2.5">Occupancy</th>
-                    <th className="text-left px-4 py-2.5">Revenue ↓</th>
+                    <th className="text-left px-4 py-2.5">Rev ↓</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -610,20 +610,20 @@ export default function DashboardPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-600 font-medium">{u.occupancyPct}%</span>
+                            <div className="w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                               <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, u.occupancyPct)}%` }} />
                             </div>
-                            <span className="text-xs text-gray-600 w-7 text-right">{u.occupancyPct}%</span>
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
+                            <div className="w-14 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                               <div className={`h-full rounded-full ${u.revenue > 0 ? 'bg-blue-500' : 'bg-gray-300'}`}
                                 style={{ width: maxRev > 0 ? `${Math.round((u.revenue / maxRev) * 100)}%` : '0%' }} />
                             </div>
-                            <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
                           </div>
                         </td>
                       </tr>
