@@ -130,9 +130,7 @@ export default function UnitPerformancePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <span className="text-sm font-semibold text-gray-800">Host Hive</span>
           </div>
-          <span className="text-xs text-blue-600">{userEmail}</span>
         </div>
       </div>
 
