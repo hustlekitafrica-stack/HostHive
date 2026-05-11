@@ -140,19 +140,18 @@ export default function HelpCenterPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="hidden sm:block sticky top-0 z-30 bg-white border-b border-gray-200">
-        <div className={`flex items-center gap-3 px-4 lg:px-8 h-[80px] transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
-          <button className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-700"
-            onClick={() => window.dispatchEvent(new CustomEvent('openMobileMenu'))}>
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="1.75" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
+      {/* Sticky Top Header */}
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className={`flex items-center justify-between px-4 lg:px-8 h-[80px] transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
+          <div className="flex items-center gap-3">
+            <button
+              className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-700"
+              onClick={() => window.dispatchEvent(new CustomEvent('openMobileMenu'))}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
             <h1 className="text-lg font-bold text-gray-900">Help Center</h1>
           </div>
         </div>

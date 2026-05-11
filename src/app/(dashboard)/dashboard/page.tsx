@@ -103,7 +103,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-0">
       {/* Desktop Sticky Header + Action Buttons */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 hidden lg:block">
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200 hidden lg:block h-[80px]">
         <div className={`flex items-center h-[80px] px-3 sm:px-4 md:px-6 lg:px-8 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
           {/* Action Buttons - scrollable */}
           <div className="flex gap-2 overflow-x-auto flex-1 scrollbar-hide" style={{ scrollBehavior: 'smooth', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
