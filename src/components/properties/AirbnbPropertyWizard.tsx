@@ -347,6 +347,18 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const pct = Math.round((step / TOTAL) * 100);
   const upd = (field: keyof WizardFormData, val: unknown) => setData(d => ({ ...d, [field]: val }));
 
+  const saveDraft = async () => {
+    try {
+      await fetch('/api/properties/wizard', {
+        method: propertyId ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...(propertyId ? { id: propertyId } : {}), ...data, status: 'draft', setup_step: step }),
+      });
+    } catch {
+    }
+    onClose();
+  };
+
   const handlePublish = async () => {
     if (publishing) return;
     setPublishing(true);
@@ -354,7 +366,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
       const res = await fetch('/api/properties/wizard', {
         method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isEdit ? { id: propertyId, ...data } : data),
+        body: JSON.stringify(isEdit ? { id: propertyId, ...data, status: 'active' } : { ...data, status: 'active' }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -1169,7 +1181,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         <div className="bg-white flex flex-col h-full">
       {/* ── Top bar ── */}
       <div className="flex items-center justify-between px-6 h-[80px] border-b border-gray-200 shrink-0">
-        <button onClick={onClose} className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
+        <button onClick={saveDraft} className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Save & Exit
         </button>

@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
         caretaker_name: d.rules?.caretakerName || '',
         caretaker_phone: d.rules?.caretakerPhone || '',
         cancellation_policy: d.rules?.cancellation || 'moderate',
-        status: 'active',
+        status: d.status || 'active',
+        setup_step: d.setup_step ?? null,
       })
       .select()
       .single();
