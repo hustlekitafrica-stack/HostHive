@@ -591,15 +591,13 @@ export default function DashboardPage() {
                     <th className="text-left px-5 py-2.5">Unit</th>
                     <th className="text-left px-4 py-2.5">Occupancy</th>
                     <th className="text-left px-4 py-2.5">Revenue ↓</th>
-                    <th className="text-center px-4 py-2.5">Avg Stay</th>
-                    <th className="text-center px-4 py-2.5">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={5} className="px-5 py-6 text-center text-gray-400 text-xs">Loading…</td></tr>
+                    <tr><td colSpan={3} className="px-5 py-6 text-center text-gray-400 text-xs">Loading…</td></tr>
                   ) : (stats?.unitPerformance ?? []).length === 0 ? (
-                    <tr><td colSpan={5} className="px-5 py-6 text-center text-gray-400 text-xs">No active properties yet.</td></tr>
+                    <tr><td colSpan={3} className="px-5 py-6 text-center text-gray-400 text-xs">No active properties yet.</td></tr>
                   ) : (stats.unitPerformance as any[]).map((u: any) => {
                     const maxRev = stats.maxUnitRevenue ?? 1;
                     return (
@@ -626,12 +624,6 @@ export default function DashboardPage() {
                             </div>
                             <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-center text-xs text-gray-600">{u.avgStay.toFixed(1)}n</td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.status === 'occupied' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'}`}>
-                            {u.status}
-                          </span>
                         </td>
                       </tr>
                     );
@@ -776,7 +768,8 @@ export default function DashboardPage() {
 
             return (
               <>
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}
+                <div className="overflow-x-auto -mx-1">
+            <svg viewBox={`0 0 ${W} ${H}`} className="w-full min-w-[480px]" style={{ overflow: 'visible' }}
                   onMouseLeave={() => setHoveredMonth(null)}>
 
                   {/* Current period highlight */}
@@ -867,6 +860,7 @@ export default function DashboardPage() {
                     </g>
                   )}
                 </svg>
+                </div>
 
                 {/* Legend */}
                 <div className="flex flex-wrap items-center justify-center gap-5 mt-1 mb-3 text-xs">

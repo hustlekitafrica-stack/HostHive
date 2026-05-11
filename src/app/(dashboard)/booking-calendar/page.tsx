@@ -421,6 +421,7 @@ export default function BookingCalendarPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+            <h1 className="text-lg font-bold text-gray-900">Booking Calendar</h1>
           </div>
         </div>
       </div>
@@ -429,13 +430,9 @@ export default function BookingCalendarPage() {
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
       <div className="px-2 py-4 sm:p-6 space-y-4 max-w-[1400px]">
 
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Booking Calendar</h1>
-            <p className="text-sm text-gray-500 mt-1">Tap any day to add a booking. Tap a booking pill to edit it.</p>
-          </div>
-          <button onClick={() => openCreate()} className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap flex-shrink-0">
+        {/* New Booking button */}
+        <div className="flex justify-end">
+          <button onClick={() => openCreate()} className="flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors whitespace-nowrap">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
@@ -447,7 +444,7 @@ export default function BookingCalendarPage() {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 
           {/* Nav row */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-wrap gap-2">
+          <div className="flex items-center justify-center sm:justify-between px-4 py-3 border-b border-gray-100 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <button onClick={prevMonth} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">

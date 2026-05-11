@@ -141,7 +141,7 @@ export default function HelpCenterPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
+      <div className="hidden sm:block sticky top-0 z-30 bg-white border-b border-gray-200">
         <div className={`flex items-center gap-3 px-4 lg:px-8 h-[80px] transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
           <button className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-700"
             onClick={() => window.dispatchEvent(new CustomEvent('openMobileMenu'))}>
@@ -233,22 +233,6 @@ export default function HelpCenterPage() {
 
             {/* FAQ sidebar */}
             <div className="space-y-4">
-              <div className="bg-white border border-gray-200 rounded-xl p-5">
-                <h3 className="text-sm font-bold text-gray-900 mb-3">Before you submit</h3>
-                <ul className="space-y-2 text-sm text-gray-600">
-                  {[
-                    'Check your internet connection',
-                    'Try refreshing the page',
-                    'Clear browser cache / cookies',
-                    'Try a different browser',
-                  ].map(tip => (
-                    <li key={tip} className="flex items-start gap-2">
-                      <svg className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-              </div>
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
                 <p className="text-sm font-semibold text-blue-800 mb-1">⏱ Response time</p>
                 <p className="text-sm text-blue-700">All tickets are reviewed and addressed within <strong>24 hours</strong> during business days.</p>

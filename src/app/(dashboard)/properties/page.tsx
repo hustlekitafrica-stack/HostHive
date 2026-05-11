@@ -355,6 +355,10 @@ export default function PropertiesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">My Properties</h1>
+                <p className="text-xs text-gray-400">{activeCount} active units</p>
+              </div>
             </div>
           </div>
         </div>
@@ -363,10 +367,7 @@ export default function PropertiesPage() {
 
           {/* ── Header ── */}
           <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">My Properties</h1>
-              <p className="text-sm text-gray-500 mt-0.5">{activeCount} active units</p>
-            </div>
+            <div />
             <div className="flex items-center gap-2">
               <input ref={csvFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsvFile} />
               <button onClick={() => csvFileRef.current?.click()} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-green-50 hover:border-green-500 hover:text-green-700 transition-colors">
@@ -408,17 +409,6 @@ export default function PropertiesPage() {
               <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
 
-            {/* Status filter */}
-            <div className="relative">
-              <select
-                value={filterStatus}
-                onChange={e => setFilterStatus(e.target.value)}
-                className="appearance-none pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-2 focus:ring-gray-900 cursor-pointer"
-              >
-                {STATUSES.map(s => <option key={s}>{s}</option>)}
-              </select>
-              <svg className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
 
             {/* Spacer */}
             <div className="flex-1" />

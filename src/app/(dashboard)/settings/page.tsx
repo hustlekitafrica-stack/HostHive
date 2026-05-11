@@ -115,7 +115,7 @@ export default function SettingsPage() {
   const tabs: { id: Tab; label: string }[] = [
     { id: 'general', label: 'General' },
     { id: 'brand', label: 'Brand' },
-    { id: 'categories', label: 'Expense Categories' },
+    { id: 'categories', label: 'Expenses' },
     { id: 'account', label: 'Account' },
   ];
 
@@ -133,6 +133,7 @@ export default function SettingsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+            <h1 className="text-lg font-bold text-gray-900">Settings</h1>
           </div>
         </div>
       </div>
@@ -140,19 +141,13 @@ export default function SettingsPage() {
       {/* Page Content */}
       <div className={`px-2 py-4 sm:p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage your business profile and preferences.</p>
-        </div>
-
         {/* Tab Bar */}
-        <div className="bg-gray-100 rounded-lg p-1 flex gap-0.5 mb-6">
+        <div className="bg-gray-100 rounded-lg p-1 flex gap-0.5 mb-6 overflow-x-auto">
           {tabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2 rounded-md text-sm transition-colors ${activeTab === tab.id ? 'bg-white font-semibold text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
+              className={`px-4 py-2 rounded-md text-sm transition-colors whitespace-nowrap flex-shrink-0 ${activeTab === tab.id ? 'bg-white font-semibold text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}
             >
               {tab.label}
             </button>

@@ -408,7 +408,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-1">What kind of place are you listing?</h2>
         <p className="text-sm text-gray-500 mb-6">Choose the type that best describes your property. <span className="text-red-500">*</span></p>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {PROPERTY_TYPES.map(t => (
             <button
               key={t.id}
@@ -536,8 +536,8 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           ))}
         </div>
 
-        {/* Floor Space */}
-        <div className="mb-5">
+        {/* Floor Space - hidden */}
+        <div className="mb-5 hidden">
           <label className="block text-sm font-semibold text-gray-800 mb-2">Floor Space (sq meters, optional)</label>
           <input type="number" value={data.basics.size}
             onChange={e => upd('basics', { ...data.basics, size: e.target.value })}
@@ -546,8 +546,8 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           />
         </div>
 
-        {/* Unit & Building */}
-        <div className="mb-6">
+        {/* Unit & Building - hidden */}
+        <div className="mb-6 hidden">
           <label className="block text-sm font-semibold text-gray-800 mb-2">Unit & Building (optional)</label>
           <div className="flex gap-3">
             <input value={data.location.unit}
@@ -606,7 +606,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           Select all that apply. You can always update these later.{' '}
           <span className="text-green-600 font-semibold">{data.amenities.length} selected</span>
         </p>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {AMENITIES_FLAT.map(item => {
             const sel = data.amenities.includes(item.id);
             return (
@@ -685,17 +685,17 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           {/* Listing Title */}
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-800 mb-1.5">Listing Title <span className="text-red-500">*</span></label>
-            <div className="flex gap-3 items-center">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 value={data.title}
                 onChange={e => e.target.value.length <= 80 && upd('title', e.target.value)}
                 maxLength={80}
                 placeholder="e.g. Cozy Studio in Kilimani with Fast Wi-Fi"
-                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
+                className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
               />
               <button
                 type="button"
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors whitespace-nowrap"
+                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors whitespace-nowrap flex-shrink-0"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
                   <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z"/>
@@ -720,25 +720,6 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             <p className="text-xs text-gray-400 mt-1">{data.description.length}/2000 characters</p>
           </div>
 
-          {/* Three sub-textareas */}
-          <div className="grid grid-cols-3 gap-3">
-            {([
-              ['The space',         'descriptionSpace', 'Describe the layout, furniture, vibe...'],
-              ['Getting around',    'descriptionAround','Nearby matatu routes, parking, distance to CBD...'],
-              ['Guest interaction', 'descriptionHost',  'How available you are, caretaker presence...'],
-            ] as [string, string, string][]).map(([label, field, ph]) => (
-              <div key={field}>
-                <p className="text-xs text-gray-500 mb-1.5">{label}</p>
-                <textarea
-                  value={(data as unknown as Record<string, string>)[field]}
-                  onChange={e => upd(field as keyof WizardFormData, e.target.value)}
-                  placeholder={ph}
-                  rows={4}
-                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600 resize-y"
-                />
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     );
@@ -888,7 +869,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         {/* Check-in method */}
         <div>
           <p className="text-sm font-semibold text-gray-800 mb-2">Check-in method</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {CHECK_METHODS.map(m => {
               const sel = data.rules.checkInMethod === m.id;
               return (
@@ -1264,7 +1245,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
           Back
         </button>
-        <span className="text-sm text-gray-500">{step} / {TOTAL} — {STEP_NAMES[step - 1]}</span>
+        <span className="text-sm text-gray-500">{step} / {TOTAL}<span className="hidden sm:inline"> — {STEP_NAMES[step - 1]}</span></span>
         {step < TOTAL ? (
           <button onClick={goNext}
             className="flex items-center gap-1.5 px-6 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
