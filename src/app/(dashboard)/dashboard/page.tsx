@@ -90,6 +90,10 @@ export default function DashboardPage() {
     ? `${customFrom.split('-').reverse().join('/')} – ${customTo.split('-').reverse().join('/')}`
     : timeframe.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 
+  const { from: _drFrom, to: _drTo } = getDateRange();
+  const _fmtD = (iso: string) => iso.split('-').reverse().join('/');
+  const dateRangeLabel = `${_fmtD(_drFrom)} – ${_fmtD(_drTo)}`;
+
 
   return (
     <div className="space-y-0">
@@ -579,7 +583,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-              Payment Methods — {periodLabel}
+              Payment Methods — {dateRangeLabel}
             </h3>
             <div className="space-y-4">
               {[
