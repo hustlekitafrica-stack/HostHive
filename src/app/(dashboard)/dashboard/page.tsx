@@ -208,15 +208,16 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-500 mt-0.5">Here&apos;s what&apos;s happening with your properties.</p>
           </div>
           <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <style>{`.scrollbar-hide::-webkit-scrollbar{display:none}`}</style>
               {['Today', 'This Week', 'This Month', 'This Year', 'Custom'].map((period) => (
                 <button
                   key={period}
                   onClick={() => setTimeframe(period.toLowerCase())}
-                  className={`px-3 py-1 rounded-lg font-medium text-sm transition-colors ${
+                  className={`px-3 py-1.5 rounded-full font-semibold text-xs transition-all whitespace-nowrap flex-shrink-0 active:scale-95 ${
                     timeframe === period.toLowerCase()
-                      ? 'bg-teal-500 text-white'
-                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                      ? 'bg-teal-500 text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {period}
