@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { AirbnbPropertyWizard, WizardFormData } from '@/components/properties/AirbnbPropertyWizard';
 import { createClient } from '@/lib/supabase/client';
 
@@ -100,6 +100,12 @@ export default function PropertiesPage() {
   const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userEmail, setUserEmail] = useState('');
+  const [showCsvModal, setShowCsvModal] = useState(false);
+  const [csvRows, setCsvRows] = useState<Record<string, string>[]>([]);
+  const [csvError, setCsvError] = useState('');
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvDone, setCsvDone] = useState(0);
+  const csvFileRef = useRef<HTMLInputElement>(null);
 
   const loadProperties = useCallback(async () => {
     setLoading(true);
@@ -135,6 +141,61 @@ export default function PropertiesPage() {
   }), [properties, search, filterType, filterStatus]);
 
   const activeCount = properties.filter(p => p.status === 'active').length;
+
+  const parseCsv = (text: string): Record<string, string>[] => {
+    const lines = text.split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) return [];
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_'));
+    return lines.slice(1).map(line => {
+      const vals = line.match(/(?:"([^"]*)"|([^,]*))/g)?.map(v => v.replace(/^"|"$/g, '').trim()) ?? line.split(',').map(v => v.trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = vals[i] ?? ''; });
+      return row;
+    }).filter(r => r.name);
+  };
+
+  const handleCsvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const text = ev.target?.result as string;
+      const rows = parseCsv(text);
+      if (!rows.length) { setCsvError('No valid rows found. Make sure your CSV has a header row and a "name" column.'); setShowCsvModal(true); return; }
+      setCsvError('');
+      setCsvRows(rows);
+      setCsvDone(0);
+      setShowCsvModal(true);
+    };
+    reader.readAsText(file);
+  };
+
+  const confirmCsvImport = async () => {
+    setCsvImporting(true);
+    let done = 0;
+    for (const row of csvRows) {
+      const payload = {
+        title: row.name || row.property_name || 'Untitled',
+        propertyType: row.type || row.property_type || 'apartment',
+        location: { neighbourhood: row.location || row.neighbourhood || 'Nairobi', address: row.address || '', city: row.city || 'Nairobi', county: row.county || 'Nairobi', building: '', unit: '', floor: '', lat: null, lng: null },
+        basics: { bedrooms: parseInt(row.bedrooms) || 1, bathrooms: parseInt(row.bathrooms) || 1, maxGuests: parseInt(row.max_guests || row.maxguests) || 2, size: '', sizeUnit: 'sq m', beds: [] },
+        pricing: { nightly: row.nightly_rate || row.price || row.price_per_night || '0', weekend: '', monthly: '', cleaning: row.cleaning_fee || '0', deposit: row.deposit || '0', extraGuest: '', baseGuests: 2, minStay: row.min_stay || '1 night', maxStay: '', seasonal: [] },
+        rules: { checkIn: '14:00', checkOut: '11:00', checkInMethod: '', instructions: '', caretakerName: '', caretakerPhone: '', noSmoking: true, noParties: true, noPets: true, childrenAllowed: false, quietHours: true, couplesOnly: false, noAlcohol: false, adultsOnly: false, additionalRules: '', cancellation: 'moderate', nonRefundableDiscount: '10' },
+        description: row.description || '',
+        status: (['active','inactive','maintenance','draft'].includes(row.status) ? row.status : 'active'),
+        photos: [],
+        amenities: [],
+      };
+      await fetch('/api/properties/wizard', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }).catch(() => {});
+      done++;
+      setCsvDone(done);
+    }
+    setCsvImporting(false);
+    setShowCsvModal(false);
+    setCsvRows([]);
+    loadProperties();
+  };
 
   const STATUS_LABEL: Record<PropStatus, string> = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance', draft: 'Incomplete' };
   const STATUS_BG: Record<PropStatus, string> = { active: 'bg-green-100 text-green-700', inactive: 'bg-gray-100 text-gray-600', maintenance: 'bg-yellow-100 text-yellow-700', draft: 'bg-amber-100 text-amber-700' };
@@ -307,7 +368,8 @@ export default function PropertiesPage() {
               <p className="text-sm text-gray-500 mt-0.5">{activeCount} active units</p>
             </div>
             <div className="flex items-center gap-2">
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <input ref={csvFileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleCsvFile} />
+              <button onClick={() => csvFileRef.current?.click()} className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 Import CSV
               </button>
@@ -524,6 +586,76 @@ export default function PropertiesPage() {
 
         </div>
       </div>
+
+      {/* ── CSV Import Modal ── */}
+      {showCsvModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">Import Properties from CSV</h2>
+                {!csvError && <p className="text-sm text-gray-500 mt-0.5">{csvRows.length} propert{csvRows.length === 1 ? 'y' : 'ies'} ready to import</p>}
+              </div>
+              <button onClick={() => { setShowCsvModal(false); setCsvRows([]); setCsvError(''); }} className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {csvError ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3">
+                <svg className="w-10 h-10 text-red-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p className="text-sm text-red-600 font-medium">{csvError}</p>
+                <p className="text-xs text-gray-500">Expected columns: <code className="bg-gray-100 px-1 rounded">name, type, location, county, bedrooms, bathrooms, nightly_rate, status</code></p>
+                <a href="data:text/csv;charset=utf-8,name,type,location,county,bedrooms,bathrooms,max_guests,nightly_rate,status%0AExample Studio,studio,Westlands,Nairobi,0,1,2,4500,active" download="properties_template.csv"
+                  className="mt-2 text-sm text-gray-900 underline">Download template CSV</a>
+              </div>
+            ) : (
+              <>
+                <div className="flex-1 overflow-auto px-6 py-3">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-gray-200">
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Name</th>
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Type</th>
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Location</th>
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Beds</th>
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Rate/night</th>
+                        <th className="text-left py-2 font-semibold text-gray-600 text-xs uppercase">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {csvRows.map((r, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="py-2 font-medium text-gray-900">{r.name || r.property_name}</td>
+                          <td className="py-2 text-gray-600 capitalize">{r.type || r.property_type || 'apartment'}</td>
+                          <td className="py-2 text-gray-600">{r.location || r.neighbourhood || '—'}{r.county ? `, ${r.county}` : ''}</td>
+                          <td className="py-2 text-gray-600">{r.bedrooms || '1'}</td>
+                          <td className="py-2 text-gray-600">Ksh {parseInt(r.nightly_rate || r.price || r.price_per_night || '0').toLocaleString()}</td>
+                          <td className="py-2"><span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.status === 'active' || !r.status ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>{r.status || 'active'}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3">
+                  <a href="data:text/csv;charset=utf-8,name,type,location,county,bedrooms,bathrooms,max_guests,nightly_rate,status%0AExample Studio,studio,Westlands,Nairobi,0,1,2,4500,active" download="properties_template.csv"
+                    className="text-xs text-gray-400 hover:text-gray-600 underline">Download template</a>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => { setShowCsvModal(false); setCsvRows([]); }} className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors">Cancel</button>
+                    <button onClick={confirmCsvImport} disabled={csvImporting} className="px-5 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors disabled:opacity-60 flex items-center gap-2">
+                      {csvImporting ? (
+                        <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Importing {csvDone}/{csvRows.length}…</>
+                      ) : (
+                        <>Import {csvRows.length} propert{csvRows.length === 1 ? 'y' : 'ies'}</>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }
