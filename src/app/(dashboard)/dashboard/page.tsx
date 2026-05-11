@@ -512,32 +512,64 @@ export default function DashboardPage() {
 
         {/* Bottom Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {/* Cashflow Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">💵 Cashflow — {periodLabel}</h3>
+          {/* Unit Performance Card */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+              <h3 className="text-base font-semibold text-gray-900">Unit Performance</h3>
+              <span className="text-xs text-gray-400">{periodLabel}</span>
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 text-gray-600 font-medium">Period</th>
-                    <th className="text-center py-2 text-gray-600 font-medium">M-Pesa</th>
-                    <th className="text-center py-2 text-gray-600 font-medium">Cash</th>
-                    <th className="text-center py-2 text-gray-600 font-medium">Total</th>
+                  <tr className="border-b border-gray-100 text-xs text-gray-500 font-medium">
+                    <th className="text-left px-5 py-2.5">Unit</th>
+                    <th className="text-left px-4 py-2.5">Occupancy</th>
+                    <th className="text-left px-4 py-2.5">Revenue ↓</th>
+                    <th className="text-center px-4 py-2.5">Avg Stay</th>
+                    <th className="text-center px-4 py-2.5">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loading ? (
-                    <tr><td colSpan={4} className="py-4 text-center text-gray-400 text-xs">Loading…</td></tr>
-                  ) : (stats?.cashflow ?? []).length === 0 ? (
-                    <tr><td colSpan={4} className="py-4 text-center text-gray-400 text-xs">No payments in this period.</td></tr>
-                  ) : (stats.cashflow as any[]).map((row: any) => (
-                    <tr key={row.date} className="border-b border-gray-100">
-                      <td className="py-2 text-gray-700">{new Date(row.date + 'T12:00:00').toLocaleDateString('en-KE', { weekday: 'short', day: 'numeric', month: 'short' })}</td>
-                      <td className="text-center text-gray-600">{row.mpesa > 0 ? `KSH ${row.mpesa.toLocaleString()}` : '—'}</td>
-                      <td className="text-center text-gray-600">{row.cash > 0 ? `KSH ${row.cash.toLocaleString()}` : '—'}</td>
-                      <td className="text-center font-medium text-gray-900">KSH {row.total.toLocaleString()}</td>
-                    </tr>
-                  ))}
+                    <tr><td colSpan={5} className="px-5 py-6 text-center text-gray-400 text-xs">Loading…</td></tr>
+                  ) : (stats?.unitPerformance ?? []).length === 0 ? (
+                    <tr><td colSpan={5} className="px-5 py-6 text-center text-gray-400 text-xs">No active properties yet.</td></tr>
+                  ) : (stats.unitPerformance as any[]).map((u: any) => {
+                    const maxRev = stats.maxUnitRevenue ?? 1;
+                    return (
+                      <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${u.status === 'occupied' ? 'bg-blue-500' : 'bg-green-500'}`} />
+                            <span className="text-gray-800 font-medium truncate max-w-[120px]">{u.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.min(100, u.occupancyPct)}%` }} />
+                            </div>
+                            <span className="text-xs text-gray-600 w-7 text-right">{u.occupancyPct}%</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${u.revenue > 0 ? 'bg-blue-500' : 'bg-gray-300'}`}
+                                style={{ width: maxRev > 0 ? `${Math.round((u.revenue / maxRev) * 100)}%` : '0%' }} />
+                            </div>
+                            <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-center text-xs text-gray-600">{u.avgStay.toFixed(1)}n</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${u.status === 'occupied' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'}`}>
+                            {u.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -545,81 +577,28 @@ export default function DashboardPage() {
 
           {/* Payment Methods Card */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">⏰ Payment Methods</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">💳 Payment Methods — {periodLabel}</h3>
             <div className="space-y-4">
-              {[{ label: 'M-Pesa', val: stats?.revenue.mpesa ?? 0, color: 'bg-green-500' }, { label: 'Cash', val: stats?.revenue.cash ?? 0, color: 'bg-blue-500' }, { label: 'Other', val: Math.max(0, (stats?.revenue.total ?? 0) - (stats?.revenue.mpesa ?? 0) - (stats?.revenue.cash ?? 0)), color: 'bg-gray-400' }].map(item => (
+              {[
+                { label: 'M-Pesa', val: stats?.revenue.mpesa ?? 0, color: 'bg-green-500' },
+                { label: 'Cash',   val: stats?.revenue.cash  ?? 0, color: 'bg-blue-500'  },
+                { label: 'Other',  val: Math.max(0, (stats?.revenue.total ?? 0) - (stats?.revenue.mpesa ?? 0) - (stats?.revenue.cash ?? 0)), color: 'bg-gray-400' },
+              ].map(item => (
                 <div key={item.label}>
                   <div className="flex justify-between mb-1">
                     <p className="text-sm font-medium text-gray-700">{item.label}</p>
                     <p className="text-sm text-gray-600">KSH {item.val.toLocaleString()}</p>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`${item.color} h-full rounded-full`} style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((item.val / stats.revenue.total) * 100)}%` : '0%' }}></div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={`${item.color} h-full rounded-full transition-all duration-500`}
+                      style={{ width: (stats?.revenue.total ?? 0) > 0 ? `${Math.round((item.val / stats.revenue.total) * 100)}%` : '0%' }} />
                   </div>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {(stats?.revenue.total ?? 0) > 0 ? `${Math.round((item.val / stats.revenue.total) * 100)}%` : '0%'} of total
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        {/* ── Unit Performance ── */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h3 className="text-base font-semibold text-gray-900">Unit Performance</h3>
-            <span className="text-xs text-gray-400">{periodLabel}</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100 text-xs text-gray-500 font-medium">
-                  <th className="text-left px-5 py-2.5">Unit</th>
-                  <th className="text-left px-4 py-2.5">Occupancy</th>
-                  <th className="text-left px-4 py-2.5">Revenue ↓</th>
-                  <th className="text-center px-4 py-2.5">Avg Stay</th>
-                  <th className="text-center px-4 py-2.5">St.</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr><td colSpan={5} className="px-5 py-4 text-center text-gray-400 text-xs">Loading…</td></tr>
-                ) : (stats?.unitPerformance ?? []).length === 0 ? (
-                  <tr><td colSpan={5} className="px-5 py-4 text-center text-gray-400 text-xs">No properties yet.</td></tr>
-                ) : (stats.unitPerformance as any[]).map((u: any) => {
-                  const maxRev = stats.maxUnitRevenue ?? 1;
-                  return (
-                    <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${u.status === 'occupied' ? 'bg-blue-500' : 'bg-green-500'}`} />
-                          <span className="text-gray-800 font-medium truncate max-w-[140px]">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.min(100, u.occupancyPct)}%` }} />
-                          </div>
-                          <span className="text-xs text-gray-600 w-7 text-right">{u.occupancyPct}%</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="w-32 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${u.revenue > 0 ? 'bg-blue-500' : 'bg-gray-300'}`}
-                              style={{ width: maxRev > 0 ? `${Math.round((u.revenue / maxRev) * 100)}%` : '0%' }} />
-                          </div>
-                          <span className="text-xs text-gray-700 font-medium whitespace-nowrap">Ksh {Number(u.revenue).toLocaleString()}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center text-xs text-gray-600">{u.avgStay.toFixed(1)}n</td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-red-400 mx-auto" />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
 
