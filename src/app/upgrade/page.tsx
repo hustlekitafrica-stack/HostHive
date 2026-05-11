@@ -92,7 +92,7 @@ function UpgradeContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-3">
-            <div className="w-9 h-9 bg-teal-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
+            <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
             <span className="text-white font-bold text-xl">Host Hive</span>
           </div>
           {isExpired && (

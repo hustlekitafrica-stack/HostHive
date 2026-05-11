@@ -16,16 +16,9 @@ function darkenHex(hex: string, factor: number): string {
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    const OLD_PRIMARY = '#1e293b';
-    const OLD_SECONDARY = '#16a34a';
-    const NEW_PRIMARY = '#1e1245';
-    const NEW_SECONDARY = '#ec4899';
-
     const applyBrand = () => {
-      let primary = localStorage.getItem('brand_primary') || NEW_PRIMARY;
-      let secondary = localStorage.getItem('brand_secondary') || NEW_SECONDARY;
-      if (primary === OLD_PRIMARY) { primary = NEW_PRIMARY; localStorage.setItem('brand_primary', NEW_PRIMARY); }
-      if (secondary === OLD_SECONDARY) { secondary = NEW_SECONDARY; localStorage.setItem('brand_secondary', NEW_SECONDARY); }
+      const primary = localStorage.getItem('brand_primary') || '#1e293b';
+      const secondary = localStorage.getItem('brand_secondary') || '#16a34a';
       document.documentElement.style.setProperty('--brand-primary', primary);
       document.documentElement.style.setProperty('--brand-secondary', secondary);
       document.documentElement.style.setProperty('--brand-primary-dark', darkenHex(primary, 0.75));

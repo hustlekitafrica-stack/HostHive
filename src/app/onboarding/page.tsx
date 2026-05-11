@@ -62,7 +62,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center px-4 py-8">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-green-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" />
         <div className="absolute bottom-20 right-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-pulse" />
       </div>
 
@@ -70,14 +70,14 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-9 h-9 bg-pink-500 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
+            <div className="w-9 h-9 bg-green-600 rounded-xl flex items-center justify-center text-white font-bold text-sm">HH</div>
             <span className="text-white font-bold text-xl">Host Hive</span>
           </div>
           <div className="flex items-center justify-center gap-2">
             {STEPS.map((_, i) => (
               <div
                 key={i}
-                className={`h-1.5 rounded-full transition-all duration-300 ${i <= stepIndex ? 'bg-pink-400 w-8' : 'bg-slate-600 w-4'}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i <= stepIndex ? 'bg-green-400 w-8' : 'bg-slate-600 w-4'}`}
               />
             ))}
           </div>
@@ -89,8 +89,8 @@ export default function OnboardingPage() {
           {/* ── Welcome ── */}
           {screenName === 'Welcome' && (
             <div className="p-6 sm:p-8">
-              <div className="w-14 h-14 bg-pink-500/20 rounded-full flex items-center justify-center mb-5">
-                <svg className="w-7 h-7 text-pink-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="w-14 h-14 bg-green-600/20 rounded-full flex items-center justify-center mb-5">
+                <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                 </svg>
               </div>
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
               <div className="bg-slate-700/40 rounded-xl p-4 mb-6 space-y-2">
                 {['Manage unlimited properties', 'Full booking calendar', 'Expense tracking & reports', 'Guest CRM'].map((f, i) => (
                   <div key={i} className="flex items-center gap-2.5 text-sm text-slate-300">
-                    <svg className="w-4 h-4 text-pink-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                     {f}
@@ -117,14 +117,14 @@ export default function OnboardingPage() {
                   value={whatsappPhone}
                   onChange={e => setWhatsappPhone(e.target.value)}
                   placeholder="e.g. 0712 345 678"
-                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-500 text-sm"
+                  className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
                 />
                 <p className="text-xs text-slate-500 mt-1.5">We'll send you a reminder before your trial expires.</p>
               </div>
 
               <button
                 onClick={next}
-                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors"
               >
                 Start Free Trial →
               </button>
@@ -139,7 +139,7 @@ export default function OnboardingPage() {
               </button>
               <h2 className="text-2xl font-bold text-white mb-1">Set up your brand</h2>
               <p className="text-slate-400 text-sm mb-6">
-                Personalise the app with your logo and colors. You can always update these in <span className="text-pink-400">Settings → Brand</span>.
+                Personalise the app with your logo and colors. You can always update these in <span className="text-green-400">Settings → Brand</span>.
               </p>
 
               {/* Logo Upload */}
@@ -218,7 +218,7 @@ export default function OnboardingPage() {
 
               <button
                 onClick={next}
-                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors"
               >
                 Continue →
               </button>
@@ -234,17 +234,17 @@ export default function OnboardingPage() {
           {/* ── All Done ── */}
           {screenName === 'All Done' && (
             <div className="p-6 sm:p-8 text-center">
-              <div className="w-16 h-16 bg-pink-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
-                <svg className="w-8 h-8 text-pink-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="w-16 h-16 bg-green-600/20 rounded-full flex items-center justify-center mx-auto mb-5">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">You're all set!</h2>
-              <div className="inline-flex items-center gap-2 bg-pink-500/10 border border-pink-500/30 rounded-full px-4 py-1.5 mb-4">
-                <svg className="w-4 h-4 text-pink-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="inline-flex items-center gap-2 bg-green-600/10 border border-green-500/30 rounded-full px-4 py-1.5 mb-4">
+                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
                 </svg>
-                <span className="text-pink-300 text-sm font-medium">14-day free trial active</span>
+                <span className="text-green-300 text-sm font-medium">14-day free trial active</span>
               </div>
               <p className="text-slate-400 text-sm mb-6">Your account is ready. Let's start managing your properties.</p>
               <div className="space-y-2.5 text-left bg-slate-700/40 rounded-xl p-4 mb-6">
@@ -255,8 +255,8 @@ export default function OnboardingPage() {
                   'Generate financial reports',
                 ].map((item, i) => (
                   <div key={i} className="flex items-center gap-3 text-sm text-slate-300">
-                    <div className="w-5 h-5 rounded-full bg-pink-500/20 border border-pink-500/40 flex items-center justify-center flex-shrink-0">
-                      <span className="text-pink-400 text-xs font-bold">{i + 1}</span>
+                    <div className="w-5 h-5 rounded-full bg-green-600/20 border border-green-500/40 flex items-center justify-center flex-shrink-0">
+                      <span className="text-green-400 text-xs font-bold">{i + 1}</span>
                     </div>
                     {item}
                   </div>
@@ -264,7 +264,7 @@ export default function OnboardingPage() {
               </div>
               <button
                 onClick={handleFinish}
-                className="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-xl transition-colors"
+                className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl transition-colors"
               >
                 Go to Dashboard →
               </button>
