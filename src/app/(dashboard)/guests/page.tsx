@@ -117,6 +117,7 @@ export default function GuestsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+            <h1 className="text-lg font-bold text-gray-900">Guests</h1>
           </div>
         </div>
       </div>
@@ -126,14 +127,10 @@ export default function GuestsPage() {
       <div className="px-2 py-4 sm:p-6 w-full space-y-6">
 
         {/* ── Header ── */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Guests</h1>
-            <p className="text-sm text-gray-500 mt-1">Your guest CRM — bookings, contact info, repeat stays.</p>
-          </div>
+        <div className="flex items-start justify-end gap-4">
           <button
             onClick={() => { setShowAdd(true); setFormError(''); setForm({ name: '', phone: '', email: '' }); }}
-            className="flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
+            className="hidden sm:flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
           >
             <span className="text-lg leading-none">+</span> Add Guest
           </button>
