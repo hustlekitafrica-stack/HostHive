@@ -250,7 +250,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-900">Occupancy</h3>
-              <span className="text-xs text-gray-400">{dateRangeLabel}</span>
+              <span className="text-xs text-gray-400">{periodLabel}</span>
             </div>
             
             {/* Stats Cards - Responsive Grid */}
@@ -337,7 +337,7 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-semibold text-gray-900">Revenue</h3>
-              <span className="text-xs text-gray-400">{dateRangeLabel}</span>
+              <span className="text-xs text-gray-400">{periodLabel}</span>
             </div>
             <div className="space-y-4">
               {/* Total Revenue */}
@@ -597,7 +597,7 @@ export default function DashboardPage() {
                 <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 Payment Methods
               </h3>
-              <span className="text-xs text-gray-400">{dateRangeLabel}</span>
+              <span className="text-xs text-gray-400">{periodLabel}</span>
             </div>
             <div className="space-y-4">
               {[
