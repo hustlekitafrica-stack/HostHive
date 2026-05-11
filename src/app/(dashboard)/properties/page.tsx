@@ -414,7 +414,7 @@ export default function PropertiesPage() {
             <div className="flex-1" />
 
             {/* View toggle */}
-            <div className="flex border border-gray-300 rounded-lg overflow-hidden bg-white">
+            <div className="hidden sm:flex border border-gray-300 rounded-lg overflow-hidden bg-white">
               <button
                 onClick={() => setView('grid')}
                 className={`p-2 transition-colors ${view === 'grid' ? 'bg-gray-900 text-white' : 'text-gray-500 hover:bg-gray-50'}`}
@@ -438,8 +438,9 @@ export default function PropertiesPage() {
             </div>
           )}
 
-          {/* ── Grid View ── */}
-          {!loading && view === 'grid' && (
+          {/* ── Grid View ── always on mobile, conditional on desktop */}
+          {!loading && (view === 'grid' || true) && (
+            <div className={view !== 'grid' ? 'sm:hidden' : ''}>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {filtered.map(p => (
                 <div key={p.id} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-sm transition-shadow">
@@ -499,10 +500,12 @@ export default function PropertiesPage() {
                 </div>
               ))}
             </div>
+            </div>
           )}
 
-          {/* ── List View ── */}
+          {/* ── List View ── desktop only */}
           {!loading && view === 'list' && (
+            <div className="hidden sm:block">
             <>
               {/* ── Mobile: card stack ── */}
               <div className="sm:hidden space-y-3">
@@ -633,6 +636,7 @@ export default function PropertiesPage() {
                 </table>
               </div>
             </>
+            </div>
           )}
 
           {/* Empty state */}
