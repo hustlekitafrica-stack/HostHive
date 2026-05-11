@@ -38,7 +38,8 @@ export default function DashboardPage() {
   const [trends, setTrends] = useState<any>(null);
   const [trendsLoading, setTrendsLoading] = useState(true);
   const [alertsSummary, setAlertsSummary] = useState<{ checkIns: number; checkOuts: number; unpaid: number; upcoming: number } | null>(null);
-  const [activeSeries, setActiveSeries] = useState({ revenue: true, expenses: true, profit: true, occupancy: true });
+  const [activeSeries, setActiveSeries] = useState({ revenue: true, expenses: true, profit: true, occupancy: false });
+  const [hoveredMonth, setHoveredMonth] = useState<number | null>(null);
 
   const getDateRange = useCallback(() => {
     const today = new Date();
@@ -647,22 +648,23 @@ export default function DashboardPage() {
 
         {/* ── 12-Month Trends ── */}
         <div className="mt-4 mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-          {/* Header row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-            <h3 className="text-base font-bold text-gray-900">12-Month Trends</h3>
+            <div>
+              <h3 className="text-base font-bold text-gray-900">12-Month Trends</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Hover a month to see exact values</p>
+            </div>
             <div className="flex flex-wrap gap-2">
               {([
-                { key: 'revenue',   label: 'Revenue',     on: 'bg-green-50 border-green-400 text-green-700',  dot: 'bg-green-500'  },
-                { key: 'expenses',  label: 'Expenses',    on: 'bg-red-50 border-red-400 text-red-600',        dot: 'bg-red-500'    },
-                { key: 'profit',    label: 'Profit',      on: 'bg-orange-50 border-orange-400 text-orange-600', dot: 'bg-orange-500' },
+                { key: 'revenue',   label: 'Revenue',   on: 'bg-green-50 border-green-400 text-green-700',    dot: 'bg-green-500'  },
+                { key: 'expenses',  label: 'Expenses',  on: 'bg-red-50 border-red-400 text-red-600',          dot: 'bg-red-500'    },
+                { key: 'profit',    label: 'Profit',    on: 'bg-blue-50 border-blue-400 text-blue-700',       dot: 'bg-blue-500'   },
+                { key: 'occupancy', label: 'Occupancy', on: 'bg-purple-50 border-purple-400 text-purple-700', dot: 'bg-purple-500' },
               ] as const).map(s => (
-                <button
-                  key={s.key}
+                <button key={s.key}
                   onClick={() => setActiveSeries(p => ({ ...p, [s.key]: !p[s.key] }))}
                   className={`flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border font-semibold transition-all ${
                     activeSeries[s.key] ? s.on : 'bg-white border-gray-200 text-gray-300'
-                  }`}
-                >
+                  }`}>
                   <div className={`w-2 h-2 rounded-full ${activeSeries[s.key] ? s.dot : 'bg-gray-200'}`} />
                   {s.label}
                 </button>
@@ -678,13 +680,15 @@ export default function DashboardPage() {
             const monthly: any[] = trends?.monthly ?? [];
             if (monthly.length === 0) return <p className="text-sm text-gray-400 py-8 text-center">No trend data yet.</p>;
 
-            const W = 820, H = 115;
-            const ML = 56, MR = 16, MT = 8, MB = 29;
+            const now = new Date();
+            const currentLabel = now.toLocaleDateString('en-KE', { month: 'short', year: 'numeric' });
+
+            const W = 820, H = 220;
+            const ML = 62, MR = activeSeries.occupancy ? 50 : 16, MT = 14, MB = 32;
             const cW = W - ML - MR;
             const cH = H - MT - MB;
             const n  = monthly.length;
 
-            // Y scale
             const kvs: number[] = [];
             if (activeSeries.revenue)  monthly.forEach((m: any) => kvs.push(Number(m.revenue)  || 0));
             if (activeSeries.expenses) monthly.forEach((m: any) => kvs.push(Number(m.expenses) || 0));
@@ -696,90 +700,124 @@ export default function DashboardPage() {
             const baseline = MT + cH;
             const yOf = (v: number) => baseline - Math.max(0, Math.min(cH, (Math.max(0, v) / maxVal) * cH));
             const hOf = (v: number) => Math.max(0, Math.min(cH, (Math.max(0, v) / maxVal) * cH));
+            const occY = (p: number) => baseline - Math.max(0, Math.min(cH, (Math.max(0, p) / 100) * cH));
 
-            // Grouped bar layout — 3 fixed slots per group
-            const groupW   = cW / n;
-            const pad      = groupW * 0.25;
-            const barsArea = groupW - pad * 2;
-            const barW     = barsArea / 3;
+            const groupW  = cW / n;
+            const pad     = groupW * 0.2;
+            const barW    = (groupW - pad * 2) / 3;
+            const groupCx = (i: number) => ML + i * groupW + groupW / 2;
 
-            // Gridlines
             const grids = [0, 0.25, 0.5, 0.75, 1].map(f => ({
-              y:     MT + cH * (1 - f),
+              y: MT + cH * (1 - f),
               label: f * maxVal >= 1000 ? `${((f * maxVal) / 1000).toFixed(0)}k` : (f * maxVal).toFixed(0),
             }));
 
+            const occPts = monthly.map((m: any, i: number) => `${groupCx(i)},${occY(Number(m.occupancy) || 0)}`).join(' ');
+
+            const hm  = hoveredMonth !== null ? monthly[hoveredMonth] : null;
+            const ttW = 148;
+            const activeCnt = [activeSeries.revenue, activeSeries.expenses, activeSeries.profit, activeSeries.occupancy].filter(Boolean).length;
+            const ttH = 18 + activeCnt * 16 + 6;
+            const ttRawX = hoveredMonth !== null ? groupCx(hoveredMonth) - ttW / 2 : 0;
+            const ttX = Math.max(ML, Math.min(W - MR - ttW, ttRawX));
+
             return (
               <>
-                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}>
-                  {/* Gridlines + Y labels */}
+                <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}
+                  onMouseLeave={() => setHoveredMonth(null)}>
+
+                  {/* Current month highlight */}
+                  {monthly.map((m: any, i: number) => m.label === currentLabel ? (
+                    <rect key={`hl${i}`} x={ML + i * groupW} y={MT} width={groupW} height={cH}
+                      fill="#f0fdf4" rx="3" />
+                  ) : null)}
+
+                  {/* Gridlines + left Y labels */}
                   {grids.map(g => (
                     <g key={g.label}>
-                      <line x1={ML} y1={g.y} x2={W - MR} y2={g.y}
-                        stroke="#e5e7eb" strokeWidth="1" strokeDasharray="5,4" />
-                      <text x={ML - 6} y={g.y + 4} textAnchor="end"
-                        fontSize="8" fill="#9ca3af" fontFamily="system-ui,sans-serif">
-                        {g.label}
-                      </text>
+                      <line x1={ML} y1={g.y} x2={W - MR} y2={g.y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4,4" />
+                      <text x={ML - 6} y={g.y + 4} textAnchor="end" fontSize="9" fill="#9ca3af" fontFamily="system-ui,sans-serif">{g.label}</text>
                     </g>
+                  ))}
+
+                  {/* Right Y axis — occupancy % */}
+                  {activeSeries.occupancy && [0, 25, 50, 75, 100].map(pct => (
+                    <text key={pct} x={W - MR + 6} y={occY(pct) + 4} textAnchor="start"
+                      fontSize="9" fill="#a855f7" fontFamily="system-ui,sans-serif">{pct}%</text>
                   ))}
 
                   {/* Baseline */}
                   <line x1={ML} y1={baseline} x2={W - MR} y2={baseline} stroke="#d1d5db" strokeWidth="1" />
 
-                  {/* Grouped bars + X labels */}
+                  {/* Bars + hover targets */}
                   {monthly.map((m: any, i: number) => {
                     const gx = ML + i * groupW + pad;
+                    const isH = hoveredMonth === i;
                     return (
                       <g key={i}>
+                        {isH && <rect x={ML + i * groupW + 1} y={MT} width={groupW - 2} height={cH} fill="#f9fafb" rx="2" />}
                         {activeSeries.revenue && (
-                          <rect x={gx} y={yOf(Number(m.revenue) || 0)}
-                            width={barW - 1} height={hOf(Number(m.revenue) || 0)}
-                            fill="#16a34a" rx="2" opacity="0.85" />
+                          <rect x={gx} y={yOf(Number(m.revenue) || 0)} width={barW - 1} height={hOf(Number(m.revenue) || 0)}
+                            fill="#16a34a" rx="2" opacity={isH ? 1 : 0.8} />
                         )}
                         {activeSeries.expenses && (
-                          <rect x={gx + barW} y={yOf(Number(m.expenses) || 0)}
-                            width={barW - 1} height={hOf(Number(m.expenses) || 0)}
-                            fill="#ef4444" rx="2" opacity="0.8" />
+                          <rect x={gx + barW} y={yOf(Number(m.expenses) || 0)} width={barW - 1} height={hOf(Number(m.expenses) || 0)}
+                            fill="#ef4444" rx="2" opacity={isH ? 1 : 0.75} />
                         )}
                         {activeSeries.profit && (
-                          <rect x={gx + barW * 2} y={yOf(Number(m.profit) || 0)}
-                            width={barW - 1} height={hOf(Number(m.profit) || 0)}
-                            fill="#ea580c" rx="2" opacity="0.9" />
+                          <rect x={gx + barW * 2} y={yOf(Number(m.profit) || 0)} width={barW - 1} height={hOf(Number(m.profit) || 0)}
+                            fill="#2563eb" rx="2" opacity={isH ? 1 : 0.8} />
                         )}
-                        <text x={ML + i * groupW + groupW / 2} y={H - 10}
-                          textAnchor="middle" fontSize="8" fill="#9ca3af" fontFamily="system-ui,sans-serif">
-                          {m.label}
-                        </text>
+                        <text x={groupCx(i)} y={H - 12} textAnchor="middle" fontSize="9"
+                          fill={m.label === currentLabel ? '#16a34a' : '#9ca3af'}
+                          fontWeight={m.label === currentLabel ? 'bold' : 'normal'}
+                          fontFamily="system-ui,sans-serif">{m.label}</text>
+                        <rect x={ML + i * groupW} y={MT} width={groupW} height={cH + MB}
+                          fill="transparent" onMouseEnter={() => setHoveredMonth(i)} />
                       </g>
                     );
                   })}
 
+                  {/* Occupancy line */}
+                  {activeSeries.occupancy && monthly.length > 1 && (
+                    <>
+                      <polyline points={occPts} fill="none" stroke="#a855f7" strokeWidth="2" strokeDasharray="6,3" opacity="0.9" />
+                      {monthly.map((m: any, i: number) => (
+                        <circle key={i} cx={groupCx(i)} cy={occY(Number(m.occupancy) || 0)} r="3"
+                          fill="#a855f7" stroke="white" strokeWidth="1.5" />
+                      ))}
+                    </>
+                  )}
+
+                  {/* Hover tooltip */}
+                  {hm !== null && (
+                    <g transform={`translate(${ttX},${MT})`}>
+                      <rect width={ttW} height={ttH} rx="6" fill="white" stroke="#e5e7eb" strokeWidth="1"
+                        style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10))' }} />
+                      <text x={ttW / 2} y="13" textAnchor="middle" fontSize="9.5" fontWeight="bold"
+                        fill="#111827" fontFamily="system-ui,sans-serif">{hm.label}</text>
+                      {(() => {
+                        const rows: JSX.Element[] = [];
+                        let ry = 22;
+                        if (activeSeries.revenue)  { rows.push(<g key="r" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#16a34a"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Rev: Ksh {Number(hm.revenue||0).toLocaleString()}</text></g>); ry+=16; }
+                        if (activeSeries.expenses) { rows.push(<g key="e" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#ef4444"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Exp: Ksh {Number(hm.expenses||0).toLocaleString()}</text></g>); ry+=16; }
+                        if (activeSeries.profit)   { rows.push(<g key="p" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#2563eb"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Profit: Ksh {Number(hm.profit||0).toLocaleString()}</text></g>); ry+=16; }
+                        if (activeSeries.occupancy){ rows.push(<g key="o" transform={`translate(10,${ry})`}><circle cx="5" cy="5" r="3.5" fill="#a855f7"/><text x="13" y="9" fontSize="9" fill="#374151" fontFamily="system-ui,sans-serif">Occ: {Number(hm.occupancy||0).toFixed(0)}%</text></g>); }
+                        return rows;
+                      })()}
+                    </g>
+                  )}
                 </svg>
 
-                {/* Inline bottom legend */}
-                <div className="flex flex-wrap items-center justify-center gap-5 mt-2 mb-3 text-xs">
-                  {activeSeries.revenue && (
-                    <span className="flex items-center gap-1.5 text-green-700 font-medium">
-                      <span className="inline-block w-3 h-3 rounded-sm bg-green-500" />
-                      Revenue
-                    </span>
-                  )}
-                  {activeSeries.expenses && (
-                    <span className="flex items-center gap-1.5 text-red-600 font-medium">
-                      <span className="inline-block w-3 h-3 rounded-sm bg-red-500" />
-                      Expenses
-                    </span>
-                  )}
-                  {activeSeries.profit && (
-                    <span className="flex items-center gap-1.5 text-orange-600 font-medium">
-                      <span className="inline-block w-3 h-3 rounded-sm bg-orange-500" />
-                      Profit
-                    </span>
-                  )}
+                {/* Legend */}
+                <div className="flex flex-wrap items-center justify-center gap-5 mt-1 mb-3 text-xs">
+                  {activeSeries.revenue  && <span className="flex items-center gap-1.5 text-green-700 font-medium"><span className="inline-block w-3 h-3 rounded-sm bg-green-500"/>Revenue</span>}
+                  {activeSeries.expenses && <span className="flex items-center gap-1.5 text-red-600 font-medium"><span className="inline-block w-3 h-3 rounded-sm bg-red-500"/>Expenses</span>}
+                  {activeSeries.profit   && <span className="flex items-center gap-1.5 text-blue-700 font-medium"><span className="inline-block w-3 h-3 rounded-sm bg-blue-500"/>Profit</span>}
+                  {activeSeries.occupancy&& <span className="flex items-center gap-1.5 text-purple-700 font-medium"><span className="inline-block w-8 border-t-2 border-dashed border-purple-500"/>Occupancy %</span>}
                 </div>
 
-                {/* Summary stats row */}
+                {/* Summary stats */}
                 <div className="flex flex-wrap gap-6 pt-3 border-t border-gray-100 text-xs text-gray-600">
                   <span className="flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5 text-green-600" viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h3v3H2V2zm4 0h3v3H6V2zm4 0h4v3h-4V2zM2 6h3v3H2V6zm4 0h3v3H6V6zm4 0h4v3h-4V6zM2 10h3v4H2v-4zm4 0h3v4H6v-4zm4 0h4v4h-4v-4z"/></svg>
