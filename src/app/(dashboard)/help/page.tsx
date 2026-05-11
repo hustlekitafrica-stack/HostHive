@@ -103,7 +103,7 @@ export default function HelpCenterPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || 'Failed to submit'); return; }
-      toast.success('Ticket submitted! We'll respond within 24 hours.');
+      toast.success("Ticket submitted! We'll respond within 24 hours.");
       setSubject(''); setDescription(''); setCategory('general'); setPriority('normal');
       await loadTickets();
       setActiveTab('my_tickets');
