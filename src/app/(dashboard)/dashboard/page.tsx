@@ -6,7 +6,7 @@ import { StatsRow } from '@/components/stats/StatsRow';
 import toast from 'react-hot-toast';
 
 export default function DashboardPage() {
-  const [timeframe, setTimeframe] = useState('this month');
+  const [timeframe, setTimeframe] = useState('today');
   const [customFrom, setCustomFrom] = useState(() => {
     const d = new Date();
     d.setDate(1);

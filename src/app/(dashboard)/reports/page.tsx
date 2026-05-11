@@ -142,7 +142,7 @@ interface ReportData {
 export default function ReportsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userEmail, setUserEmail] = useState('');
-  const [activeSection, setActiveSection] = useState<NavSection>('financial');
+  const [activeSection, setActiveSection] = useState<NavSection | 'quick'>('quick');
 
   // Preview modal state
   const [previewName, setPreviewName] = useState<string | null>(null);
