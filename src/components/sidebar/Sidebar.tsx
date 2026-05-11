@@ -35,8 +35,9 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
       }
     };
 
+    type AlertData = { checkIns?: unknown[]; checkOuts?: unknown[]; unpaid?: unknown[] };
     Promise.all([
-      fetch('/api/alerts').then(r => r.ok ? r.json() : {}) as Promise<{ checkIns?: unknown[]; checkOuts?: unknown[]; unpaid?: unknown[] }>,
+      fetch('/api/alerts').then(r => r.ok ? (r.json() as Promise<AlertData>) : Promise.resolve({} as AlertData)),
       fetch('/api/reminders').then(r => r.ok ? r.json() : []),
     ]).then(([alertData, remindersData]) => {
       const alerts =
