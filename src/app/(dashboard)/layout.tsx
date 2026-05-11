@@ -99,6 +99,11 @@ export default function DashboardLayout({
     return () => window.removeEventListener('openMobileMenu', handler);
   }, []);
 
+  // Close mobile sidebar whenever the route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-50">
@@ -147,7 +152,7 @@ export default function DashboardLayout({
         <MobileNav />
 
         {/* Page content - Add top padding on mobile to account for header + action buttons */}
-        <main className={`flex-1 overflow-y-auto lg:pt-0 ${['/booking-calendar','/alerts','/guests','/unit-performance','/properties','/expenses','/reports','/settings'].includes(pathname) ? 'pt-0' : 'pt-32'}`}>
+        <main className={`flex-1 overflow-y-auto lg:pt-0 ${['/booking-calendar','/alerts','/guests','/unit-performance','/properties','/expenses','/reports','/settings','/help'].includes(pathname) ? 'pt-0' : 'pt-32'}`}>
           <BrandProvider>
             {children}
           </BrandProvider>

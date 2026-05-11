@@ -160,10 +160,10 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
       {/* Navigation - Scrollable */}
       <div 
         className="flex-1 overflow-y-auto px-2 py-6 space-y-6"
-        onClick={() => { if (isMobile && onClose) onClose(); }}
         style={{
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch',
         }}
       >
         <style>{`
