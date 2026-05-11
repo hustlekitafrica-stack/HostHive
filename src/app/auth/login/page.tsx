@@ -37,11 +37,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = () => {
-    setEmail('demo@hostbooks.com');
-    setPassword('demo123456');
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4 py-8">
       {/* Background decoration */}
@@ -116,32 +111,9 @@ export default function LoginPage() {
               </Link>
             </form>
 
-            {/* Demo Credentials Info */}
-            <div className="mt-6 pt-6 border-t border-slate-700">
-              <p className="text-xs text-slate-400 text-center mb-3">Demo Credentials:</p>
-              <div className="bg-slate-700/50 rounded-lg p-3 mb-3">
-                <p className="text-xs text-slate-300">
-                  <span className="text-slate-400">Email:</span> demo@hostbooks.com
-                </p>
-                <p className="text-xs text-slate-300 mt-1">
-                  <span className="text-slate-400">Password:</span> demo123456
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleDemoLogin}
-                className="w-full bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white font-medium py-2 px-4 rounded-lg transition-all text-sm"
-              >
-                Use Demo Credentials
-              </button>
-            </div>
           </div>
         </div>
 
-        {/* Footer Text */}
-        <p className="text-center text-slate-400 text-xs mt-6">
-          This is a demo login. In production, this connects to Supabase authentication.
-        </p>
       </div>
     </div>
   );

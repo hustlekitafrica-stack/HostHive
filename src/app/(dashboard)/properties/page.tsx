@@ -12,8 +12,15 @@ interface Property {
   type: string;
   category: string;
   bedrooms: string;
+  bathrooms: number;
+  maxGuests: number;
   location: string;
   pricePerNight: number;
+  cleaningFee: number;
+  deposit: number;
+  minStay: string;
+  description: string;
+  amenities: string[];
   status: PropStatus;
   setupStep?: number;
 }
@@ -27,8 +34,15 @@ function dbRowToProperty(row: any): Property {
     type: bedsLabel,
     category: row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : 'Apartment',
     bedrooms: bedsLabel,
+    bathrooms: row.bathrooms ?? 1,
+    maxGuests: row.max_guests ?? 2,
     location: [row.location, row.county].filter(Boolean).join(', '),
     pricePerNight: parseFloat(row.nightly_rate) || 0,
+    cleaningFee: parseFloat(row.cleaning_fee) || 0,
+    deposit: parseFloat(row.deposit) || 0,
+    minStay: row.min_stay || '1 night',
+    description: row.description || '',
+    amenities: Array.isArray(row.amenities) ? row.amenities : (row.amenities ? [row.amenities] : []),
     status: (['active', 'inactive', 'maintenance', 'draft'].includes(row.status) ? row.status : 'active') as PropStatus,
   };
 }
@@ -83,6 +97,7 @@ export default function PropertiesPage() {
   const [filterType, setFilterType] = useState('All types');
   const [filterStatus, setFilterStatus] = useState('All statuses');
   const [showBanner, setShowBanner] = useState(true);
+  const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userEmail, setUserEmail] = useState('');
 
@@ -121,8 +136,132 @@ export default function PropertiesPage() {
 
   const activeCount = properties.filter(p => p.status === 'active').length;
 
+  const STATUS_LABEL: Record<PropStatus, string> = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance', draft: 'Incomplete' };
+  const STATUS_BG: Record<PropStatus, string> = { active: 'bg-green-100 text-green-700', inactive: 'bg-gray-100 text-gray-600', maintenance: 'bg-yellow-100 text-yellow-700', draft: 'bg-amber-100 text-amber-700' };
+
   return (
     <>
+      {/* ── Property Details Slide-over ── */}
+      {viewingProperty && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/30" onClick={() => setViewingProperty(null)} />
+          {/* Panel */}
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-y-auto animate-slide-in">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[viewingProperty.status]}`} />
+                <h2 className="text-lg font-bold text-gray-900 leading-tight">{viewingProperty.name}</h2>
+              </div>
+              <button onClick={() => setViewingProperty(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            <div className="flex-1 px-6 py-5 space-y-6">
+              {/* Status + Type */}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BG[viewingProperty.status]}`}>{STATUS_LABEL[viewingProperty.status]}</span>
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{viewingProperty.category}</span>
+              </div>
+
+              {/* Quick stats grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Bedrooms', value: viewingProperty.bedrooms, icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+                  { label: 'Bathrooms', value: viewingProperty.bathrooms, icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z' },
+                  { label: 'Max Guests', value: viewingProperty.maxGuests, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
+                  { label: 'Min Stay', value: viewingProperty.minStay, icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
+                ].map(({ label, value, icon }) => (
+                  <div key={label} className="bg-gray-50 rounded-xl p-3.5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d={icon} /></svg>
+                      <span className="text-xs text-gray-500">{label}</span>
+                    </div>
+                    <p className="text-sm font-bold text-gray-900">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Location */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Location</p>
+                <div className="flex items-start gap-2 text-sm text-gray-700">
+                  <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>{viewingProperty.location || 'Location not set'}</span>
+                </div>
+              </div>
+
+              {/* Pricing */}
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pricing</p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Nightly rate</span>
+                    <span className="text-sm font-bold text-gray-900">Ksh {viewingProperty.pricePerNight.toLocaleString()}</span>
+                  </div>
+                  {viewingProperty.cleaningFee > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Cleaning fee</span>
+                      <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.cleaningFee.toLocaleString()}</span>
+                    </div>
+                  )}
+                  {viewingProperty.deposit > 0 && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Security deposit</span>
+                      <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.deposit.toLocaleString()}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Amenities */}
+              {viewingProperty.amenities.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Amenities</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {viewingProperty.amenities.map((a: string) => (
+                      <span key={a} className="text-xs px-2.5 py-1 bg-teal-50 text-teal-700 rounded-full border border-teal-100 font-medium">{a}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Description */}
+              {viewingProperty.description && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
+                  <p className="text-sm text-gray-600 leading-relaxed">{viewingProperty.description}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer actions */}
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
+              {viewingProperty.status === 'draft' ? (
+                <button
+                  onClick={() => { setContinuingProperty(viewingProperty); setViewingProperty(null); }}
+                  className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors">
+                  Continue Setup
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setEditingProperty(viewingProperty); setViewingProperty(null); }}
+                  className="flex-1 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors">
+                  Edit Property
+                </button>
+              )}
+              <button
+                onClick={() => setViewingProperty(null)}
+                className="px-4 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showWizard && <AirbnbPropertyWizard onClose={() => { setShowWizard(false); loadProperties(); }} />}
       {editingProperty && (
         <AirbnbPropertyWizard
@@ -326,8 +465,8 @@ export default function PropertiesPage() {
 
                   {/* Actions */}
                   <div className="flex items-center gap-2 border-t border-gray-100 pt-3">
-                    <button className="flex items-center gap-1.5 flex-1 justify-center py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    <button onClick={() => setViewingProperty(p)} className="flex items-center gap-1.5 flex-1 justify-center py-1.5 border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-gray-50 transition-colors font-medium">
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                       Details
                     </button>
                     <button onClick={() => setEditingProperty(p)} className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
@@ -379,8 +518,8 @@ export default function PropertiesPage() {
                       <td className="px-4 py-3 font-semibold text-gray-900 hidden sm:table-cell">Ksh {p.pricePerNight.toLocaleString()}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-1">
-                          <button className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-50 font-medium">
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                          <button onClick={() => setViewingProperty(p)} className="flex items-center gap-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-700 hover:bg-gray-50 font-medium">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             Details
                           </button>
                           {p.status === 'draft' ? (

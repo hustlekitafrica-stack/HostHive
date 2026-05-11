@@ -28,10 +28,10 @@ export default function SettingsPage() {
 
   // Brand tab state
   const [primaryColor, setPrimaryColor] = useState(() =>
-    typeof window !== 'undefined' ? localStorage.getItem('brand_primary') || '#1e293b' : '#1e293b'
+    typeof window !== 'undefined' ? localStorage.getItem('brand_primary') || '#1e1245' : '#1e1245'
   );
   const [secondaryColor, setSecondaryColor] = useState(() =>
-    typeof window !== 'undefined' ? localStorage.getItem('brand_secondary') || '#16a34a' : '#16a34a'
+    typeof window !== 'undefined' ? localStorage.getItem('brand_secondary') || '#ec4899' : '#ec4899'
   );
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoName, setLogoName] = useState('');
