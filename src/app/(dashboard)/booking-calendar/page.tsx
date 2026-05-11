@@ -648,22 +648,22 @@ export default function BookingCalendarPage() {
 
             {/* ── Stepper (guest bookings only) ── */}
             {!form.is_blocked && (
-              <div className="flex items-start px-6 py-4 bg-gray-50 border-b border-gray-100 flex-shrink-0 w-full">
+              <div className="flex items-start px-3 sm:px-6 py-4 bg-gray-50 border-b border-gray-100 flex-shrink-0 w-full overflow-hidden">
                 {STEPS.map((label, i) => {
                   const n = i + 1;
                   const done = step > n;
                   const active = step === n;
                   return [
-                    <div key={`s${i}`} className="flex flex-col items-center gap-1.5 shrink-0">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${done || active ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
+                    <div key={`s${i}`} className="flex flex-col items-center gap-1 min-w-0 shrink">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${done || active ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-400'}`}>
                         {done ? '✓' : n}
                       </div>
-                      <span className={`text-[10px] font-semibold whitespace-nowrap ${active ? 'text-teal-600' : done ? 'text-teal-500' : 'text-gray-400'}`}>
+                      <span className={`text-[9px] font-semibold text-center leading-tight ${active ? 'text-teal-600' : done ? 'text-teal-500' : 'text-gray-400'}`}>
                         {label}
                       </span>
                     </div>,
                     i < STEPS.length - 1 && (
-                      <div key={`c${i}`} className={`flex-1 h-0.5 mt-3.5 mx-2 ${step > n ? 'bg-teal-600' : 'bg-gray-200'}`} />
+                      <div key={`c${i}`} className={`flex-1 h-0.5 mt-3.5 mx-1 min-w-0 ${step > n ? 'bg-teal-600' : 'bg-gray-200'}`} />
                     ),
                   ];
                 })}
