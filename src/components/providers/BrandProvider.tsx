@@ -16,9 +16,14 @@ function darkenHex(hex: string, factor: number): string {
 
 export function BrandProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
+    const STALE_PRIMARIES   = ['#1e1245', '#1e1042', '#1a1035'];
+    const STALE_SECONDARIES = ['#ec4899', '#db2777'];
+
     const applyBrand = () => {
-      const primary = localStorage.getItem('brand_primary') || '#1e293b';
-      const secondary = localStorage.getItem('brand_secondary') || '#16a34a';
+      let primary   = localStorage.getItem('brand_primary')   || '#1e293b';
+      let secondary = localStorage.getItem('brand_secondary') || '#16a34a';
+      if (STALE_PRIMARIES.includes(primary))     { primary   = '#1e293b'; localStorage.setItem('brand_primary',   primary); }
+      if (STALE_SECONDARIES.includes(secondary)) { secondary = '#16a34a'; localStorage.setItem('brand_secondary', secondary); }
       document.documentElement.style.setProperty('--brand-primary', primary);
       document.documentElement.style.setProperty('--brand-secondary', secondary);
       document.documentElement.style.setProperty('--brand-primary-dark', darkenHex(primary, 0.75));
