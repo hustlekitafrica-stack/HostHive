@@ -36,7 +36,7 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
     };
 
     Promise.all([
-      fetch('/api/alerts').then(r => r.ok ? r.json() : {}),
+      fetch('/api/alerts').then(r => r.ok ? r.json() : {}) as Promise<{ checkIns?: unknown[]; checkOuts?: unknown[]; unpaid?: unknown[] }>,
       fetch('/api/reminders').then(r => r.ok ? r.json() : []),
     ]).then(([alertData, remindersData]) => {
       const alerts =
