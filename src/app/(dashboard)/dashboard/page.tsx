@@ -513,35 +513,62 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Bottom Section - Donut Chart & Info */}
+            {/* Bottom Section - Donut Chart & Source Legend */}
             {(() => {
               const sources = stats?.bookings.sources ?? {};
               const total = stats?.bookings.roomsSold ?? 0;
-              const topEntry = Object.entries(sources).sort(([,a],[,b]) => (b as number) - (a as number))[0];
-              const topPct = total > 0 && topEntry ? Math.round(((topEntry[1] as number) / total) * 100) : 0;
+              const sorted = Object.entries(sources).sort(([,a],[,b]) => (b as number) - (a as number));
+              const topEntry = sorted[0];
+              const COLORS = ['#10b981','#3b82f6','#f59e0b','#8b5cf6','#ef4444','#06b6d4'];
+              const circumference = 251.2;
+              let offset = 0;
+              const segments = sorted.map(([src, cnt], i) => {
+                const pct = total > 0 ? (cnt as number) / total : 0;
+                const dash = pct * circumference;
+                const seg = { src, pct: Math.round(pct * 100), dash, offset, color: COLORS[i % COLORS.length] };
+                offset += dash;
+                return seg;
+              });
               return (
                 <div className="flex gap-4 items-center">
                   <div className="flex-shrink-0">
-                    <svg width="100" height="100" viewBox="0 0 100 100" className="transform -rotate-90">
-                      <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="8" />
-                      <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" strokeWidth="8"
-                        strokeDasharray={`${total > 0 ? 251.2 : 0} 251.2`} strokeDashoffset="0" strokeLinecap="round" />
+                    <svg width="88" height="88" viewBox="0 0 100 100" className="transform -rotate-90">
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#f3f4f6" strokeWidth="10" />
+                      {segments.length === 0 && (
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="10" strokeDasharray="251.2 251.2" />
+                      )}
+                      {segments.map((s, i) => (
+                        <circle key={i} cx="50" cy="50" r="40" fill="none"
+                          stroke={s.color} strokeWidth="10"
+                          strokeDasharray={`${s.dash} ${circumference}`}
+                          strokeDashoffset={-s.offset}
+                          strokeLinecap="butt" />
+                      ))}
                     </svg>
                   </div>
-                  <div className="flex-1">
-                    <div className="mb-3">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-2.5 h-2.5 bg-green-600 rounded-full"></div>
-                        <span className="text-sm font-semibold text-gray-900 capitalize">{topEntry?.[0] ?? 'Direct'}</span>
+                  <div className="flex-1 space-y-1.5">
+                    {sorted.length === 0 ? (
+                      <p className="text-xs text-gray-400">No booking data yet</p>
+                    ) : sorted.map(([src, cnt], i) => {
+                      const pct = total > 0 ? Math.round(((cnt as number) / total) * 100) : 0;
+                      return (
+                        <div key={src} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1.5 min-w-0">
+                            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                            <span className="text-sm font-medium text-gray-800 capitalize truncate">{src}</span>
+                          </div>
+                          <span className="text-sm font-bold text-gray-900 flex-shrink-0 ml-2">{loading ? '…' : `${pct}%`}</span>
+                        </div>
+                      );
+                    })}
+                    {topEntry && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg px-2 py-1.5 flex items-center gap-1.5 mt-2">
+                        <svg className="w-3.5 h-3.5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <p className="text-xs text-amber-900 font-medium capitalize">{topEntry[0]} is your #1 source</p>
                       </div>
-                      <p className="text-2xl font-bold text-green-600">{loading ? '…' : `${topPct}%`}</p>
-                    </div>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 flex items-start gap-2">
-                      <svg className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                      <p className="text-xs text-amber-900 font-medium capitalize">{topEntry?.[0] ?? 'Direct'} is your #1 source</p>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
