@@ -374,38 +374,41 @@ export default function DashboardPage() {
                 )
               )}
 
-              {/* Beautiful Area Chart */}
-              <div className="mt-6 h-32 bg-gradient-to-b from-gray-50 to-white rounded-lg p-4 flex items-end justify-between gap-1">
-                <svg
-                  viewBox="0 0 300 120"
-                  className="w-full h-full"
-                  preserveAspectRatio="none"
-                  style={{ overflow: 'visible' }}
-                >
-                  {/* Area fill */}
-                  <defs>
-                    <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.3" />
-                      <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.01" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Smooth curve path */}
-                  <path
-                    d="M 0 80 Q 30 60 60 70 T 120 50 T 180 75 T 240 45 T 300 65 L 300 120 L 0 120 Z"
-                    fill="url(#areaGradient)"
-                  />
-                  
-                  {/* Line stroke */}
-                  <path
-                    d="M 0 80 Q 30 60 60 70 T 120 50 T 180 75 T 240 45 T 300 65"
-                    stroke="#14b8a6"
-                    strokeWidth="2.5"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+              {/* Revenue sparkline — real data */}
+              <div className="mt-4">
+                <p className="text-xs text-gray-400 mb-1">Daily payments in period</p>
+                <div className="h-24 bg-gradient-to-b from-gray-50 to-white rounded-lg overflow-hidden">
+                  {loading ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  ) : (stats?.cashflow ?? []).length === 0 ? (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <p className="text-xs text-gray-400">No payments in this period</p>
+                    </div>
+                  ) : (() => {
+                    const cf: any[] = stats.cashflow;
+                    const W = 300, H = 80;
+                    const maxVal = Math.max(...cf.map((r: any) => Number(r.total) || 0), 1);
+                    const n = cf.length;
+                    const xs = cf.map((_: any, i: number) => n > 1 ? Math.round((i / (n - 1)) * W) : W / 2);
+                    const ys = cf.map((r: any) => Math.round(H - Math.max(3, (Number(r.total) / maxVal) * (H - 8))));
+                    const linePts = xs.map((x: number, i: number) => `${x},${ys[i]}`).join(' ');
+                    const areaD = `M ${xs[0]},${ys[0]} ` + xs.slice(1).map((x: number, i: number) => `L ${x},${ys[i+1]}`).join(' ') + ` L ${xs[n-1]},${H} L ${xs[0]},${H} Z`;
+                    return (
+                      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.35" />
+                            <stop offset="100%" stopColor="#14b8a6" stopOpacity="0.02" />
+                          </linearGradient>
+                        </defs>
+                        <path d={areaD} fill="url(#sparkGrad)" />
+                        <polyline points={linePts} stroke="#14b8a6" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           </div>
