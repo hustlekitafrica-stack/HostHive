@@ -201,7 +201,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className={`py-4 md:py-6 px-3 sm:px-4 md:px-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
+      <div className={`py-4 md:py-6 px-2 sm:px-4 md:px-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Host Dashboard</h2>

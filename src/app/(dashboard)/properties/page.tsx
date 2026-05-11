@@ -359,7 +359,7 @@ export default function PropertiesPage() {
           </div>
         </div>
 
-        <div className={`px-4 py-8 sm:px-6 space-y-5 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
+        <div className={`px-2 py-4 sm:px-6 sm:py-8 space-y-5 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
 
           {/* ── Header ── */}
           <div className="flex items-start justify-between">

@@ -427,7 +427,7 @@ export default function BookingCalendarPage() {
 
       {/* Page Content */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
-      <div className="p-6 space-y-4 max-w-[1400px]">
+      <div className="px-2 py-4 sm:p-6 space-y-4 max-w-[1400px]">
 
         {/* Header */}
         <div className="flex items-start justify-between gap-4">

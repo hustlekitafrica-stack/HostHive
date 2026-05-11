@@ -138,7 +138,7 @@ export default function SettingsPage() {
       </div>
 
       {/* Page Content */}
-      <div className={`p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
+      <div className={`px-2 py-4 sm:p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
 
         {/* Page Title */}
         <div className="mb-6">

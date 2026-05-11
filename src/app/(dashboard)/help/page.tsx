@@ -158,7 +158,7 @@ export default function HelpCenterPage() {
         </div>
       </div>
 
-      <div className={`p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[280px]'} max-w-5xl`}>
+      <div className={`px-2 py-4 sm:p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[280px]'} max-w-5xl`}>
 
         {/* Hero banner */}
         <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-xl p-6 mb-6 text-white">

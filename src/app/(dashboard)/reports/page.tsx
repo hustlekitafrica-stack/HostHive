@@ -334,7 +334,7 @@ export default function ReportsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-8 min-w-0 max-w-3xl">
+        <div className="flex-1 px-2 py-4 sm:p-8 min-w-0 max-w-3xl">
 
           {/* Section Header */}
           <div className="flex items-center gap-3 mb-1">
