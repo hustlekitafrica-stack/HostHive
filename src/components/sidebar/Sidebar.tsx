@@ -350,6 +350,19 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
         <SidebarSection title="ACCOUNTS" collapsed={collapsed}>
           <SidebarItem
             icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}/>
+              </svg>
+            }
+            label="Help Center"
+            href="/help"
+            isActive={isActive('/help')}
+            collapsed={collapsed}
+          />
+          <SidebarItem
+            icon={
               <svg
                 className="w-5 h-5"
                 fill="none"
