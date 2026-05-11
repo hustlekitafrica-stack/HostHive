@@ -232,8 +232,9 @@ export default function DashboardPage() {
                   onChange={(e) => setCustomFrom(e.target.value)}
                   className="bg-transparent text-xs text-gray-700 font-medium focus:outline-none w-[108px] cursor-pointer"
                 />
-                <svg className="w-3.5 h-3.5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                <svg className="w-4 h-4 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                  <path d="M3 8h18"/><path d="M16 4l5 4-5 4"/>
+                  <path d="M21 16H3"/><path d="M8 12l-5 4 5 4"/>
                 </svg>
                 <input
                   type="date"
