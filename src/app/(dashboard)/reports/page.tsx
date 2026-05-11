@@ -415,7 +415,14 @@ export default function ReportsPage() {
             <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl flex flex-col">
 
               {/* Modal Header */}
-              <div className="flex flex-wrap items-center gap-3 px-6 py-4 border-b border-gray-200">
+              <div className="relative flex flex-wrap items-center gap-3 px-6 pr-14 py-4 border-b border-gray-200">
+                {/* Close — pinned top-right */}
+                <button onClick={() => { setPreviewName(null); setReportData(null); }}
+                  className="absolute top-3 right-4 p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
                 <div className="flex-1 min-w-0">
                   <h2 className="text-base font-bold text-gray-900 truncate">{previewName}</h2>
                   {reportData && <p className="text-xs text-gray-400 mt-0.5">Period: {reportData.period}</p>}
@@ -445,7 +452,7 @@ export default function ReportsPage() {
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
                     </svg>
-                    <span className="hidden sm:inline">Print / PDF</span>
+                    Print / PDF
                   </button>
                   <button onClick={handleNativeShare} disabled={!reportData}
                     className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 text-white rounded-lg text-xs font-semibold hover:bg-teal-600 active:scale-95 disabled:opacity-40 transition-all">
@@ -454,12 +461,6 @@ export default function ReportsPage() {
                       <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
                     </svg>
                     Share
-                  </button>
-                  <button onClick={() => { setPreviewName(null); setReportData(null); }}
-                    className="p-1.5 text-gray-500 hover:text-gray-700 border border-gray-200 sm:border-transparent hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
                   </button>
                 </div>
               </div>
