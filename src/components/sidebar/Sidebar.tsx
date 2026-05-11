@@ -17,6 +17,7 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
   const [userEmail, setUserEmail] = useState('');
   const [trialDaysLeft, setTrialDaysLeft] = useState(14);
   const [isPaid, setIsPaid] = useState(false);
+  const [alertCount, setAlertCount] = useState(0);
 
   useEffect(() => {
     const email = localStorage.getItem('user_email') || 'kogelosutes@gmail.com';
@@ -33,6 +34,20 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
         }
       }
     };
+
+    Promise.all([
+      fetch('/api/alerts').then(r => r.ok ? r.json() : {}),
+      fetch('/api/reminders').then(r => r.ok ? r.json() : []),
+    ]).then(([alertData, remindersData]) => {
+      const alerts =
+        (alertData.checkIns?.length  ?? 0) +
+        (alertData.checkOuts?.length ?? 0) +
+        (alertData.unpaid?.length    ?? 0);
+      const pending = Array.isArray(remindersData)
+        ? remindersData.filter((r: { is_done: boolean }) => !r.is_done).length
+        : 0;
+      setAlertCount(alerts + pending);
+    }).catch(() => {});
 
     fetch('/api/subscription')
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
@@ -274,7 +289,7 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
             href="/alerts"
             isActive={isActive('/alerts')}
             collapsed={collapsed}
-            badge={2}
+            badge={alertCount > 0 ? alertCount : undefined}
           />
         </SidebarSection>
 
