@@ -35,20 +35,22 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
       }
     };
 
-    type AlertData = { checkIns?: unknown[]; checkOuts?: unknown[]; unpaid?: unknown[] };
-    Promise.all([
-      fetch('/api/alerts').then(r => r.ok ? (r.json() as Promise<AlertData>) : Promise.resolve({} as AlertData)),
-      fetch('/api/reminders').then(r => r.ok ? r.json() : []),
-    ]).then(([alertData, remindersData]) => {
-      const alerts =
-        (alertData.checkIns?.length  ?? 0) +
-        (alertData.checkOuts?.length ?? 0) +
-        (alertData.unpaid?.length    ?? 0);
-      const pending = Array.isArray(remindersData)
-        ? remindersData.filter((r: { is_done: boolean }) => !r.is_done).length
-        : 0;
-      setAlertCount(alerts + pending);
-    }).catch(() => {});
+    let alertTotal = 0;
+    fetch('/api/alerts')
+      .then(r => r.ok ? r.json() : {})
+      .then((d: { checkIns?: unknown[]; checkOuts?: unknown[]; unpaid?: unknown[] }) => {
+        alertTotal += (d.checkIns?.length ?? 0) + (d.checkOuts?.length ?? 0) + (d.unpaid?.length ?? 0);
+      })
+      .catch(() => {})
+      .finally(() => {
+        fetch('/api/reminders')
+          .then(r => r.ok ? r.json() : [])
+          .then((list: { is_done: boolean }[]) => {
+            alertTotal += list.filter(r => !r.is_done).length;
+            setAlertCount(alertTotal);
+          })
+          .catch(() => setAlertCount(alertTotal));
+      });
 
     fetch('/api/subscription')
       .then(r => r.ok ? r.json() : Promise.reject(r.status))
