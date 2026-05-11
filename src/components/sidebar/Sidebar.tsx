@@ -400,13 +400,6 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
 
       {/* User Section */}
       <div className="px-2 py-4 border-t border-slate-800">
-        {!collapsed && (
-          <div className="px-3 pb-2">
-            <p className="text-xs text-slate-500">Signed in as</p>
-            <p className="text-sm text-slate-300 mt-0.5 truncate">{userEmail}</p>
-          </div>
-        )}
-
         {/* Free Trial Card */}
         {!collapsed && !isPaid && !trialDismissed && (
           <div className="bg-slate-800/50 rounded-lg p-3 mt-2 relative">
