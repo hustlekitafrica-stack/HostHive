@@ -130,7 +130,7 @@ export default function GuestsPage() {
         <div className="flex items-start justify-end gap-4">
           <button
             onClick={() => { setShowAdd(true); setFormError(''); setForm({ name: '', phone: '', email: '' }); }}
-            className="hidden sm:flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
+            className="flex items-center gap-2 bg-gray-900 text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-gray-800 transition-colors whitespace-nowrap"
           >
             <span className="text-lg leading-none">+</span> Add Guest
           </button>

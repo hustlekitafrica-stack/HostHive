@@ -134,7 +134,7 @@ export default function ExpensesPage() {
 
         {/* Page Header */}
         <div className="flex items-center justify-end mb-6">
-          <div className="hidden sm:flex gap-2">
+          <div className="flex gap-2">
             <button
               onClick={handleExportCSV}
               className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"

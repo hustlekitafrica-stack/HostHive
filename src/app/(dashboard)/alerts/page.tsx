@@ -220,7 +220,7 @@ export default function AlertsPage() {
       <div className={`px-2 py-4 sm:p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
 
         <div className="mb-6 flex items-center justify-end">
-          <button onClick={loadData} className="hidden sm:flex text-xs text-gray-500 hover:text-gray-800 items-center gap-1 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
+          <button onClick={loadData} className="flex text-xs text-gray-500 hover:text-gray-800 items-center gap-1 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
