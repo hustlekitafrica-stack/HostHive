@@ -44,6 +44,7 @@ function dbRowToProperty(row: any): Property {
     description: row.description || '',
     amenities: Array.isArray(row.amenities) ? row.amenities : (row.amenities ? [row.amenities] : []),
     status: (['active', 'inactive', 'maintenance', 'draft'].includes(row.status) ? row.status : 'active') as PropStatus,
+    setupStep: row.setup_step ?? row.setupStep ?? 1,
   };
 }
 
@@ -96,7 +97,7 @@ export default function PropertiesPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All types');
   const [filterStatus, setFilterStatus] = useState('All statuses');
-  const [dismissedDraftId, setDismissedDraftId] = useState<string | null>(null);
+  const [dismissedDraftIds, setDismissedDraftIds] = useState<Set<string>>(new Set());
   const [viewingProperty, setViewingProperty] = useState<Property | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userEmail, setUserEmail] = useState('');
@@ -135,7 +136,7 @@ export default function PropertiesPage() {
   }), [properties, search, filterType, filterStatus]);
 
   const activeCount = properties.filter(p => p.status === 'active').length;
-  const firstDraft = properties.find(p => p.status === 'draft' && p.id !== dismissedDraftId) ?? null;
+  const draftProperties = properties.filter(p => p.status === 'draft' && !dismissedDraftIds.has(p.id));
 
   const STATUS_LABEL: Record<PropStatus, string> = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance', draft: 'Incomplete' };
   const STATUS_BG: Record<PropStatus, string> = { active: 'bg-green-100 text-green-700', inactive: 'bg-gray-100 text-gray-600', maintenance: 'bg-yellow-100 text-yellow-700', draft: 'bg-amber-100 text-amber-700' };
@@ -324,33 +325,37 @@ export default function PropertiesPage() {
             </div>
           </div>
 
-          {/* ── Incomplete setup banner ── */}
-          {firstDraft && (
-            <div className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 9l4-4h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 21V12h6v9"/></svg>
+          {/* ── Incomplete setup banners ── */}
+          {draftProperties.length > 0 && (
+            <div className="space-y-2">
+              {draftProperties.map(draft => (
+                <div key={draft.id} className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                      <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M3 9l4-4h10l4 4v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path d="M9 21V12h6v9"/></svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-700">{draft.name} — setup incomplete</p>
+                      <p className="text-xs text-amber-600 mt-0.5">Step {draft.setupStep ?? 1} of 9 completed</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setContinuingProperty(draft)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-400 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                      Continue
+                    </button>
+                    <button
+                      onClick={() => setDismissedDraftIds(prev => new Set([...prev, draft.id]))}
+                      className="w-8 h-8 flex items-center justify-center border border-red-200 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-amber-700">{firstDraft.name} — setup incomplete</p>
-                  <p className="text-xs text-amber-600 mt-0.5">Left off at: {STEP_LABELS[firstDraft.setupStep ?? 1]}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setContinuingProperty(firstDraft)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 border border-amber-400 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
-                >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-                  Continue
-                </button>
-                <button
-                  onClick={() => setDismissedDraftId(firstDraft.id)}
-                  className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
-              </div>
+              ))}
             </div>
           )}
 
