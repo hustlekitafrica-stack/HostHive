@@ -349,12 +349,19 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
   const saveDraft = async () => {
     try {
-      await fetch('/api/properties/wizard', {
+      const res = await fetch('/api/properties/wizard', {
         method: propertyId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...(propertyId ? { id: propertyId } : {}), ...data, status: 'draft', setup_step: step }),
       });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        showError(json.error?.message || 'Failed to save draft. Please try again.');
+        return;
+      }
     } catch {
+      showError('Network error. Could not save draft.');
+      return;
     }
     onClose();
   };
