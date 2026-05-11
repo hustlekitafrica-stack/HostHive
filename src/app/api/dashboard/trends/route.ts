@@ -38,7 +38,8 @@ export async function GET() {
         .lte('date', rangeTo),
       supabase.from('properties')
         .select('id')
-        .eq('user_id', userId),
+        .eq('user_id', userId)
+        .neq('status', 'draft'),
     ]);
 
     const bookings: any[] = bkRes.data ?? [];

@@ -26,7 +26,8 @@ export async function GET(request: NextRequest) {
     const { data: properties } = await supabase
       .from('properties')
       .select('id, name')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .neq('status', 'draft');
 
     if (!properties || properties.length === 0) {
       return NextResponse.json({ units: [] });

@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
         .from('properties')
         .select('id, name')
         .eq('user_id', userId)
+        .neq('status', 'draft')
         .order('created_at'),
       supabase
         .from('bookings')

@@ -362,7 +362,7 @@ async function guestDirectoryReport(sb: any, uid: string): Promise<ReportData> {
 
 async function occupancyReport(sb: any, uid: string, from: string, to: string): Promise<ReportData> {
   const [prRes, bkRes] = await Promise.all([
-    sb.from('properties').select('id, name').eq('user_id', uid).order('name'),
+    sb.from('properties').select('id, name').eq('user_id', uid).neq('status', 'draft').order('name'),
     sb.from('bookings')
       .select('property_id, check_in, check_out, nights')
       .eq('user_id', uid)

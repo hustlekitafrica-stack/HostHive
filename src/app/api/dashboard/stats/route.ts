@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
     const { data: properties } = await supabase
       .from('properties')
       .select('id, name, status')
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .neq('status', 'draft');
     const totalProperties = properties?.length ?? 0;
 
     // Bookings in period (by check_in date)
