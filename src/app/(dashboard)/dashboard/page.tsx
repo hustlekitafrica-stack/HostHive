@@ -70,10 +70,15 @@ export default function DashboardPage() {
   }, [getDateRange]);
 
   useEffect(() => {
-    fetch('/api/dashboard/trends')
+    const { from, to } = getDateRange();
+    setTrendsLoading(true);
+    fetch(`/api/dashboard/trends?from=${from}&to=${to}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setTrends(d); })
       .finally(() => setTrendsLoading(false));
+  }, [getDateRange]);
+
+  useEffect(() => {
     fetch('/api/alerts')
       .then(r => r.json())
       .then(d => {
@@ -648,8 +653,8 @@ export default function DashboardPage() {
         <div className="mt-4 mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
             <div>
-              <h3 className="text-base font-bold text-gray-900">12-Month Trends</h3>
-              <p className="text-xs text-gray-400 mt-0.5">Hover a month to see exact values</p>
+              <h3 className="text-base font-bold text-gray-900">Trends — {periodLabel}</h3>
+              <p className="text-xs text-gray-400 mt-0.5">Hover to see exact values</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {([
@@ -678,8 +683,7 @@ export default function DashboardPage() {
             const monthly: any[] = trends?.monthly ?? [];
             if (monthly.length === 0) return <p className="text-sm text-gray-400 py-8 text-center">No trend data yet.</p>;
 
-            const now = new Date();
-            const currentLabel = now.toLocaleDateString('en-KE', { month: 'short', year: 'numeric' });
+            const todayIso = new Date().toISOString().split('T')[0];
 
             const W = 820, H = 220;
             const ML = 62, MR = activeSeries.occupancy ? 50 : 16, MT = 14, MB = 32;
@@ -724,8 +728,8 @@ export default function DashboardPage() {
                 <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ overflow: 'visible' }}
                   onMouseLeave={() => setHoveredMonth(null)}>
 
-                  {/* Current month highlight */}
-                  {monthly.map((m: any, i: number) => m.label === currentLabel ? (
+                  {/* Current period highlight */}
+                  {monthly.map((m: any, i: number) => (m.from <= todayIso && todayIso <= m.to) ? (
                     <rect key={`hl${i}`} x={ML + i * groupW} y={MT} width={groupW} height={cH}
                       fill="#f0fdf4" rx="3" />
                   ) : null)}
@@ -766,10 +770,16 @@ export default function DashboardPage() {
                           <rect x={gx + barW * 2} y={yOf(Number(m.profit) || 0)} width={barW - 1} height={hOf(Number(m.profit) || 0)}
                             fill="#2563eb" rx="2" opacity={isH ? 1 : 0.8} />
                         )}
-                        <text x={groupCx(i)} y={H - 12} textAnchor="middle" fontSize="9"
-                          fill={m.label === currentLabel ? '#16a34a' : '#9ca3af'}
-                          fontWeight={m.label === currentLabel ? 'bold' : 'normal'}
-                          fontFamily="system-ui,sans-serif">{m.label}</text>
+                        {(() => {
+                          const isCur = m.from <= todayIso && todayIso <= m.to;
+                          const showLbl = n <= 20 || i % Math.ceil(n / 20) === 0 || i === n - 1;
+                          return showLbl ? (
+                            <text x={groupCx(i)} y={H - 12} textAnchor="middle" fontSize="9"
+                              fill={isCur ? '#16a34a' : '#9ca3af'}
+                              fontWeight={isCur ? 'bold' : 'normal'}
+                              fontFamily="system-ui,sans-serif">{m.label}</text>
+                          ) : null;
+                        })()}
                         <rect x={ML + i * groupW} y={MT} width={groupW} height={cH + MB}
                           fill="transparent" onMouseEnter={() => setHoveredMonth(i)} />
                       </g>
