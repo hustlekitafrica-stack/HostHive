@@ -121,7 +121,7 @@ export default function UnitPerformancePage() {
       {/* Sticky Top Header */}
       <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
         <div className={`flex items-center justify-between px-4 lg:px-8 h-[80px] transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
-          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3">
             <button
               className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-700"
               onClick={() => window.dispatchEvent(new CustomEvent('openMobileMenu'))}
@@ -130,6 +130,10 @@ export default function UnitPerformancePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">Unit Performance</h1>
+              <p className="text-xs text-gray-400 hidden sm:block">Leaderboard, analytics and diagnostics for all your units</p>
+            </div>
           </div>
         </div>
       </div>
@@ -138,12 +142,8 @@ export default function UnitPerformancePage() {
       <div className={`p-6 transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[280px] lg:pr-[200px]' : 'lg:pl-[456px] lg:pr-[200px]'}`}>
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Unit Performance</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Leaderboard, analytics and diagnostics for all your units</p>
-          </div>
+        {/* Controls */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
           <div className="flex items-center gap-2 flex-wrap">
             {/* Month picker */}
             <div className="relative">
@@ -231,7 +231,6 @@ export default function UnitPerformancePage() {
                   <tr className="border-b border-gray-200">
                     <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Rank</th>
                     <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Unit ↕</th>
-                    <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Group</th>
                     <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Occupancy ↕</th>
                     <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Revenue ↕</th>
                     <th className="text-left pb-3 px-2 text-xs font-semibold text-gray-500">Bookings ↕</th>
@@ -249,7 +248,6 @@ export default function UnitPerformancePage() {
                           <span className="text-sm font-semibold text-gray-900 whitespace-nowrap">{unit.name}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-2 text-sm text-gray-400">—</td>
                       <td className="py-4 px-2">
                         <div className="flex items-center gap-2">
                           <div className="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden">
