@@ -472,12 +472,12 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     if (step === 2) return (
       <div className="lg:px-[300px]">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Where is your property located?</h2>
-        <p className="text-sm text-gray-500 mb-5">Type your street address below — suggestions will appear as you type.</p>
+        <p className="text-sm text-gray-500 mb-5">Type your property name or address — suggestions will appear as you type.</p>
         <div className="space-y-4">
 
           {/* ── Street Address with live autocomplete ── */}
           <div>
-            <label className="block text-sm font-semibold text-gray-800 mb-1.5">Street Address <span className="text-red-500">*</span></label>
+            <label className="block text-sm font-semibold text-gray-800 mb-1.5">Property Address <span className="text-red-500">*</span></label>
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input
@@ -489,7 +489,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                   if (!q.trim() || q.length < 3) { setAddrResults([]); setAddrDropdown(false); return; }
                   addrTimerRef.current = setTimeout(async () => {
                     try {
-                      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ' Kenya')}&limit=6&countrycodes=ke&addressdetails=1`, { headers: { 'Accept-Language': 'en' } });
+                      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=ke&addressdetails=1&featuretype=building,amenity,residential,place`, { headers: { 'Accept-Language': 'en' } });
                       const json = await res.json();
                       setAddrResults(json);
                       setAddrDropdown(json.length > 0);
@@ -498,7 +498,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                 }}
                 onBlur={() => setTimeout(() => setAddrDropdown(false), 200)}
                 onFocus={() => addrResults.length > 0 && setAddrDropdown(true)}
-                placeholder="e.g. Ngong Road, Kilimani…"
+                placeholder="e.g. Groovehart Apartments, Kilimani"
                 className="w-full pl-9 pr-4 py-3 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm"
                 autoComplete="off"
               />
@@ -512,17 +512,22 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                         const a = r.address || {};
                         const lat = parseFloat(parseFloat(r.lat).toFixed(6));
                         const lng = parseFloat(parseFloat(r.lon).toFixed(6));
-                        const road = [a.house_number, a.road || a.pedestrian || a.footway || a.path].filter(Boolean).join(' ');
+                        const placeName = a.building || a.amenity || a.leisure || a.shop || a.office || a.tourism || '';
+                        const road = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(' ');
+                        const addressStr = placeName
+                          ? (road ? `${placeName}, ${road}` : placeName)
+                          : (road || r.display_name.split(',')[0].trim());
                         const neighbourhood = a.suburb || a.neighbourhood || a.quarter || a.village || '';
                         const city = a.city || a.town || a.municipality || '';
-                        const rawCounty = a.county || a.state_district || '';
+                        const rawCounty = (a.county || a.state_district || '').replace(/ county$/i, '').trim();
                         const matched = COUNTIES.find(c =>
+                          rawCounty.toLowerCase() === c.toLowerCase() ||
                           rawCounty.toLowerCase().includes(c.toLowerCase()) ||
-                          c.toLowerCase().includes(rawCounty.replace(/ county$/i,'').trim().toLowerCase())
+                          c.toLowerCase().includes(rawCounty.toLowerCase())
                         ) || '';
                         upd('location', {
                           ...data.location,
-                          address: road || r.display_name.split(',')[0].trim(),
+                          address: addressStr,
                           neighbourhood,
                           city,
                           county: matched,
@@ -535,8 +540,12 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                     >
                       <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">{r.display_name.split(',')[0]}</p>
-                        <p className="text-xs text-gray-400 truncate">{r.display_name.split(',').slice(1, 4).join(',').trim()}</p>
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {(r.address?.building || r.address?.amenity || r.address?.leisure || r.address?.shop || r.display_name.split(',')[0]).trim()}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {[r.address?.road, r.address?.suburb, r.address?.city || r.address?.town].filter(Boolean).join(', ') || r.display_name.split(',').slice(1, 4).join(',').trim()}
+                        </p>
                       </div>
                     </button>
                   ))}
