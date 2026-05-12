@@ -547,9 +547,17 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                             const lng = parseFloat(place.geometry.location.lng().toFixed(6));
                             const get = (type: string) =>
                               (place.address_components || []).find((c: any) => c.types.includes(type))?.long_name || '';
-                            const neighbourhood = get('sublocality_level_1') || get('sublocality') || get('neighborhood') || '';
                             const city = get('locality') || get('administrative_area_level_2') || '';
                             const rawCounty = (get('administrative_area_level_1') || get('administrative_area_level_2') || '').replace(/ county$/i, '').trim();
+                            const neighbourhood = [
+                              get('sublocality_level_1'),
+                              get('sublocality_level_2'),
+                              get('sublocality'),
+                              get('neighborhood'),
+                            ].filter(Boolean).find(n =>
+                              n.toLowerCase() !== city.toLowerCase() &&
+                              n.toLowerCase() !== rawCounty.toLowerCase()
+                            ) || '';
                             const matched = COUNTIES.find(c =>
                               rawCounty.toLowerCase() === c.toLowerCase() ||
                               rawCounty.toLowerCase().includes(c.toLowerCase()) ||
