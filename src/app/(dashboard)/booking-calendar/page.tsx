@@ -100,6 +100,7 @@ const EMPTY_FORM = {
   nightly_rate: '',
   cleaning_fee: '',
   extra_fees: '',
+  discount: '',
   security_deposit: '',
   notes: '',
 };
@@ -286,6 +287,7 @@ export default function BookingCalendarPage() {
     const _rate = parseFloat(form.nightly_rate) || 0;
     const _clean = parseFloat(form.cleaning_fee) || 0;
     const _extra = parseFloat(form.extra_fees) || 0;
+    const _discount = parseFloat(form.discount) || 0;
     const _paid = paymentIntent !== 'none'
       ? payments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0) : 0;
     if (paymentIntent !== 'none' && _paid <= 0) {
@@ -322,6 +324,7 @@ export default function BookingCalendarPage() {
         nightly_rate: _rate,
         cleaning_fee: _clean,
         extra_fees: _extra,
+        discount: _discount,
         security_deposit: parseFloat(form.security_deposit) || 0,
         notes: form.notes,
         payment_intent: paymentIntent,
@@ -403,8 +406,9 @@ export default function BookingCalendarPage() {
   const rate = parseFloat(form.nightly_rate) || 0;
   const cleaningFeeAmt = parseFloat(form.cleaning_fee) || 0;
   const extraFeesAmt = parseFloat(form.extra_fees) || 0;
+  const discountAmt = parseFloat(form.discount) || 0;
   const securityDeposit = parseFloat(form.security_deposit) || 0;
-  const totalAmount = rate * nights + cleaningFeeAmt + extraFeesAmt;
+  const totalAmount = Math.max(0, rate * nights + cleaningFeeAmt + extraFeesAmt - discountAmt);
   const totalPaid = paymentIntent !== 'none'
     ? payments.reduce((s, p) => s + (parseFloat(p.amount) || 0), 0) : 0;
   const balanceDue = Math.max(0, totalAmount - totalPaid);
@@ -812,9 +816,14 @@ export default function BookingCalendarPage() {
                       <input type="number" value={form.extra_fees} onChange={e => setF('extra_fees', e.target.value)} placeholder="0" className={INP} />
                     </div>
                     <div>
-                      <label className={LBL}>Total (KES) <span className="text-red-500">*</span></label>
-                      <input type="number" value={totalAmount || ''} readOnly placeholder="0" className={`${INP} bg-gray-50 cursor-default`} />
+                      <label className={LBL}>Discount (KES)</label>
+                      <input type="number" value={form.discount} onChange={e => setF('discount', e.target.value)} placeholder="0" className={INP} />
                     </div>
+                  </div>
+
+                  <div className="w-1/2">
+                    <label className={LBL}>Total (KES) <span className="text-red-500">*</span></label>
+                    <input type="number" value={totalAmount || ''} readOnly placeholder="0" className={`${INP} bg-gray-50 cursor-default`} />
                   </div>
 
                   <div className="w-1/2">
@@ -849,6 +858,7 @@ export default function BookingCalendarPage() {
                       </div>
                       {cleaningFeeAmt > 0 && <div className="flex justify-between text-gray-700"><span>Cleaning fee</span><span>KSH {cleaningFeeAmt.toLocaleString()}</span></div>}
                       {extraFeesAmt > 0 && <div className="flex justify-between text-gray-700"><span>Extra fees</span><span>KSH {extraFeesAmt.toLocaleString()}</span></div>}
+                      {discountAmt > 0 && <div className="flex justify-between text-green-700"><span>Discount</span><span>− KSH {discountAmt.toLocaleString()}</span></div>}
                       <div className="flex justify-between font-bold border-t border-amber-200 pt-2 mt-1 uppercase text-amber-900">
                         <span>Total Booking Value</span><span>KSH {totalAmount.toLocaleString()}</span>
                       </div>

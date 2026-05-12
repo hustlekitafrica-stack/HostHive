@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       nightly_rate = 0,
       cleaning_fee = 0,
       extra_fees = 0,
+      discount = 0,
       security_deposit = 0,
       booking_source = 'Direct',
       status = 'confirmed',
@@ -63,7 +64,8 @@ export async function POST(request: NextRequest) {
     const rate = is_blocked ? 0 : Number(nightly_rate);
     const cleaningFee = is_blocked ? 0 : Number(cleaning_fee);
     const extraFees = is_blocked ? 0 : Number(extra_fees);
-    const totalAmount = rate * nights + cleaningFee + extraFees;
+    const discountVal = is_blocked ? 0 : Number(discount);
+    const totalAmount = Math.max(0, rate * nights + cleaningFee + extraFees - discountVal);
     // Support both legacy single-payment and new payments array
     const paid = payment_intent !== 'none'
       ? (payments as {amount:number}[]).reduce((s, p) => s + (Number(p.amount) || 0), 0)
