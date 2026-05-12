@@ -152,14 +152,28 @@ function AmenityIcon({ id }: { id: string }) {
     case 'iron':      return <svg {...s}><path d="M20.38 3.46L16 2a4 4 0 01-8 0L3.62 3.46a2 2 0 00-1.34 2.23l.58 3.57a1 1 0 00.99.86H6v10c0 1.1.9 2 2 2h8a2 2 0 002-2V10h2.15a1 1 0 00.99-.86l.58-3.57a2 2 0 00-1.34-2.23z"/></svg>;
     case 'hottub':    return <svg {...s}><path d="M4 12h16a1 1 0 011 1v3a4 4 0 01-4 4H7a4 4 0 01-4-4v-3a1 1 0 011-1z"/><path d="M6 12V5a2 2 0 012-2h3"/><path d="M4 21h1M19 21h1"/></svg>;
     case 'breakfast': return <svg {...s}><path d="M17 8h1a4 4 0 010 8h-1"/><path d="M3 8h14v9a4 4 0 01-4 4H7a4 4 0 01-4-4V8z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>;
-    case 'ev':        return <svg {...s}><path d="M5 18H3a2 2 0 01-2-2V8a2 2 0 012-2h3.19M15 6h2a2 2 0 012 2v8a2 2 0 01-2 2h-3.19"/><line x1="11" y1="6" x2="13" y2="6"/><polyline points="11 12 9 18 15 12 13 12"/></svg>;
+    case 'ev':        return <svg {...s}><path d="M5 18H3a2 2 0 01-2 2V8a2 2 0 012-2h3.19M15 6h2a2 2 0 012 2v8a2 2 0 01-2 2h-3.19"/><line x1="11" y1="6" x2="13" y2="6"/><polyline points="11 12 9 18 15 12 13 12"/></svg>;
     case 'concierge': return <svg {...s}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>;
     default:          return <svg {...s}><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
   }
 }
 
-// ─── Leaflet Map Component ───────────────────────────────────────────────────
-function LeafletMap({ lat, lng, onChange }: { lat: number | null; lng: number | null; onChange: (lat: number, lng: number) => void }) {
+// ─── Google Map Component ────────────────────────────────────────────────────
+const GMAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+function loadGoogleMaps(cb: () => void) {
+  if ((window as any).google?.maps) { cb(); return; }
+  if (document.getElementById('google-maps-js')) {
+    const t = setInterval(() => { if ((window as any).google?.maps) { clearInterval(t); cb(); } }, 100);
+    return;
+  }
+  const s = document.createElement('script');
+  s.id = 'google-maps-js';
+  s.src = `https://maps.googleapis.com/maps/api/js?key=${GMAPS_API_KEY}&libraries=places`;
+  s.onload = cb;
+  document.head.appendChild(s);
+}
+
+function GoogleMapView({ lat, lng, onChange }: { lat: number | null; lng: number | null; onChange: (lat: number, lng: number) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -167,45 +181,37 @@ function LeafletMap({ lat, lng, onChange }: { lat: number | null; lng: number | 
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-
-    const initMap = () => {
-      const L = (window as any).L;
-      if (!L || !containerRef.current) return;
+    loadGoogleMaps(() => {
+      const G = (window as any).google.maps;
+      if (!containerRef.current) return;
       const initLat = lat ?? DEFAULT_LAT, initLng = lng ?? DEFAULT_LNG;
-      const map = L.map(containerRef.current, { zoomControl: true }).setView([initLat, initLng], 13);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '\uD83C\uDDFA\uD83C\uDDE6 <a href="https://leafletjs.com" style="color:#0078A8">Leaflet</a> | \u00A9 <a href="https://www.openstreetmap.org/copyright" style="color:#0078A8">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(map);
-      const marker = L.marker([initLat, initLng], { draggable: true }).addTo(map);
-      marker.on('dragend', () => { const p = marker.getLatLng(); onChange(parseFloat(p.lat.toFixed(5)), parseFloat(p.lng.toFixed(5))); });
-      map.on('click', (e: any) => { marker.setLatLng(e.latlng); onChange(parseFloat(e.latlng.lat.toFixed(5)), parseFloat(e.latlng.lng.toFixed(5))); });
+      const map = new G.Map(containerRef.current, {
+        center: { lat: initLat, lng: initLng }, zoom: 14,
+        mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+      });
+      const marker = new G.Marker({ position: { lat: initLat, lng: initLng }, map, draggable: true, animation: G.Animation.DROP });
+      marker.addListener('dragend', () => {
+        const p = marker.getPosition();
+        onChange(parseFloat(p.lat().toFixed(6)), parseFloat(p.lng().toFixed(6)));
+      });
+      map.addListener('click', (e: any) => {
+        marker.setPosition(e.latLng);
+        onChange(parseFloat(e.latLng.lat().toFixed(6)), parseFloat(e.latLng.lng().toFixed(6)));
+      });
       mapRef.current = map; markerRef.current = marker;
-    };
-
-    if (!document.getElementById('leaflet-css')) {
-      const link = document.createElement('link');
-      link.id = 'leaflet-css'; link.rel = 'stylesheet';
-      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-      document.head.appendChild(link);
-    }
-    if ((window as any).L) {
-      initMap();
-    } else if (!document.getElementById('leaflet-js')) {
-      const script = document.createElement('script');
-      script.id = 'leaflet-js'; script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-      script.onload = initMap; document.head.appendChild(script);
-    } else {
-      const t = setInterval(() => { if ((window as any).L) { clearInterval(t); initMap(); } }, 100);
-    }
-    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; markerRef.current = null; } };
+    });
+    return () => { mapRef.current = null; markerRef.current = null; };
   }, []);
 
   useEffect(() => {
-    if (markerRef.current && lat && lng) { markerRef.current.setLatLng([lat, lng]); mapRef.current?.setView([lat, lng]); }
+    if (markerRef.current && lat !== null && lng !== null) {
+      const pos = { lat, lng };
+      markerRef.current.setPosition(pos);
+      mapRef.current?.panTo(pos);
+    }
   }, [lat, lng]);
 
-  return <div ref={containerRef} className="w-full rounded-xl border border-gray-200 overflow-hidden" style={{ height: '280px' }} />;
+  return <div ref={containerRef} className="w-full" style={{ height: '300px' }} />;
 }
 
 // ─── Stepper Component ────────────────────────────────────────────────────────
@@ -487,14 +493,21 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                   upd('location', { ...data.location, address: q });
                   if (addrTimerRef.current) clearTimeout(addrTimerRef.current);
                   if (!q.trim() || q.length < 3) { setAddrResults([]); setAddrDropdown(false); return; }
-                  addrTimerRef.current = setTimeout(async () => {
-                    try {
-                      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=8&countrycodes=ke&addressdetails=1&featuretype=building,amenity,residential,place`, { headers: { 'Accept-Language': 'en' } });
-                      const json = await res.json();
-                      setAddrResults(json);
-                      setAddrDropdown(json.length > 0);
-                    } catch {}
-                  }, 400);
+                  addrTimerRef.current = setTimeout(() => {
+                    loadGoogleMaps(() => {
+                      const G = (window as any).google?.maps;
+                      if (!G?.places) return;
+                      new G.places.AutocompleteService().getPlacePredictions(
+                        { input: q, componentRestrictions: { country: 'ke' }, types: ['establishment', 'geocode'] },
+                        (preds: any[], status: string) => {
+                          if (status === G.places.PlacesServiceStatus.OK && preds?.length) {
+                            setAddrResults(preds);
+                            setAddrDropdown(true);
+                          } else { setAddrResults([]); setAddrDropdown(false); }
+                        }
+                      );
+                    });
+                  }, 350);
                 }}
                 onBlur={() => setTimeout(() => setAddrDropdown(false), 200)}
                 onFocus={() => addrResults.length > 0 && setAddrDropdown(true)}
@@ -509,43 +522,43 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                       key={i}
                       type="button"
                       onMouseDown={() => {
-                        const a = r.address || {};
-                        const lat = parseFloat(parseFloat(r.lat).toFixed(6));
-                        const lng = parseFloat(parseFloat(r.lon).toFixed(6));
-                        const placeName = a.building || a.amenity || a.leisure || a.shop || a.office || a.tourism || '';
-                        const road = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(' ');
-                        const addressStr = placeName
-                          ? (road ? `${placeName}, ${road}` : placeName)
-                          : (road || r.display_name.split(',')[0].trim());
-                        const neighbourhood = a.suburb || a.neighbourhood || a.quarter || a.village || '';
-                        const city = a.city || a.town || a.municipality || '';
-                        const rawCounty = (a.county || a.state_district || '').replace(/ county$/i, '').trim();
-                        const matched = COUNTIES.find(c =>
-                          rawCounty.toLowerCase() === c.toLowerCase() ||
-                          rawCounty.toLowerCase().includes(c.toLowerCase()) ||
-                          c.toLowerCase().includes(rawCounty.toLowerCase())
-                        ) || '';
-                        upd('location', {
-                          ...data.location,
-                          address: addressStr,
-                          neighbourhood,
-                          city,
-                          county: matched,
-                          lat,
-                          lng,
-                        });
-                        setAddrDropdown(false);
+                        const G = (window as any).google?.maps;
+                        if (!G?.places) return;
+                        new G.places.PlacesService(document.createElement('div')).getDetails(
+                          { placeId: r.place_id, fields: ['name', 'geometry', 'address_components', 'formatted_address'] },
+                          (place: any, status: string) => {
+                            if (status !== G.places.PlacesServiceStatus.OK || !place) return;
+                            const lat = parseFloat(place.geometry.location.lat().toFixed(6));
+                            const lng = parseFloat(place.geometry.location.lng().toFixed(6));
+                            const get = (type: string) =>
+                              (place.address_components || []).find((c: any) => c.types.includes(type))?.long_name || '';
+                            const neighbourhood = get('sublocality_level_1') || get('sublocality') || get('neighborhood') || '';
+                            const city = get('locality') || get('administrative_area_level_2') || '';
+                            const rawCounty = (get('administrative_area_level_1') || get('administrative_area_level_2') || '').replace(/ county$/i, '').trim();
+                            const matched = COUNTIES.find(c =>
+                              rawCounty.toLowerCase() === c.toLowerCase() ||
+                              rawCounty.toLowerCase().includes(c.toLowerCase()) ||
+                              c.toLowerCase().includes(rawCounty.toLowerCase())
+                            ) || '';
+                            upd('location', {
+                              ...data.location,
+                              address: place.name || place.formatted_address?.split(',')[0] || '',
+                              neighbourhood,
+                              city,
+                              county: matched,
+                              lat,
+                              lng,
+                            });
+                            setAddrDropdown(false);
+                          }
+                        );
                       }}
                       className="w-full text-left px-4 py-2.5 hover:bg-green-50 border-b border-gray-100 last:border-0 flex items-start gap-2.5"
                     >
                       <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {(r.address?.building || r.address?.amenity || r.address?.leisure || r.address?.shop || r.display_name.split(',')[0]).trim()}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">
-                          {[r.address?.road, r.address?.suburb, r.address?.city || r.address?.town].filter(Boolean).join(', ') || r.display_name.split(',').slice(1, 4).join(',').trim()}
-                        </p>
+                        <p className="text-sm font-medium text-gray-900 truncate">{r.structured_formatting?.main_text || r.description}</p>
+                        <p className="text-xs text-gray-400 truncate">{r.structured_formatting?.secondary_text || ''}</p>
                       </div>
                     </button>
                   ))}
@@ -556,7 +569,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
           {/* ── Map ── */}
           <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-            <LeafletMap
+            <GoogleMapView
               lat={data.location.lat}
               lng={data.location.lng}
               onChange={(lat, lng) => upd('location', { ...data.location, lat, lng })}
