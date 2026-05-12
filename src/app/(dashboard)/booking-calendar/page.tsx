@@ -107,6 +107,8 @@ const EMPTY_FORM = {
 interface Property {
   id: string;
   name: string;
+  nightly_rate?: number;
+  cleaning_fee?: number;
 }
 
 function parseDate(s: string): Date {
@@ -212,7 +214,11 @@ export default function BookingCalendarPage() {
   // Modal openers
   const openCreate = (date?: string) => {
     const nextDay = date ? toDateStr(addDay(parseDate(date))) : '';
-    setForm({ ...EMPTY_FORM, property_id: properties[0]?.id ?? '', check_in: date ?? '', check_out: nextDay });
+    const defaultProp = properties[0];
+    setForm({ ...EMPTY_FORM, property_id: defaultProp?.id ?? '', check_in: date ?? '', check_out: nextDay,
+      nightly_rate: defaultProp?.nightly_rate ? String(defaultProp.nightly_rate) : '',
+      cleaning_fee: defaultProp?.cleaning_fee ? String(defaultProp.cleaning_fee) : '',
+    });
     setStep(1); setEditBooking(null); setFormError('');
     setPayments([{ ...EMPTY_PAYMENT }]); setPaymentIntent('none'); setDepositStatus('not_collected');
     setModalMode('create');
@@ -688,7 +694,16 @@ export default function BookingCalendarPage() {
 
                   <div>
                     <label className={LBL}>Property <span className="text-red-500">*</span></label>
-                    <select value={form.property_id} onChange={e => setF('property_id', e.target.value)} className={INP}>
+                    <select value={form.property_id} onChange={e => {
+                      const pid = e.target.value;
+                      const prop = properties.find(p => p.id === pid);
+                      setForm(f => ({
+                        ...f,
+                        property_id: pid,
+                        nightly_rate: prop?.nightly_rate ? String(prop.nightly_rate) : f.nightly_rate,
+                        cleaning_fee: prop?.cleaning_fee ? String(prop.cleaning_fee) : f.cleaning_fee,
+                      }));
+                    }} className={INP}>
                       <option value="">Select property…</option>
                       {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const [{ data: properties }, { data: rawBookings }] = await Promise.all([
       supabase
         .from('properties')
-        .select('id, name')
+        .select('id, name, nightly_rate, cleaning_fee')
         .eq('user_id', userId)
         .neq('status', 'draft')
         .order('created_at'),
