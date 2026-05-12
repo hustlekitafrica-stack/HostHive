@@ -265,10 +265,13 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [addrResults, setAddrResults] = useState<any[]>([]);
   const [addrDropdown, setAddrDropdown] = useState(false);
   const addrTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const addrSelectingRef = useRef(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const TOTAL = 9;
+
+  useEffect(() => { if (step === 2) loadGoogleMaps(() => {}); }, [step]);
 
   const showError = (msg: string) => {
     if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
@@ -494,22 +497,20 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                   if (addrTimerRef.current) clearTimeout(addrTimerRef.current);
                   if (!q.trim() || q.length < 3) { setAddrResults([]); setAddrDropdown(false); return; }
                   addrTimerRef.current = setTimeout(() => {
-                    loadGoogleMaps(() => {
-                      const G = (window as any).google?.maps;
-                      if (!G?.places) return;
-                      new G.places.AutocompleteService().getPlacePredictions(
-                        { input: q, componentRestrictions: { country: 'ke' }, types: ['establishment', 'geocode'] },
-                        (preds: any[], status: string) => {
-                          if (status === G.places.PlacesServiceStatus.OK && preds?.length) {
-                            setAddrResults(preds);
-                            setAddrDropdown(true);
-                          } else { setAddrResults([]); setAddrDropdown(false); }
-                        }
-                      );
-                    });
+                    const G = (window as any).google?.maps;
+                    if (!G?.places) return;
+                    new G.places.AutocompleteService().getPlacePredictions(
+                      { input: q, componentRestrictions: { country: 'ke' } },
+                      (preds: any[], status: string) => {
+                        if (preds?.length) {
+                          setAddrResults(preds);
+                          setAddrDropdown(true);
+                        } else { setAddrResults([]); setAddrDropdown(false); }
+                      }
+                    );
                   }, 350);
                 }}
-                onBlur={() => setTimeout(() => setAddrDropdown(false), 200)}
+                onBlur={() => { if (!addrSelectingRef.current) setTimeout(() => setAddrDropdown(false), 200); }}
                 onFocus={() => addrResults.length > 0 && setAddrDropdown(true)}
                 placeholder="e.g. Groovehart Apartments, Kilimani"
                 className="w-full pl-9 pr-4 py-3 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm"
@@ -522,12 +523,14 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                       key={i}
                       type="button"
                       onMouseDown={() => {
+                        addrSelectingRef.current = true;
                         const G = (window as any).google?.maps;
-                        if (!G?.places) return;
+                        if (!G?.places) { addrSelectingRef.current = false; return; }
                         new G.places.PlacesService(document.createElement('div')).getDetails(
                           { placeId: r.place_id, fields: ['name', 'geometry', 'address_components', 'formatted_address'] },
                           (place: any, status: string) => {
-                            if (status !== G.places.PlacesServiceStatus.OK || !place) return;
+                            addrSelectingRef.current = false;
+                            if (!place?.geometry) return;
                             const lat = parseFloat(place.geometry.location.lat().toFixed(6));
                             const lng = parseFloat(place.geometry.location.lng().toFixed(6));
                             const get = (type: string) =>
@@ -542,7 +545,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                             ) || '';
                             upd('location', {
                               ...data.location,
-                              address: place.name || place.formatted_address?.split(',')[0] || '',
+                              address: place.name || place.formatted_address?.split(',')[0].trim() || '',
                               neighbourhood,
                               city,
                               county: matched,
