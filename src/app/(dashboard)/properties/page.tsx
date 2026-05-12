@@ -15,14 +15,28 @@ interface Property {
   bathrooms: number;
   maxGuests: number;
   location: string;
+  city: string;
   pricePerNight: number;
+  weekendRate: number;
+  monthlyRate: number;
   cleaningFee: number;
   deposit: number;
   minStay: string;
+  maxStayNights: number;
   description: string;
   amenities: string[];
   status: PropStatus;
   setupStep?: number;
+  coverPhoto: string;
+  checkInTime: string;
+  checkOutTime: string;
+  checkInMethod: string;
+  checkInInstructions: string;
+  caretakerName: string;
+  caretakerPhone: string;
+  houseRules: Record<string, boolean>;
+  additionalRules: string;
+  cancellationPolicy: string;
 }
 
 function dbRowToProperty(row: any): Property {
@@ -37,16 +51,43 @@ function dbRowToProperty(row: any): Property {
     bathrooms: row.bathrooms ?? 1,
     maxGuests: row.max_guests ?? 2,
     location: [row.location, row.county].filter(Boolean).join(', '),
+    city: row.city || '',
     pricePerNight: parseFloat(row.nightly_rate) || 0,
+    weekendRate: parseFloat(row.weekend_rate) || 0,
+    monthlyRate: parseFloat(row.monthly_rate) || 0,
     cleaningFee: parseFloat(row.cleaning_fee) || 0,
-    deposit: parseFloat(row.deposit) || 0,
-    minStay: row.min_stay || '1 night',
+    deposit: parseFloat(row.security_deposit) || 0,
+    minStay: row.min_stay_nights ? `${row.min_stay_nights} night${row.min_stay_nights === 1 ? '' : 's'}` : '1 night',
+    maxStayNights: row.max_stay_nights || 0,
     description: row.description || '',
-    amenities: Array.isArray(row.amenities) ? row.amenities : (row.amenities ? [row.amenities] : []),
+    amenities: [],
     status: (['active', 'inactive', 'maintenance', 'draft'].includes(row.status) ? row.status : 'active') as PropStatus,
     setupStep: row.setup_step ?? row.setupStep ?? 1,
+    coverPhoto: row.cover_photo || '',
+    checkInTime: row.check_in_time || '',
+    checkOutTime: row.check_out_time || '',
+    checkInMethod: row.check_in_method || '',
+    checkInInstructions: row.check_in_instructions || '',
+    caretakerName: row.caretaker_name || '',
+    caretakerPhone: row.caretaker_phone || '',
+    houseRules: row.house_rules || {},
+    additionalRules: row.additional_rules || '',
+    cancellationPolicy: row.cancellation_policy || '',
   };
 }
+
+const HOUSE_RULE_LABELS: { key: string; label: string }[] = [
+  { key: 'noSmoking',       label: 'No smoking' },
+  { key: 'noParties',       label: 'No parties' },
+  { key: 'noPets',          label: 'No pets' },
+  { key: 'quietHours',      label: 'Quiet hours 10pm–7am' },
+  { key: 'noAlcohol',       label: 'No alcohol' },
+  { key: 'couplesOnly',     label: 'Couples only' },
+  { key: 'adultsOnly',      label: 'Adults only' },
+  { key: 'removeShoes',     label: 'Remove shoes' },
+  { key: 'sortRubbish',     label: 'Sort rubbish' },
+  { key: 'childrenAllowed', label: 'Children welcome' },
+];
 
 const STATUS_DOT: Record<PropStatus, string> = {
   active: 'bg-green-500',
@@ -96,6 +137,7 @@ export default function PropertiesPage() {
   const [editWizardData, setEditWizardData] = useState<Partial<WizardFormData> | null>(null);
   const [continueWizardData, setContinueWizardData] = useState<Partial<WizardFormData> | null>(null);
   const [editLoading, setEditLoading] = useState<string | null>(null);
+  const [viewingPropertyDetails, setViewingPropertyDetails] = useState<{ amenities: string[]; photos: { url: string; isCover: boolean }[] } | null>(null);
   const [view, setView] = useState<ViewMode>('grid');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All types');
@@ -124,6 +166,14 @@ export default function PropertiesPage() {
   }, []);
 
   useEffect(() => { loadProperties(); }, [loadProperties]);
+
+  useEffect(() => {
+    if (!viewingProperty) { setViewingPropertyDetails(null); return; }
+    fetch(`/api/properties/wizard?id=${viewingProperty.id}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => json && setViewingPropertyDetails({ amenities: json.amenities ?? [], photos: json.photos ?? [] }))
+      .catch(() => {});
+  }, [viewingProperty?.id]);
 
   const fetchPropertyForEdit = useCallback(async (id: string): Promise<Partial<WizardFormData> | null> => {
     const res = await fetch(`/api/properties/wizard?id=${id}`);
@@ -248,98 +298,228 @@ export default function PropertiesPage() {
           {/* Backdrop */}
           <div className="absolute inset-0 bg-black/30" onClick={() => setViewingProperty(null)} />
           {/* Panel */}
-          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-y-auto animate-slide-in">
+          <div className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col overflow-hidden animate-slide-in">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${STATUS_DOT[viewingProperty.status]}`} />
-                <h2 className="text-lg font-bold text-gray-900 leading-tight">{viewingProperty.name}</h2>
+                <h2 className="text-base font-bold text-gray-900 leading-tight truncate">{viewingProperty.name}</h2>
               </div>
-              <button onClick={() => setViewingProperty(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors">
+              <button onClick={() => setViewingProperty(null)} className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors flex-shrink-0 ml-2">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
-            <div className="flex-1 px-6 py-5 space-y-6">
-              {/* Status + Type */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BG[viewingProperty.status]}`}>{STATUS_LABEL[viewingProperty.status]}</span>
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{viewingProperty.category}</span>
-              </div>
+            {/* Scrollable body */}
+            <div className="flex-1 overflow-y-auto">
 
-              {/* Quick stats grid */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Bedrooms', value: viewingProperty.bedrooms, icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
-                  { label: 'Bathrooms', value: viewingProperty.bathrooms, icon: 'M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z' },
-                  { label: 'Max Guests', value: viewingProperty.maxGuests, icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' },
-                  { label: 'Min Stay', value: viewingProperty.minStay, icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-                ].map(({ label, value, icon }) => (
-                  <div key={label} className="bg-gray-50 rounded-xl p-3.5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d={icon} /></svg>
-                      <span className="text-xs text-gray-500">{label}</span>
-                    </div>
-                    <p className="text-sm font-bold text-gray-900">{value}</p>
+              {/* Cover photo */}
+              {(() => {
+                const coverUrl = viewingPropertyDetails?.photos?.find(p => p.isCover)?.url
+                  || viewingPropertyDetails?.photos?.[0]?.url
+                  || viewingProperty.coverPhoto;
+                return coverUrl ? (
+                  <div className="w-full h-44 bg-gray-200 overflow-hidden flex-shrink-0">
+                    <img src={coverUrl} alt={viewingProperty.name} className="w-full h-full object-cover" />
                   </div>
-                ))}
-              </div>
+                ) : null;
+              })()}
 
-              {/* Location */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Location</p>
-                <div className="flex items-start gap-2 text-sm text-gray-700">
-                  <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span>{viewingProperty.location || 'Location not set'}</span>
+              <div className="px-6 py-5 space-y-5">
+
+                {/* Status + Type */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${STATUS_BG[viewingProperty.status]}`}>{STATUS_LABEL[viewingProperty.status]}</span>
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600">{viewingProperty.category}</span>
                 </div>
-              </div>
 
-              {/* Pricing */}
-              <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Pricing</p>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Nightly rate</span>
-                    <span className="text-sm font-bold text-gray-900">Ksh {viewingProperty.pricePerNight.toLocaleString()}</span>
-                  </div>
-                  {viewingProperty.cleaningFee > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Cleaning fee</span>
-                      <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.cleaningFee.toLocaleString()}</span>
+                {/* Quick stats */}
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { label: 'Bedrooms',   value: viewingProperty.bedrooms },
+                    { label: 'Bathrooms',  value: viewingProperty.bathrooms },
+                    { label: 'Max Guests', value: `${viewingProperty.maxGuests} guests` },
+                    { label: 'Min Stay',   value: viewingProperty.minStay },
+                    ...(viewingProperty.maxStayNights > 0 ? [{ label: 'Max Stay', value: `${viewingProperty.maxStayNights} nights` }] : []),
+                  ].map(({ label, value }) => (
+                    <div key={label} className="bg-gray-50 rounded-lg px-3 py-2.5">
+                      <p className="text-[11px] text-gray-400 mb-0.5">{label}</p>
+                      <p className="text-sm font-bold text-gray-900">{value}</p>
                     </div>
-                  )}
-                  {viewingProperty.deposit > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Security deposit</span>
-                      <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.deposit.toLocaleString()}</span>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              </div>
 
-              {/* Amenities */}
-              {viewingProperty.amenities.length > 0 && (
+                {/* Location */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Amenities</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {viewingProperty.amenities.map((a: string) => (
-                      <span key={a} className="text-xs px-2.5 py-1 bg-teal-50 text-teal-700 rounded-full border border-teal-100 font-medium">{a}</span>
-                    ))}
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Location</p>
+                  <div className="flex items-start gap-2 text-sm text-gray-700">
+                    <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <span>{viewingProperty.location || 'Location not set'}</span>
                   </div>
                 </div>
-              )}
 
-              {/* Description */}
-              {viewingProperty.description && (
+                {/* Pricing */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Description</p>
-                  <p className="text-sm text-gray-600 leading-relaxed">{viewingProperty.description}</p>
+                  <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Pricing</p>
+                  <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Nightly rate</span>
+                      <span className="text-sm font-bold text-gray-900">Ksh {viewingProperty.pricePerNight.toLocaleString()}</span>
+                    </div>
+                    {viewingProperty.weekendRate > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Weekend rate</span>
+                        <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.weekendRate.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {viewingProperty.monthlyRate > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Monthly rate</span>
+                        <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.monthlyRate.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {viewingProperty.cleaningFee > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Cleaning fee</span>
+                        <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.cleaningFee.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {viewingProperty.deposit > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Security deposit</span>
+                        <span className="text-sm font-semibold text-gray-700">Ksh {viewingProperty.deposit.toLocaleString()}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
+
+                {/* Check-in & Check-out */}
+                {(viewingProperty.checkInTime || viewingProperty.checkOutTime || viewingProperty.checkInMethod) && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Check-in & Check-out</p>
+                    <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                      {viewingProperty.checkInTime && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Check-in from</span>
+                          <span className="text-sm font-semibold text-gray-900">{viewingProperty.checkInTime}</span>
+                        </div>
+                      )}
+                      {viewingProperty.checkOutTime && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Check-out by</span>
+                          <span className="text-sm font-semibold text-gray-900">{viewingProperty.checkOutTime}</span>
+                        </div>
+                      )}
+                      {viewingProperty.checkInMethod && (
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Check-in method</span>
+                          <span className="text-sm font-semibold text-gray-900 capitalize">{viewingProperty.checkInMethod.replace(/_/g,' ')}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Check-in instructions */}
+                {viewingProperty.checkInInstructions && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Check-in Instructions</p>
+                    <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3 whitespace-pre-line">{viewingProperty.checkInInstructions}</p>
+                  </div>
+                )}
+
+                {/* Caretaker */}
+                {(viewingProperty.caretakerName || viewingProperty.caretakerPhone) && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Caretaker</p>
+                    <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                      {viewingProperty.caretakerName && (
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                          <span className="text-sm font-medium text-gray-800">{viewingProperty.caretakerName}</span>
+                        </div>
+                      )}
+                      {viewingProperty.caretakerPhone && (
+                        <div className="flex items-center gap-2">
+                          <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.82 19.79 19.79 0 01.1 2.2 2 2 0 012.1 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14.92z"/></svg>
+                          <span className="text-sm text-gray-700">{viewingProperty.caretakerPhone}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* House rules */}
+                {(() => {
+                  const activeRules = HOUSE_RULE_LABELS.filter(r => viewingProperty.houseRules[r.key]);
+                  return activeRules.length > 0 ? (
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">House Rules</p>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeRules.map(r => (
+                          <span key={r.key} className={`text-xs px-2.5 py-1 rounded-full border font-medium ${r.key === 'childrenAllowed' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>{r.label}</span>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+
+                {/* Additional rules */}
+                {viewingProperty.additionalRules && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Additional Rules</p>
+                    <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 rounded-xl p-3 whitespace-pre-line">{viewingProperty.additionalRules}</p>
+                  </div>
+                )}
+
+                {/* Cancellation policy */}
+                {viewingProperty.cancellationPolicy && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Cancellation Policy</p>
+                    <span className="inline-block text-xs font-semibold px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 capitalize">{viewingProperty.cancellationPolicy}</span>
+                  </div>
+                )}
+
+                {/* Amenities */}
+                {(viewingPropertyDetails?.amenities ?? viewingProperty.amenities).length > 0 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Amenities</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(viewingPropertyDetails?.amenities ?? viewingProperty.amenities).map((a: string) => (
+                        <span key={a} className="text-xs px-2.5 py-1 bg-teal-50 text-teal-700 rounded-full border border-teal-100 font-medium">{a}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Photos strip */}
+                {viewingPropertyDetails && viewingPropertyDetails.photos.length > 1 && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">Photos ({viewingPropertyDetails.photos.length})</p>
+                    <div className="flex gap-2 overflow-x-auto pb-1">
+                      {viewingPropertyDetails.photos.map((ph, i) => (
+                        <div key={i} className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 bg-gray-100 relative">
+                          <img src={ph.url} alt="" className="w-full h-full object-cover" />
+                          {ph.isCover && <span className="absolute bottom-0 left-0 right-0 text-center text-[9px] font-bold bg-green-600 text-white py-0.5">Cover</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Description */}
+                {viewingProperty.description && (
+                  <div>
+                    <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-1.5">Description</p>
+                    <p className="text-sm text-gray-600 leading-relaxed">{viewingProperty.description}</p>
+                  </div>
+                )}
+
+              </div>
             </div>
 
             {/* Footer actions */}
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
+            <div className="px-6 py-4 border-t border-gray-100 flex gap-2 flex-shrink-0">
               {viewingProperty.status === 'draft' ? (
                 <button
                   onClick={() => handleContinueProperty(viewingProperty)}
