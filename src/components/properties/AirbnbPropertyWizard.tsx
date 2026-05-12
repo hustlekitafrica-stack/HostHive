@@ -199,6 +199,18 @@ function GoogleMapView({ lat, lng, onChange }: { lat: number | null; lng: number
         onChange(parseFloat(e.latLng.lat().toFixed(6)), parseFloat(e.latLng.lng().toFixed(6)));
       });
       mapRef.current = map; markerRef.current = marker;
+      if (lat === null && navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          pos => {
+            const { latitude, longitude } = pos.coords;
+            const userPos = { lat: latitude, lng: longitude };
+            marker.setPosition(userPos);
+            map.panTo(userPos);
+            onChange(parseFloat(latitude.toFixed(6)), parseFloat(longitude.toFixed(6)));
+          },
+          () => {}
+        );
+      }
     });
     return () => { mapRef.current = null; markerRef.current = null; };
   }, []);
