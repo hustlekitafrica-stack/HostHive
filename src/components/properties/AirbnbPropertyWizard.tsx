@@ -158,7 +158,7 @@ function AmenityIcon({ id }: { id: string }) {
   }
 }
 
-// ─── Google Map Component ────────────────────────────────────────────────────
+// ─── Google Places loader (autocomplete only) ────────────────────────────────
 const GMAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 function loadGoogleMaps(cb: () => void) {
   if ((window as any).google?.maps) { cb(); return; }
@@ -173,7 +173,8 @@ function loadGoogleMaps(cb: () => void) {
   document.head.appendChild(s);
 }
 
-function GoogleMapView({ lat, lng, onChange }: { lat: number | null; lng: number | null; onChange: (lat: number, lng: number) => void }) {
+// ─── Leaflet Hybrid Map ───────────────────────────────────────────────────────
+function LeafletMap({ lat, lng, onChange }: { lat: number | null; lng: number | null; onChange: (lat: number, lng: number) => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -181,45 +182,56 @@ function GoogleMapView({ lat, lng, onChange }: { lat: number | null; lng: number
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    loadGoogleMaps(() => {
-      const G = (window as any).google.maps;
-      if (!containerRef.current) return;
-      const initLat = lat ?? DEFAULT_LAT, initLng = lng ?? DEFAULT_LNG;
-      const map = new G.Map(containerRef.current, {
-        center: { lat: initLat, lng: initLng }, zoom: 14,
-        mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
-      });
-      const marker = new G.Marker({ position: { lat: initLat, lng: initLng }, map, draggable: true, animation: G.Animation.DROP });
-      marker.addListener('dragend', () => {
-        const p = marker.getPosition();
-        onChange(parseFloat(p.lat().toFixed(6)), parseFloat(p.lng().toFixed(6)));
-      });
-      map.addListener('click', (e: any) => {
-        marker.setPosition(e.latLng);
-        onChange(parseFloat(e.latLng.lat().toFixed(6)), parseFloat(e.latLng.lng().toFixed(6)));
-      });
+
+    const initMap = (initLat: number, initLng: number) => {
+      const L = (window as any).L;
+      if (!L || !containerRef.current) return;
+      const map = L.map(containerRef.current, { zoomControl: true }).setView([initLat, initLng], 16);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Imagery © Esri', maxZoom: 19,
+      }).addTo(map);
+      L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, opacity: 1,
+      }).addTo(map);
+      const marker = L.marker([initLat, initLng], { draggable: true }).addTo(map);
+      marker.on('dragend', () => { const p = marker.getLatLng(); onChange(parseFloat(p.lat.toFixed(6)), parseFloat(p.lng.toFixed(6))); });
+      map.on('click', (e: any) => { marker.setLatLng(e.latlng); onChange(parseFloat(e.latlng.lat.toFixed(6)), parseFloat(e.latlng.lng.toFixed(6))); });
       mapRef.current = map; markerRef.current = marker;
-      if (lat === null && navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          pos => {
-            const { latitude, longitude } = pos.coords;
-            const userPos = { lat: latitude, lng: longitude };
-            marker.setPosition(userPos);
-            map.panTo(userPos);
-            onChange(parseFloat(latitude.toFixed(6)), parseFloat(longitude.toFixed(6)));
-          },
-          () => {}
-        );
+      if (lat === null) onChange(parseFloat(initLat.toFixed(6)), parseFloat(initLng.toFixed(6)));
+    };
+
+    const loadLeaflet = (initLat: number, initLng: number) => {
+      if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css'; link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
       }
-    });
-    return () => { mapRef.current = null; markerRef.current = null; };
+      if ((window as any).L) { initMap(initLat, initLng); }
+      else if (!document.getElementById('leaflet-js')) {
+        const s = document.createElement('script');
+        s.id = 'leaflet-js'; s.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        s.onload = () => initMap(initLat, initLng); document.head.appendChild(s);
+      } else {
+        const t = setInterval(() => { if ((window as any).L) { clearInterval(t); initMap(initLat, initLng); } }, 100);
+      }
+    };
+
+    if (lat === null && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        p => loadLeaflet(p.coords.latitude, p.coords.longitude),
+        () => loadLeaflet(DEFAULT_LAT, DEFAULT_LNG)
+      );
+    } else {
+      loadLeaflet(lat ?? DEFAULT_LAT, lng ?? DEFAULT_LNG);
+    }
+
+    return () => { if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; markerRef.current = null; } };
   }, []);
 
   useEffect(() => {
     if (markerRef.current && lat !== null && lng !== null) {
-      const pos = { lat, lng };
-      markerRef.current.setPosition(pos);
-      mapRef.current?.panTo(pos);
+      markerRef.current.setLatLng([lat, lng]); mapRef.current?.setView([lat, lng]);
     }
   }, [lat, lng]);
 
@@ -592,7 +604,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
           {/* ── Map ── */}
           <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
-            <GoogleMapView
+            <LeafletMap
               lat={data.location.lat}
               lng={data.location.lng}
               onChange={(lat, lng) => upd('location', { ...data.location, lat, lng })}
