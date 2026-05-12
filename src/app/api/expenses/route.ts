@@ -9,7 +9,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from('expenses')
-      .select('id, date, category_name, vendor, gross, tax, net')
+      .select('id, date, category_name, vendor, gross, tax, net, receipt_url')
       .eq('user_id', session.user.id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         net: netNum,
         amount: grossNum,
       })
-      .select('id, date, category_name, vendor, gross, tax, net')
+      .select('id, date, category_name, vendor, gross, tax, net, receipt_url')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

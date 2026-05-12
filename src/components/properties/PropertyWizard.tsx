@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
 
 type WizardStep = 'basic' | 'pricing' | 'amenities' | 'beds' | 'photos' | 'rules' | 'contact' | 'group' | 'seasonal';
 
@@ -40,6 +41,9 @@ export function PropertyWizard() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState<WizardStep>('basic');
   const [isLoading, setIsLoading] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [uploadedPhotoUrls, setUploadedPhotoUrls] = useState<string[]>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     basic: {
@@ -68,6 +72,7 @@ export function PropertyWizard() {
     },
     photos: {
       photos: [] as File[],
+      photo_urls: [] as string[],
     },
     rules: {
       checkInTime: '14:00',
@@ -105,13 +110,39 @@ export function PropertyWizard() {
     }
   };
 
+  const handlePhotoUpload = async (files: FileList) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { toast.error('Not authenticated'); return; }
+    setPhotoUploading(true);
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      if (file.size > 10 * 1024 * 1024) { toast.error(`${file.name} exceeds 10 MB`); continue; }
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/tmp/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('property-photos').upload(path, file, { upsert: true });
+      if (error) { toast.error(`Failed to upload ${file.name}`); continue; }
+      const { data: { publicUrl } } = supabase.storage.from('property-photos').getPublicUrl(path);
+      newUrls.push(publicUrl);
+    }
+    setUploadedPhotoUrls(prev => [...prev, ...newUrls]);
+    setFormData(prev => ({ ...prev, photos: { ...prev.photos, photo_urls: [...prev.photos.photo_urls, ...newUrls] } }));
+    setPhotoUploading(false);
+    if (newUrls.length) toast.success(`${newUrls.length} photo(s) uploaded`);
+  };
+
+  const handleRemovePhoto = (url: string) => {
+    setUploadedPhotoUrls(prev => prev.filter(u => u !== url));
+    setFormData(prev => ({ ...prev, photos: { ...prev.photos, photo_urls: prev.photos.photo_urls.filter(u => u !== url) } }));
+  };
+
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/properties/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, photo_urls: uploadedPhotoUrls }),
       });
 
       const data = await response.json();
@@ -466,34 +497,44 @@ export function PropertyWizard() {
 
           {currentStep === 'photos' && (
             <div className="space-y-4">
-              <p className="text-sm text-surface-600">Upload photos of your property</p>
-              <div className="border-2 border-dashed border-surface-300 rounded-lg p-8 text-center">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={(e) => {
-                    if (e.target.files) {
-                      setFormData({
-                        ...formData,
-                        photos: {
-                          photos: Array.from(e.target.files),
-                        },
-                      });
-                    }
-                  }}
-                  className="hidden"
-                  id="photos"
-                />
-                <label htmlFor="photos" className="cursor-pointer">
-                  <p className="text-lg font-medium text-surface-900">
-                    📸 Click to upload photos
-                  </p>
-                  <p className="text-sm text-surface-600 mt-1">
-                    {formData.photos.photos.length} file(s) selected
-                  </p>
-                </label>
-              </div>
+              <p className="text-sm text-surface-600">Upload photos of your property. Max 10 MB per image.</p>
+              <input ref={photoInputRef} type="file" multiple accept="image/*" className="hidden"
+                onChange={e => { if (e.target.files?.length) handlePhotoUpload(e.target.files); }} />
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                disabled={photoUploading}
+                className="w-full border-2 border-dashed border-surface-300 rounded-xl p-8 text-center hover:border-teal-400 hover:bg-teal-50/30 transition-colors disabled:opacity-60"
+              >
+                {photoUploading ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-7 h-7 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-surface-600">Uploading...</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-3xl mb-2">📸</p>
+                    <p className="text-sm font-medium text-surface-900">Click to upload photos</p>
+                    <p className="text-xs text-surface-500 mt-1">JPG, PNG, WebP — up to 10 MB each</p>
+                  </>
+                )}
+              </button>
+              {uploadedPhotoUrls.length > 0 && (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {uploadedPhotoUrls.map((url, i) => (
+                    <div key={url} className="relative group rounded-lg overflow-hidden border border-surface-200 aspect-square">
+                      <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                      {i === 0 && (
+                        <span className="absolute top-1 left-1 bg-teal-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">Cover</span>
+                      )}
+                      <button
+                        onClick={() => handleRemovePhoto(url)}
+                        className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

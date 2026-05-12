@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
 
 type Tab = 'general' | 'brand' | 'categories' | 'account';
 
@@ -54,6 +55,11 @@ export default function SettingsPage() {
   const [newCategory, setNewCategory] = useState('');
   const [catLoading, setCatLoading] = useState(false);
 
+  // Profile photo state
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetch('/api/expense-categories')
       .then(r => r.json())
@@ -71,6 +77,25 @@ export default function SettingsPage() {
     const email = localStorage.getItem('user_email') || 'demo@hostbooks.ke';
     setUserEmail(email);
   }, []);
+
+  const handleAvatarUpload = async (file: File) => {
+    if (file.size > 3 * 1024 * 1024) { toast.error('Photo must be under 3 MB'); return; }
+    setAvatarUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Not authenticated'); return; }
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/avatar.${ext}`;
+      const { error } = await supabase.storage.from('profile-photos').upload(path, file, { upsert: true });
+      if (error) { toast.error('Upload failed'); return; }
+      const { data: { publicUrl } } = supabase.storage.from('profile-photos').getPublicUrl(path);
+      setAvatarUrl(publicUrl);
+      await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id);
+      toast.success('Profile photo updated');
+    } catch { toast.error('Network error'); }
+    finally { setAvatarUploading(false); }
+  };
 
   const handleSaveGeneral = () => toast.success('Settings saved!');
   const handleSaveColors = () => {
@@ -440,7 +465,38 @@ export default function SettingsPage() {
 
         {/* ── ACCOUNT TAB ── */}
         {activeTab === 'account' && (
-          <div className="bg-white border border-gray-200 rounded-xl p-6 max-w-3xl">
+          <div className="space-y-6 max-w-3xl">
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-1">Profile Photo</h2>
+            <p className="text-sm text-gray-500 mb-5">Shown on your profile. Max 3 MB — JPG, PNG, WebP.</p>
+            <div className="flex items-center gap-5">
+              <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 overflow-hidden flex items-center justify-center bg-gray-50 flex-shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                  </svg>
+                )}
+              </div>
+              <div>
+                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarUpload(f); }} />
+                <button onClick={() => avatarInputRef.current?.click()} disabled={avatarUploading}
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60">
+                  {avatarUploading ? (
+                    <><div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" /> Uploading...</>
+                  ) : (
+                    <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg> Upload Photo</>
+                  )}
+                </button>
+                {avatarUrl && <p className="text-xs text-teal-600 mt-1">Photo saved ✓</p>}
+              </div>
+            </div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-base font-bold text-gray-900 mb-1">Account Status</h2>
             <p className="text-sm text-gray-500 mb-6">Your subscription and billing information.</p>
             <div className="space-y-0">
@@ -474,6 +530,7 @@ export default function SettingsPage() {
                 </button>
               </div>
             </div>
+          </div>
           </div>
         )}
 

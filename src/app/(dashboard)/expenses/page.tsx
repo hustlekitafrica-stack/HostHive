@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { createClient } from '@/lib/supabase/client';
 
 interface Expense {
   id: string;
@@ -11,6 +12,7 @@ interface Expense {
   gross: number;
   tax: number;
   net: number;
+  receipt_url?: string;
 }
 
 export default function ExpensesPage() {
@@ -21,6 +23,8 @@ export default function ExpensesPage() {
   const [loadingExpenses, setLoadingExpenses] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const receiptInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     category: '',
@@ -74,8 +78,31 @@ export default function ExpensesPage() {
       });
       const data = await res.json();
       if (!res.ok) { toast.error(data.error || 'Failed to add expense'); return; }
-      setExpenses(prev => [data.expense, ...prev]);
+      const newExpense = data.expense;
+      // Upload receipt if attached
+      if (receiptFile && newExpense?.id) {
+        try {
+          const supabase = createClient();
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const ext = receiptFile.name.split('.').pop();
+            const path = `${user.id}/${newExpense.id}/receipt.${ext}`;
+            const { error: upErr } = await supabase.storage.from('expense-receipts').upload(path, receiptFile, { upsert: true });
+            if (!upErr) {
+              const { data: { publicUrl } } = supabase.storage.from('expense-receipts').getPublicUrl(path);
+              await fetch(`/api/expenses/${newExpense.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ receipt_url: publicUrl }),
+              });
+              newExpense.receipt_url = publicUrl;
+            }
+          }
+        } catch { /* receipt upload is non-critical */ }
+      }
+      setExpenses(prev => [newExpense, ...prev]);
       setShowAddModal(false);
+      setReceiptFile(null);
       setFormData({ date: new Date().toISOString().split('T')[0], category: '', vendor: '', gross: '', tax: '' });
       toast.success('Expense added');
     } catch {
@@ -183,7 +210,19 @@ export default function ExpensesPage() {
                     <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.date}</td>
                     <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.category_name}</td>
                     <td className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">{expense.vendor}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">KSh {expense.net.toLocaleString()}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        KSh {expense.net.toLocaleString()}
+                        {expense.receipt_url && (
+                          <a href={expense.receipt_url} target="_blank" rel="noreferrer" title="View receipt"
+                            className="text-teal-500 hover:text-teal-700 flex-shrink-0">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                            </svg>
+                          </a>
+                        )}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -252,6 +291,18 @@ export default function ExpensesPage() {
                   Net: <span className="font-semibold text-gray-900">KSh {((parseFloat(formData.gross) || 0) - (parseFloat(formData.tax) || 0)).toLocaleString()}</span>
                 </div>
               )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Receipt <span className="text-gray-400 font-normal">(optional)</span></label>
+                <input ref={receiptInputRef} type="file" accept="image/*,application/pdf" className="hidden"
+                  onChange={e => setReceiptFile(e.target.files?.[0] ?? null)} />
+                <button type="button" onClick={() => receiptInputRef.current?.click()}
+                  className="w-full flex items-center gap-2 px-3 py-2 border border-dashed border-gray-300 rounded-lg text-sm text-gray-600 hover:border-teal-400 hover:text-teal-600 transition-colors">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                  {receiptFile ? receiptFile.name : 'Attach receipt or PDF'}
+                </button>
+              </div>
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowAddModal(false)}
                   className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">

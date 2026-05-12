@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
     // Validate basic info
     const basicData = propertyBasicSchema.parse(body.basic);
     const pricingData = propertyPricingSchema.parse(body.pricing);
+    const photoUrls: string[] = Array.isArray(body.photo_urls) ? body.photo_urls : [];
 
     // Create property
     const { data: property, error: propertyError } = await supabase
@@ -42,6 +43,7 @@ export async function POST(request: NextRequest) {
         min_stay: pricingData.minStay,
         max_guests: pricingData.maxGuests,
         status: 'draft',
+        ...(photoUrls.length > 0 && { photo_urls: photoUrls }),
       })
       .select()
       .single();
