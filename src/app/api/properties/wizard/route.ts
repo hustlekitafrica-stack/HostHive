@@ -5,6 +5,46 @@ function missingEnv() {
   return !process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 }
 
+export async function GET(request: NextRequest) {
+  try {
+    if (missingEnv()) {
+      return NextResponse.json({ error: { message: 'Supabase environment variables are not configured.' } }, { status: 500 });
+    }
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      return NextResponse.json({ error: { message: 'Not authenticated.' } }, { status: 401 });
+    }
+    const id = request.nextUrl.searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ error: { message: 'Property ID required.' } }, { status: 400 });
+    }
+    const [propRes, amenRes, photoRes] = await Promise.all([
+      supabase.from('properties').select('*').eq('id', id).eq('user_id', session.user.id).single(),
+      supabase.from('property_amenities').select('name').eq('property_id', id).order('created_at'),
+      supabase.from('property_photos').select('url, sort_order').eq('property_id', id).order('sort_order'),
+    ]);
+    if (propRes.error || !propRes.data) {
+      return NextResponse.json({ error: { message: propRes.error?.message || 'Property not found.' } }, { status: 404 });
+    }
+    const p = propRes.data;
+    const photos =
+      photoRes.data && photoRes.data.length > 0
+        ? photoRes.data.map((ph: any) => ({ url: ph.url, label: '', isCover: ph.url === p.cover_photo }))
+        : p.cover_photo
+        ? [{ url: p.cover_photo, label: '', isCover: true }]
+        : [];
+    return NextResponse.json({
+      property: p,
+      amenities: amenRes.data?.map((a: any) => a.name) ?? [],
+      photos,
+    });
+  } catch (err) {
+    console.error('[wizard/GET] Unexpected error:', err);
+    return NextResponse.json({ error: { message: 'Internal server error' } }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (missingEnv()) {

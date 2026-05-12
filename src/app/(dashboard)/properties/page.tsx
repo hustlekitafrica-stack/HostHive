@@ -126,19 +126,10 @@ export default function PropertiesPage() {
   useEffect(() => { loadProperties(); }, [loadProperties]);
 
   const fetchPropertyForEdit = useCallback(async (id: string): Promise<Partial<WizardFormData> | null> => {
-    const supabase = createClient();
-    const [propRes, amenRes, photoRes] = await Promise.all([
-      supabase.from('properties').select('*').eq('id', id).single(),
-      supabase.from('property_amenities').select('*').eq('property_id', id).order('created_at'),
-      supabase.from('property_photos').select('*').eq('property_id', id).order('sort_order'),
-    ]);
-    if (propRes.error || !propRes.data) return null;
-    const p = propRes.data;
-    const amenities: string[] = amenRes.data?.map((a: any) => a.name) ?? [];
-    const photos: { url: string; label: string; isCover: boolean }[] =
-      photoRes.data && photoRes.data.length > 0
-        ? photoRes.data.map((ph: any) => ({ url: ph.url, label: '', isCover: ph.url === p.cover_photo }))
-        : p.cover_photo ? [{ url: p.cover_photo, label: '', isCover: true }] : [];
+    const res = await fetch(`/api/properties/wizard?id=${id}`);
+    if (!res.ok) return null;
+    const { property: p, amenities, photos } = await res.json();
+    if (!p) return null;
     const hr = p.house_rules || {};
     return {
       propertyType: p.type || 'apartment',
