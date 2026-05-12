@@ -22,7 +22,7 @@ export interface WizardFormData {
 
 const INITIAL: WizardFormData = {
   propertyType: '',
-  location: { building: '', unit: '', floor: '', neighbourhood: '', county: 'Nairobi', city: 'Nairobi', address: '', lat: null, lng: null },
+  location: { building: '', unit: '', floor: '', neighbourhood: '', county: '', city: '', address: '', lat: null, lng: null },
   basics: { bedrooms: 1, bathrooms: 1, maxGuests: 2, size: '', sizeUnit: 'sq m', beds: [{ type: 'Double Bed', count: 1 }] },
   amenities: [],
   photos: [],
@@ -472,18 +472,19 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     if (step === 2) return (
       <div className="lg:px-[300px]">
         <h2 className="text-2xl font-bold text-gray-900 mb-1">Where is your property located?</h2>
-        <p className="text-sm text-gray-500 mb-5">Search for your address or click the map to pin the exact location.</p>
+        <p className="text-sm text-gray-500 mb-5">Type your street address below — suggestions will appear as you type.</p>
         <div className="space-y-4">
 
-          {/* ── Address Search Autocomplete ── */}
-          <div className="relative">
+          {/* ── Street Address with live autocomplete ── */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-800 mb-1.5">Street Address <span className="text-red-500">*</span></label>
             <div className="relative">
               <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input
-                value={addrSearch}
+                value={data.location.address}
                 onChange={e => {
                   const q = e.target.value;
-                  setAddrSearch(q);
+                  upd('location', { ...data.location, address: q });
                   if (addrTimerRef.current) clearTimeout(addrTimerRef.current);
                   if (!q.trim() || q.length < 3) { setAddrResults([]); setAddrDropdown(false); return; }
                   addrTimerRef.current = setTimeout(async () => {
@@ -497,43 +498,54 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                 }}
                 onBlur={() => setTimeout(() => setAddrDropdown(false), 200)}
                 onFocus={() => addrResults.length > 0 && setAddrDropdown(true)}
-                placeholder="Search address, estate, or landmark in Kenya…"
+                placeholder="e.g. Ngong Road, Kilimani…"
                 className="w-full pl-9 pr-4 py-3 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm"
+                autoComplete="off"
               />
+              {addrDropdown && addrResults.length > 0 && (
+                <div className="absolute z-50 top-full mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
+                  {addrResults.map((r, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onMouseDown={() => {
+                        const a = r.address || {};
+                        const lat = parseFloat(parseFloat(r.lat).toFixed(6));
+                        const lng = parseFloat(parseFloat(r.lon).toFixed(6));
+                        const road = [a.house_number, a.road || a.pedestrian || a.footway || a.path].filter(Boolean).join(' ');
+                        const neighbourhood = a.suburb || a.neighbourhood || a.quarter || a.village || '';
+                        const city = a.city || a.town || a.municipality || '';
+                        const rawCounty = a.county || a.state_district || '';
+                        const matched = COUNTIES.find(c =>
+                          rawCounty.toLowerCase().includes(c.toLowerCase()) ||
+                          c.toLowerCase().includes(rawCounty.replace(/ county$/i,'').trim().toLowerCase())
+                        ) || '';
+                        upd('location', {
+                          ...data.location,
+                          address: road || r.display_name.split(',')[0].trim(),
+                          neighbourhood,
+                          city,
+                          county: matched,
+                          lat,
+                          lng,
+                        });
+                        setAddrDropdown(false);
+                      }}
+                      className="w-full text-left px-4 py-2.5 hover:bg-green-50 border-b border-gray-100 last:border-0 flex items-start gap-2.5"
+                    >
+                      <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{r.display_name.split(',')[0]}</p>
+                        <p className="text-xs text-gray-400 truncate">{r.display_name.split(',').slice(1, 4).join(',').trim()}</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            {addrDropdown && addrResults.length > 0 && (
-              <div className="absolute z-50 mt-1 w-full bg-white rounded-xl border border-gray-200 shadow-xl overflow-hidden">
-                {addrResults.map((r, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onMouseDown={() => {
-                      const a = r.address || {};
-                      const lat = parseFloat(parseFloat(r.lat).toFixed(6));
-                      const lng = parseFloat(parseFloat(r.lon).toFixed(6));
-                      const road = [a.house_number, a.road || a.pedestrian || a.footway].filter(Boolean).join(' ');
-                      const neighbourhood = a.suburb || a.neighbourhood || a.quarter || a.village || '';
-                      const city = a.city || a.town || a.municipality || a.county || '';
-                      const rawCounty = a.county || a.state_district || '';
-                      const matched = COUNTIES.find(c => rawCounty.toLowerCase().includes(c.toLowerCase()) || c.toLowerCase().includes(rawCounty.replace(' County','').toLowerCase())) || data.location.county;
-                      upd('location', { ...data.location, address: road || r.display_name.split(',')[0], neighbourhood, city, county: matched, lat, lng });
-                      setAddrSearch(r.display_name);
-                      setAddrDropdown(false);
-                    }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-green-50 border-b border-gray-100 last:border-0 flex items-start gap-2.5"
-                  >
-                    <svg className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{r.display_name.split(',')[0]}</p>
-                      <p className="text-xs text-gray-400 truncate">{r.display_name.split(',').slice(1, 4).join(',').trim()}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
 
-          {/* ── Interactive Map ── */}
+          {/* ── Map ── */}
           <div className="rounded-xl overflow-hidden border border-gray-200 shadow-sm">
             <LeafletMap
               lat={data.location.lat}
@@ -543,61 +555,50 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           </div>
           <p className="text-xs text-gray-400 flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            Click the map or drag the pin for exact positioning.
-            {data.location.lat && <span className="ml-auto font-mono text-gray-400">{data.location.lat.toFixed(5)}, {data.location.lng?.toFixed(5)}</span>}
+            Click the map or drag the pin to set the exact position.
+            {data.location.lat && <span className="ml-2 font-mono">{data.location.lat.toFixed(5)}, {data.location.lng?.toFixed(5)}</span>}
           </p>
 
-          {/* ── Manual fields ── */}
-          <div className="border-t border-gray-100 pt-4">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Confirm details</p>
-            <div className="space-y-3">
+          {/* ── Auto-filled details ── */}
+          <div className="border-t border-gray-100 pt-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Auto-filled · edit if needed</p>
 
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1.5">Street Address <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-semibold text-gray-800 mb-1.5">Estate / Area <span className="text-red-500">*</span></label>
                 <input
-                  value={data.location.address}
-                  onChange={e => upd('location', { ...data.location, address: e.target.value })}
-                  placeholder="e.g. 45 Ngong Road"
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
+                  value={data.location.neighbourhood}
+                  onChange={e => upd('location', { ...data.location, neighbourhood: e.target.value })}
+                  placeholder="e.g. Kilimani"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
                 />
               </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">Estate / Area <span className="text-red-500">*</span></label>
-                  <input
-                    value={data.location.neighbourhood}
-                    onChange={e => upd('location', { ...data.location, neighbourhood: e.target.value })}
-                    placeholder="e.g. Kilimani"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-gray-800 mb-1.5">City / Town <span className="text-red-500">*</span></label>
-                  <input
-                    value={data.location.city}
-                    onChange={e => upd('location', { ...data.location, city: e.target.value })}
-                    placeholder="e.g. Nairobi"
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-semibold text-gray-800 mb-1.5">County <span className="text-red-500">*</span></label>
-                <div className="relative">
-                  <select
-                    value={data.location.county}
-                    onChange={e => upd('location', { ...data.location, county: e.target.value })}
-                    className="w-full appearance-none px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600 pr-9"
-                  >
-                    {COUNTIES.map(c => <option key={c}>{c}</option>)}
-                  </select>
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-                </div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1.5">City / Town <span className="text-red-500">*</span></label>
+                <input
+                  value={data.location.city}
+                  onChange={e => upd('location', { ...data.location, city: e.target.value })}
+                  placeholder="e.g. Nairobi"
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
+                />
               </div>
-
             </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">County <span className="text-red-500">*</span></label>
+              <div className="relative">
+                <select
+                  value={data.location.county}
+                  onChange={e => upd('location', { ...data.location, county: e.target.value })}
+                  className="w-full appearance-none px-4 py-2.5 border border-gray-300 rounded-lg text-sm bg-white outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600 pr-9"
+                >
+                  <option value="">Select county…</option>
+                  {COUNTIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+                <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+            </div>
+
           </div>
 
         </div>
