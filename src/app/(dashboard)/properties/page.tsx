@@ -93,6 +93,9 @@ export default function PropertiesPage() {
   const [showWizard, setShowWizard] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [continuingProperty, setContinuingProperty] = useState<Property | null>(null);
+  const [editWizardData, setEditWizardData] = useState<Partial<WizardFormData> | null>(null);
+  const [continueWizardData, setContinueWizardData] = useState<Partial<WizardFormData> | null>(null);
+  const [editLoading, setEditLoading] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>('grid');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All types');
@@ -121,6 +124,52 @@ export default function PropertiesPage() {
   }, []);
 
   useEffect(() => { loadProperties(); }, [loadProperties]);
+
+  const fetchPropertyForEdit = useCallback(async (id: string): Promise<Partial<WizardFormData> | null> => {
+    const supabase = createClient();
+    const [propRes, amenRes, photoRes] = await Promise.all([
+      supabase.from('properties').select('*').eq('id', id).single(),
+      supabase.from('property_amenities').select('*').eq('property_id', id).order('created_at'),
+      supabase.from('property_photos').select('*').eq('property_id', id).order('sort_order'),
+    ]);
+    if (propRes.error || !propRes.data) return null;
+    const p = propRes.data;
+    const amenities: string[] = amenRes.data?.map((a: any) => a.name) ?? [];
+    const photos: { url: string; label: string; isCover: boolean }[] =
+      photoRes.data && photoRes.data.length > 0
+        ? photoRes.data.map((ph: any) => ({ url: ph.url, label: '', isCover: ph.url === p.cover_photo }))
+        : p.cover_photo ? [{ url: p.cover_photo, label: '', isCover: true }] : [];
+    const hr = p.house_rules || {};
+    return {
+      propertyType: p.type || 'apartment',
+      title: p.title || p.name || '',
+      description: p.description || '',
+      location: { building: p.building_name || '', unit: p.unit_number || '', floor: p.floor_level || '', neighbourhood: p.address || p.location || '', city: p.city || 'Nairobi', county: p.county || 'Nairobi', address: p.address || p.location || '', lat: p.latitude ?? null, lng: p.longitude ?? null },
+      basics: { bedrooms: p.bedrooms ?? 1, bathrooms: p.bathrooms ?? 1, maxGuests: p.max_guests ?? 2, size: '', sizeUnit: 'sq m', beds: [{ type: 'Double Bed', count: p.bedrooms ?? 1 }] },
+      amenities,
+      photos,
+      pricing: { nightly: p.nightly_rate ? String(parseFloat(p.nightly_rate)) : '', weekend: p.weekend_rate ? String(parseFloat(p.weekend_rate)) : '', monthly: p.monthly_rate ? String(parseFloat(p.monthly_rate)) : '', cleaning: p.cleaning_fee ? String(parseFloat(p.cleaning_fee)) : '', deposit: p.security_deposit ? String(parseFloat(p.security_deposit)) : '', extraGuest: '', baseGuests: 2, minStay: p.min_stay_nights?.toString() || '1', maxStay: p.max_stay_nights?.toString() || '', seasonal: [] },
+      rules: { checkIn: p.check_in_time || '14:00', checkOut: p.check_out_time || '11:00', checkInMethod: p.check_in_method || 'caretaker', instructions: p.check_in_instructions || '', caretakerName: p.caretaker_name || '', caretakerPhone: p.caretaker_phone || '', noSmoking: hr.noSmoking ?? true, noParties: hr.noParties ?? true, noPets: hr.noPets ?? true, quietHours: hr.quietHours ?? true, childrenAllowed: hr.childrenAllowed ?? false, couplesOnly: hr.couplesOnly ?? false, noAlcohol: hr.noAlcohol ?? false, adultsOnly: hr.adultsOnly ?? false, additionalRules: p.additional_rules || '', cancellation: p.cancellation_policy || 'moderate', nonRefundableDiscount: '10', removeShoes: hr.removeShoes ?? false, sortRubbish: hr.sortRubbish ?? false },
+    };
+  }, []);
+
+  const handleEditProperty = useCallback(async (p: Property) => {
+    setEditLoading(p.id);
+    const d = await fetchPropertyForEdit(p.id);
+    setEditWizardData(d);
+    setEditingProperty(p);
+    setEditLoading(null);
+    setViewingProperty(null);
+  }, [fetchPropertyForEdit]);
+
+  const handleContinueProperty = useCallback(async (p: Property) => {
+    setEditLoading(p.id);
+    const d = await fetchPropertyForEdit(p.id);
+    setContinueWizardData(d);
+    setContinuingProperty(p);
+    setEditLoading(null);
+    setViewingProperty(null);
+  }, [fetchPropertyForEdit]);
 
   useEffect(() => {
     const h = (e: CustomEvent) => setSidebarCollapsed(e.detail.collapsed);
@@ -302,13 +351,13 @@ export default function PropertiesPage() {
             <div className="px-6 py-4 border-t border-gray-100 flex gap-2">
               {viewingProperty.status === 'draft' ? (
                 <button
-                  onClick={() => { setContinuingProperty(viewingProperty); setViewingProperty(null); }}
+                  onClick={() => handleContinueProperty(viewingProperty)}
                   className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors">
                   Continue Setup
                 </button>
               ) : (
                 <button
-                  onClick={() => { setEditingProperty(viewingProperty); setViewingProperty(null); }}
+                  onClick={() => handleEditProperty(viewingProperty)}
                   className="flex-1 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-lg transition-colors">
                   Edit Property
                 </button>
@@ -324,22 +373,30 @@ export default function PropertiesPage() {
       )}
 
       {showWizard && <AirbnbPropertyWizard onClose={() => { setShowWizard(false); loadProperties(); }} />}
-      {editingProperty && (
+      {editingProperty && editWizardData && (
         <AirbnbPropertyWizard
           mode="edit"
-          initialData={propertyToWizardData(editingProperty)}
+          initialData={editWizardData}
           propertyId={editingProperty.id}
-          onClose={() => { setEditingProperty(null); loadProperties(); }}
+          onClose={() => { setEditingProperty(null); setEditWizardData(null); loadProperties(); }}
         />
       )}
-      {continuingProperty && (
+      {continuingProperty && continueWizardData && (
         <AirbnbPropertyWizard
           mode="continue"
-          initialData={propertyToWizardData(continuingProperty)}
+          initialData={continueWizardData}
           propertyId={continuingProperty.id}
           initialStep={continuingProperty.setupStep ?? 1}
-          onClose={() => { setContinuingProperty(null); loadProperties(); }}
+          onClose={() => { setContinuingProperty(null); setContinueWizardData(null); loadProperties(); }}
         />
+      )}
+      {editLoading && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/20">
+          <div className="bg-white rounded-xl px-6 py-4 shadow-lg flex items-center gap-3">
+            <div className="w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <span className="text-sm font-medium text-gray-700">Loading property data…</span>
+          </div>
+        </div>
       )}
 
       <div className="min-h-screen bg-gray-50">
@@ -477,7 +534,7 @@ export default function PropertiesPage() {
                   {/* Continue banner for draft */}
                   {p.status === 'draft' && (
                     <button
-                      onClick={() => setContinuingProperty(p)}
+                      onClick={() => handleContinueProperty(p)}
                       className="w-full mb-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                       Continue Setup
@@ -490,7 +547,7 @@ export default function PropertiesPage() {
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                       Details
                     </button>
-                    <button onClick={() => setEditingProperty(p)} className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
+                    <button onClick={() => handleEditProperty(p)} className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                     </button>
                     <button className="p-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
@@ -547,7 +604,7 @@ export default function PropertiesPage() {
 
                     {/* Continue banner */}
                     {p.status === 'draft' && (
-                      <button onClick={() => setContinuingProperty(p)}
+                      <button onClick={() => handleContinueProperty(p)}
                         className="w-full mb-3 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg transition-colors flex items-center justify-center gap-2">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
                         Continue Setup
@@ -562,7 +619,7 @@ export default function PropertiesPage() {
                         Details
                       </button>
                       {p.status !== 'draft' && (
-                        <button onClick={() => setEditingProperty(p)}
+                        <button onClick={() => handleEditProperty(p)}
                           className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                         </button>
@@ -616,12 +673,12 @@ export default function PropertiesPage() {
                               Details
                             </button>
                             {p.status === 'draft' ? (
-                              <button onClick={() => setContinuingProperty(p)}
+                              <button onClick={() => handleContinueProperty(p)}
                                 className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-semibold transition-colors">
                                 Continue
                               </button>
                             ) : (
-                              <button onClick={() => setEditingProperty(p)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                              <button onClick={() => handleEditProperty(p)} className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                               </button>
                             )}

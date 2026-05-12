@@ -757,14 +757,13 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     );
 
     // STEP 7
-    const kshField = (key: string, placeholder: string) => (
+    const kshField = (key: string) => (
       <div className="flex items-center border border-gray-300 rounded-lg bg-white overflow-hidden focus-within:ring-1 focus-within:ring-green-600 focus-within:border-green-600">
         <span className="px-3 text-sm text-gray-500 shrink-0">KSh</span>
         <input
           type="number"
           value={(data.pricing as unknown as Record<string, string>)[key]}
           onChange={e => upd('pricing', { ...data.pricing, [key]: e.target.value })}
-          placeholder={placeholder}
           className="flex-1 py-2.5 pr-3 text-sm outline-none bg-transparent"
         />
       </div>
@@ -780,31 +779,31 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         <div className="border border-green-200 bg-green-50 rounded-xl p-5 mx-2 grid grid-cols-2 gap-x-6 gap-y-4">
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Base nightly rate <span className="text-red-500">*</span></p>
-            {kshField('nightly', '0')}
+            {kshField('nightly')}
             <p className="text-xs text-gray-400 mt-1">Standard weekday price per night</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Weekend rate (Fri–Sat)</p>
-            {kshField('weekend', 'Leave blank to use base rate')}
+            {kshField('weekend')}
             <p className="text-xs text-gray-400 mt-1">Optional uplift for weekends</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Monthly rate</p>
-            {kshField('monthly', 'e.g. 80000')}
+            {kshField('monthly')}
             <p className="text-xs text-gray-400 mt-1">Discount for 30+ night stays</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Cleaning fee</p>
-            {kshField('cleaning', '0')}
+            {kshField('cleaning')}
             <p className="text-xs text-gray-400 mt-1">One-time fee per booking</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Security deposit</p>
-            {kshField('deposit', 'Optional refundable deposit')}
+            {kshField('deposit')}
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Extra guest fee</p>
-            {kshField('extraGuest', 'Per extra guest above base')}
+            {kshField('extraGuest')}
           </div>
         </div>
 
@@ -827,7 +826,6 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Maximum stay (nights)</p>
             <input value={data.pricing.maxStay}
               onChange={e => upd('pricing', { ...data.pricing, maxStay: e.target.value })}
-              placeholder="No limit"
               className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
           </div>
         </div>
@@ -853,8 +851,8 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                 </div>
               ))}
               <div className="grid grid-cols-2 gap-2 mt-3">
-                <input placeholder="Season name" value={newSeason.name} onChange={e => setNewSeason(s => ({ ...s, name: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
-                <input placeholder="Price (KSh)" value={newSeason.price} onChange={e => setNewSeason(s => ({ ...s, price: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
+                <input value={newSeason.name} onChange={e => setNewSeason(s => ({ ...s, name: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
+                <input value={newSeason.price} onChange={e => setNewSeason(s => ({ ...s, price: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
                 <input type="date" value={newSeason.start} onChange={e => setNewSeason(s => ({ ...s, start: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
                 <input type="date" value={newSeason.end} onChange={e => setNewSeason(s => ({ ...s, end: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
               </div>
