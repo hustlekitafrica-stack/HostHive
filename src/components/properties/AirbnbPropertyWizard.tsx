@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 export interface WizardFormData {
@@ -15,7 +16,7 @@ export interface WizardFormData {
   descriptionAround: string;
   descriptionHost: string;
   pricing: { nightly: string; weekend: string; monthly: string; cleaning: string; deposit: string; extraGuest: string; baseGuests: number; minStay: string; maxStay: string; seasonal: { name: string; start: string; end: string; price: string }[] };
-  rules: { checkIn: string; checkOut: string; checkInMethod: string; instructions: string; caretakerName: string; caretakerPhone: string; noSmoking: boolean; noParties: boolean; noPets: boolean; childrenAllowed: boolean; quietHours: boolean; couplesOnly: boolean; noAlcohol: boolean; adultsOnly: boolean; additionalRules: string; cancellation: string; nonRefundableDiscount: string };
+  rules: { checkIn: string; checkOut: string; checkInMethod: string; instructions: string; caretakerName: string; caretakerPhone: string; noSmoking: boolean; noParties: boolean; noPets: boolean; childrenAllowed: boolean; quietHours: boolean; couplesOnly: boolean; noAlcohol: boolean; adultsOnly: boolean; additionalRules: string; cancellation: string; nonRefundableDiscount: string; removeShoes: boolean; sortRubbish: boolean };
   publish: { availableFrom: string; group: string; status: string };
 }
 
@@ -31,7 +32,7 @@ const INITIAL: WizardFormData = {
   descriptionAround: '',
   descriptionHost: '',
   pricing: { nightly: '', weekend: '', monthly: '', cleaning: '', deposit: '', extraGuest: '', baseGuests: 2, minStay: '1 night', maxStay: 'No maximum', seasonal: [] },
-  rules: { checkIn: '14:00', checkOut: '11:00', checkInMethod: 'caretaker', instructions: '', caretakerName: '', caretakerPhone: '', noSmoking: true, noParties: true, noPets: true, childrenAllowed: false, quietHours: true, couplesOnly: false, noAlcohol: false, adultsOnly: false, additionalRules: '', cancellation: 'moderate', nonRefundableDiscount: '10' },
+  rules: { checkIn: '14:00', checkOut: '11:00', checkInMethod: 'caretaker', instructions: '', caretakerName: '', caretakerPhone: '', noSmoking: true, noParties: true, noPets: true, childrenAllowed: false, quietHours: true, couplesOnly: false, noAlcohol: false, adultsOnly: false, additionalRules: '', cancellation: 'moderate', nonRefundableDiscount: '10', removeShoes: false, sortRubbish: false },
   publish: { availableFrom: '', group: '', status: 'publish' },
 };
 
@@ -245,6 +246,9 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [photoIdx, setPhotoIdx] = useState(0);
   const [stepError, setStepError] = useState('');
   const [publishing, setPublishing] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const touchStartX = useRef<number>(0);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const TOTAL = 9;
 
@@ -344,6 +348,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     return () => window.removeEventListener('keydown', onKey);
   }, [step]);
 
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.scrollTop = 0;
+  }, [step]);
+
   const pct = Math.round((step / TOTAL) * 100);
   const upd = (field: keyof WizardFormData, val: unknown) => setData(d => ({ ...d, [field]: val }));
 
@@ -393,13 +401,32 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
   // photo helpers
   const addPhotoUrl = (url: string) => {
-    const isCover = data.photos.length === 0;
-    setData(d => ({ ...d, photos: [...d.photos, { url, label: '', isCover }] }));
+    setData(d => {
+      const isCover = d.photos.length === 0;
+      return { ...d, photos: [...d.photos, { url, label: '', isCover }] };
+    });
   };
   const removePhoto = (i: number) => setData(d => { const p = d.photos.filter((_, idx) => idx !== i); if (p.length > 0 && !p.some(x => x.isCover)) p[0].isCover = true; return { ...d, photos: p }; });
   const setCover = (i: number) => setData(d => ({ ...d, photos: d.photos.map((p, idx) => ({ ...p, isCover: idx === i })) }));
 
   // ── Success Screen ──────────────────────────────────────────────────────────
+
+  const handlePhotoFiles = async (files: File[]) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) { showError('Please log in to upload photos'); return; }
+    setPhotoUploading(true);
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) { showError(`${file.name} exceeds 10 MB — skipped`); continue; }
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/tmp/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('property-photos').upload(path, file, { upsert: true });
+      if (error) { showError(`Upload failed: ${file.name}`); continue; }
+      const { data: { publicUrl } } = supabase.storage.from('property-photos').getPublicUrl(path);
+      addPhotoUrl(publicUrl);
+    }
+    setPhotoUploading(false);
+  };
 
   // ── Step content ────────────────────────────────────────────────────────────
   const stepContent = () => {
@@ -515,10 +542,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     const cntStepper = (key: 'bedrooms'|'bathrooms'|'maxGuests') => (
       <div className="flex items-center gap-3">
         <button onClick={() => { const v = data.basics[key]; if (v > 1) upd('basics', { ...data.basics, [key]: v - 1 }); }}
-          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-base font-medium">−</button>
-        <span className="w-5 text-center font-bold text-gray-900">{data.basics[key]}</span>
+          className="w-11 h-11 sm:w-9 sm:h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-xl font-bold">−</button>
+        <span className="w-8 sm:w-6 text-center font-bold text-gray-900 text-lg">{data.basics[key]}</span>
         <button onClick={() => upd('basics', { ...data.basics, [key]: data.basics[key] + 1 })}
-          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-base font-medium">+</button>
+          className="w-11 h-11 sm:w-9 sm:h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-xl font-bold">+</button>
       </div>
     );
     if (step === 3) return (
@@ -579,10 +606,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { const beds = [...data.basics.beds]; if (beds[i].count > 1) { beds[i] = { ...beds[i], count: beds[i].count - 1 }; upd('basics', { ...data.basics, beds }); } }}
-                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-base font-medium">−</button>
-                  <span className="w-5 text-center font-bold text-gray-900">{bed.count}</span>
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-xl font-bold">−</button>
+                  <span className="w-8 sm:w-6 text-center font-bold text-gray-900 text-lg">{bed.count}</span>
                   <button onClick={() => { const beds = [...data.basics.beds]; beds[i] = { ...beds[i], count: beds[i].count + 1 }; upd('basics', { ...data.basics, beds }); }}
-                    className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-base font-medium">+</button>
+                    className="w-11 h-11 sm:w-9 sm:h-9 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-all text-xl font-bold">+</button>
                   <button onClick={() => { const beds = data.basics.beds.filter((_, idx) => idx !== i); upd('basics', { ...data.basics, beds }); }}
                     className="text-sm text-red-500 hover:text-red-700 font-medium ml-1">Remove</button>
                 </div>
@@ -640,7 +667,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         <label
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
-          onDrop={e => { e.preventDefault(); setDragOver(false); Array.from(e.dataTransfer.files).forEach(f => addPhotoUrl(URL.createObjectURL(f))); }}
+          onDrop={e => { e.preventDefault(); setDragOver(false); handlePhotoFiles(Array.from(e.dataTransfer.files)); }}
           className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed rounded-2xl py-12 cursor-pointer transition-colors active:border-green-600 active:bg-green-50 focus-within:border-green-600 focus-within:bg-green-50 ${dragOver ? 'border-green-500 bg-green-50' : 'border-gray-300 bg-white hover:border-green-600 hover:bg-green-50'}`}
         >
           <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
@@ -648,23 +675,28 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             <polyline points="17 8 12 3 7 8"/>
             <line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
-          <p className="font-semibold text-gray-800 text-sm">Click or drag photos here</p>
-          <p className="text-xs text-gray-400">JPG, PNG, WebP — max 10 MB each</p>
-          <input type="file" multiple accept="image/*" className="hidden" onChange={e => { Array.from(e.target.files || []).forEach(f => addPhotoUrl(URL.createObjectURL(f))); }} />
+          {photoUploading
+            ? <><div className="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin" /><p className="text-sm text-green-600 font-medium">Uploading…</p></>
+            : <><p className="font-semibold text-gray-800 text-sm">Click or drag photos here</p><p className="text-xs text-gray-400">JPG, PNG, WebP — max 10 MB each</p></>}
+          <input type="file" multiple accept="image/*" className="hidden" onChange={e => { handlePhotoFiles(Array.from(e.target.files || [])); e.target.value = ''; }} />
         </label>
 
         {/* Photo grid */}
         {data.photos.length > 0 ? (
-          <div className="mt-6 grid grid-cols-3 sm:grid-cols-4 gap-3">
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {data.photos.map((p, i) => (
               <div key={i} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100">
                 <img src={p.url} alt="" className="w-full h-full object-cover" />
                 {p.isCover && (
                   <span className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">Cover</span>
                 )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <button onClick={() => setCover(i)} className="bg-white text-gray-900 rounded-lg px-2 py-1 text-xs font-semibold">Set cover</button>
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center gap-2">
+                  {!p.isCover && <button onClick={() => setCover(i)} className="bg-white text-gray-900 rounded-lg px-2 py-1 text-xs font-semibold">Set cover</button>}
                   <button onClick={() => removePhoto(i)} className="bg-red-500 text-white rounded-lg px-2 py-1 text-xs font-semibold">Remove</button>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 flex sm:hidden">
+                  {!p.isCover && <button onClick={() => setCover(i)} className="flex-1 bg-white/90 text-gray-900 text-[10px] font-bold py-1.5 border-t border-r border-gray-100">Cover</button>}
+                  <button onClick={() => removePhoto(i)} className="flex-1 bg-red-500 text-white text-[10px] font-bold py-1.5 border-t border-gray-100">✕</button>
                 </div>
               </div>
             ))}
@@ -745,7 +777,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         </div>
 
         {/* Rate card */}
-        <div className="border border-green-200 bg-green-50 rounded-xl p-5 grid grid-cols-2 gap-x-6 gap-y-4">
+        <div className="border border-green-200 bg-green-50 rounded-xl p-5 mx-2 grid grid-cols-2 gap-x-6 gap-y-4">
           <div>
             <p className="text-sm font-semibold text-gray-800 mb-1.5">Base nightly rate <span className="text-red-500">*</span></p>
             {kshField('nightly', '0')}
@@ -901,38 +933,52 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-800 mb-1.5">Caretaker phone</label>
-            <input value={data.rules.caretakerPhone} onChange={e => upd('rules', { ...data.rules, caretakerPhone: e.target.value })}
+            <input type="tel" value={data.rules.caretakerPhone}
+              onChange={e => upd('rules', { ...data.rules, caretakerPhone: e.target.value })}
               placeholder="e.g. 0712 345 678"
+              pattern="^(\+254|0)[17]\d{8}$"
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
+            {data.rules.caretakerPhone && !/^(\+254|0)[17]\d{8}$/.test(data.rules.caretakerPhone.replace(/\s/g,'')) && (
+              <p className="text-xs text-amber-600 mt-1">Enter a valid Kenyan number (e.g. 0712345678 or +254712345678)</p>
+            )}
           </div>
         </div>
 
         {/* House rules pills */}
         <div>
-          <p className="text-sm font-semibold text-gray-800 mb-3">House rules</p>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {[...PRESET_RULES, ...(data.rules.additionalRules ? data.rules.additionalRules.split('|').filter(Boolean) : [])].map(rule => {
-              const active = data.rules.additionalRules?.split('|').includes(rule) ||
-                (rule === 'No parties or events' && data.rules.noParties) ||
-                (rule === 'No smoking' && data.rules.noSmoking) ||
-                (rule === 'No pets' && data.rules.noPets) ||
-                (rule === 'Quiet hours 10pm–7am' && data.rules.quietHours) ||
-                (rule === 'No unregistered guests' && data.rules.adultsOnly) ||
-                (rule === 'Remove shoes at entrance' && false) ||
-                (rule === 'Sort rubbish before leaving' && false);
+          <p className="text-sm font-semibold text-gray-800 mb-1">House rules <span className="text-xs font-normal text-gray-400">(tap to toggle on/off)</span></p>
+          <p className="text-xs text-gray-400 mb-3">Active rules are shown highlighted in green.</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {PRESET_RULES.map(rule => {
+              const KEY_MAP: Record<string, keyof WizardFormData['rules']> = {
+                'No parties or events': 'noParties',
+                'No smoking': 'noSmoking',
+                'No pets': 'noPets',
+                'Quiet hours 10pm–7am': 'quietHours',
+                'No unregistered guests': 'adultsOnly',
+                'Remove shoes at entrance': 'removeShoes',
+                'Sort rubbish before leaving': 'sortRubbish',
+              };
+              const key = KEY_MAP[rule] as keyof typeof data.rules;
+              const active = key ? !!(data.rules[key]) : false;
               return (
-                <button key={rule}
-                  className="px-3 py-1.5 border border-gray-300 rounded-full text-sm text-gray-700 hover:border-green-600 hover:bg-green-50 transition-colors">
-                  {rule}
+                <button key={rule} type="button"
+                  onClick={() => key && upd('rules', { ...data.rules, [key]: !active })}
+                  className={`px-3 py-2 rounded-full text-sm font-medium border transition-colors ${
+                    active
+                      ? 'border-green-600 bg-green-50 text-green-700'
+                      : 'border-gray-300 text-gray-600 hover:border-green-400 hover:bg-green-50/50'
+                  }`}>
+                  {active && <span className="mr-1">✓</span>}{rule}
                 </button>
               );
             })}
           </div>
-          <div className="flex gap-2">
-            <input value={data.rules.additionalRules} onChange={e => upd('rules', { ...data.rules, additionalRules: e.target.value })}
-              placeholder="Add custom rule..."
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
-            <button className="w-10 h-10 border border-gray-300 rounded-lg flex items-center justify-center text-gray-600 hover:border-green-600 hover:bg-green-50 transition-colors text-lg">+</button>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Additional / custom rules (optional)</label>
+            <textarea value={data.rules.additionalRules} onChange={e => upd('rules', { ...data.rules, additionalRules: e.target.value })}
+              rows={2} placeholder="e.g. No smoking outside, Sort rubbish before leaving..."
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600 resize-y" />
           </div>
         </div>
 
@@ -978,7 +1024,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         {data.photos.length > 0 && (
           <div className="relative rounded-xl overflow-hidden">
             {/* Images */}
-            <div className="relative h-64 overflow-hidden rounded-xl">
+            <div className="relative h-64 overflow-hidden rounded-xl touch-pan-y"
+              onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+              onTouchEnd={e => { const dx = touchStartX.current - e.changedTouches[0].clientX; if (Math.abs(dx) > 50) { if (dx > 0) setPhotoIdx(i => Math.min(data.photos.length - 1, i + 1)); else setPhotoIdx(i => Math.max(0, i - 1)); } }}
+            >
               {data.photos.map((p, i) => (
                 <div key={i}
                   className="absolute inset-0 transition-transform duration-500 ease-in-out"
@@ -1216,6 +1265,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
         {/* Main content */}
         <div
+          ref={contentRef}
           className={`flex-1 overflow-y-auto px-6 py-8 lg:px-[200px] transition-all duration-300 ${
             animating ? (dir === 'fwd' ? 'opacity-0 translate-x-3' : 'opacity-0 -translate-x-3') : 'opacity-100 translate-x-0'
           }`}

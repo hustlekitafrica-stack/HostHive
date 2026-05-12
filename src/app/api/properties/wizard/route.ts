@@ -55,6 +55,19 @@ export async function POST(request: NextRequest) {
       caretaker_name: d.rules?.caretakerName || '',
       caretaker_phone: d.rules?.caretakerPhone || '',
       cancellation_policy: d.rules?.cancellation || 'moderate',
+      house_rules: {
+        noSmoking: d.rules?.noSmoking ?? true,
+        noParties: d.rules?.noParties ?? true,
+        noPets: d.rules?.noPets ?? true,
+        quietHours: d.rules?.quietHours ?? true,
+        childrenAllowed: d.rules?.childrenAllowed ?? false,
+        couplesOnly: d.rules?.couplesOnly ?? false,
+        noAlcohol: d.rules?.noAlcohol ?? false,
+        adultsOnly: d.rules?.adultsOnly ?? false,
+        removeShoes: d.rules?.removeShoes ?? false,
+        sortRubbish: d.rules?.sortRubbish ?? false,
+      },
+      additional_rules: d.rules?.additionalRules || '',
       status: d.status || 'active',
     };
     if (d.setup_step != null) insertRow.setup_step = d.setup_step;
@@ -154,6 +167,19 @@ export async function PUT(request: NextRequest) {
         caretaker_name: d.rules?.caretakerName || '',
         caretaker_phone: d.rules?.caretakerPhone || '',
         cancellation_policy: d.rules?.cancellation || 'moderate',
+        house_rules: {
+          noSmoking: d.rules?.noSmoking ?? true,
+          noParties: d.rules?.noParties ?? true,
+          noPets: d.rules?.noPets ?? true,
+          quietHours: d.rules?.quietHours ?? true,
+          childrenAllowed: d.rules?.childrenAllowed ?? false,
+          couplesOnly: d.rules?.couplesOnly ?? false,
+          noAlcohol: d.rules?.noAlcohol ?? false,
+          adultsOnly: d.rules?.adultsOnly ?? false,
+          removeShoes: d.rules?.removeShoes ?? false,
+          sortRubbish: d.rules?.sortRubbish ?? false,
+        },
+        additional_rules: d.rules?.additionalRules || '',
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
