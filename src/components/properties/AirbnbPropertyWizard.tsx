@@ -71,7 +71,14 @@ function PropIcon({ id }: { id: string }) {
   }
 }
 
-const COUNTIES = ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Eldoret', 'Thika', 'Malindi', 'Nanyuki', 'Nyeri', 'Machakos', 'Other'];
+const COUNTIES = [
+  'Nairobi','Mombasa','Kisumu','Nakuru','Uasin Gishu','Kiambu','Kilifi','Machakos','Meru',
+  'Kakamega','Bungoma','Kisii','Nyeri','Murang\'a','Kirinyaga','Embu','Makueni','Kajiado',
+  'Nandi','Kericho','Bomet','Migori','Homa Bay','Siaya','Vihiga','Busia','Trans Nzoia',
+  'Elgeyo-Marakwet','Baringo','Laikipia','Nyandarua','Nyamira','Narok','Kwale','Taita-Taveta',
+  'Tana River','Lamu','Garissa','Wajir','Mandera','Marsabit','Isiolo','Tharaka-Nithi',
+  'Samburu','Turkana','West Pokot','Kitui',
+];
 
 const AMENITY_CATEGORIES = [
   { cat: '🌐 Internet & Entertainment', items: [{ id: 'wifi', icon: '📶', label: 'WiFi', sub: 'Fast 50+' }, { id: 'dstv', icon: '📺', label: 'DSTV' }, { id: 'netflix', icon: '🎬', label: 'Netflix' }, { id: 'smarttv', icon: '🎮', label: 'Smart TV' }, { id: 'speaker', icon: '🔊', label: 'Bluetooth Speaker' }] },
@@ -247,6 +254,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [stepError, setStepError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef<number>(0);
   const errorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -496,6 +504,22 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             </div>
           </div>
 
+          {/* Building / Unit / Floor — optional */}
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Building <span className="text-xs font-normal text-gray-400">(optional)</span></label>
+              <input value={data.location.building} onChange={e => upd('location', { ...data.location, building: e.target.value })} placeholder="e.g. Upperhill Court" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Unit / Apt <span className="text-xs font-normal text-gray-400">(optional)</span></label>
+              <input value={data.location.unit} onChange={e => upd('location', { ...data.location, unit: e.target.value })} placeholder="e.g. B12" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-800 mb-1.5">Floor <span className="text-xs font-normal text-gray-400">(optional)</span></label>
+              <input value={data.location.floor} onChange={e => upd('location', { ...data.location, floor: e.target.value })} placeholder="e.g. 3rd" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600" />
+            </div>
+          </div>
+
           {/* County + Pin on map */}
           <div className="flex items-end gap-4">
             <div className="flex-1">
@@ -513,10 +537,26 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             </div>
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2.5 border border-green-600 text-green-600 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors whitespace-nowrap"
+              disabled={geocoding || !data.location.address.trim()}
+              onClick={async () => {
+                const q = [data.location.address, data.location.neighbourhood, data.location.city, 'Kenya'].filter(Boolean).join(', ');
+                setGeocoding(true);
+                try {
+                  const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=ke`, { headers: { 'Accept-Language': 'en' } });
+                  const json = await res.json();
+                  if (json[0]) {
+                    const lat = parseFloat(parseFloat(json[0].lat).toFixed(5));
+                    const lng = parseFloat(parseFloat(json[0].lon).toFixed(5));
+                    upd('location', { ...data.location, lat, lng });
+                  } else { showError('Address not found — try entering more detail or pin manually on the map.'); }
+                } catch { showError('Geocoding failed — check your connection and try again.'); }
+                setGeocoding(false);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 border border-green-600 text-green-600 rounded-lg text-sm font-medium hover:bg-green-50 transition-colors whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Pin on map
+              {geocoding
+                ? <><div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />Searching…</>
+                : <><svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Pin on map</>}
             </button>
           </div>
 
