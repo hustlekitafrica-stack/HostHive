@@ -52,8 +52,8 @@ export default function LoginPage() {
           <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6 border-b border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">HH</div>
-                <span className="text-sm text-white font-bold">Host Hive</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{background:'#9B1C1C'}}>KS</div>
+                <span className="text-sm text-white font-bold">Kogelo Suites</span>
               </div>
               <span className="text-xs text-slate-400">Need help?</span>
             </div>

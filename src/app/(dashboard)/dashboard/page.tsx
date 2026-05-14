@@ -190,12 +190,8 @@ export default function DashboardPage() {
             Add Property
           </button>
           </div>
-          {/* Upgrade + email */}
           <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-            <a href="/upgrade" className="bg-gray-900 text-white px-3 md:px-4 py-1.5 md:py-2 rounded-lg font-medium text-xs md:text-sm hover:bg-gray-800 transition-colors">
-              Upgrade
-            </a>
-            <span className="text-xs text-gray-600">kogelosutes@gmail.com</span>
+            <span className="text-xs text-gray-600">admin@kogelosuites.com</span>
           </div>
         </div>
       </div>
@@ -783,8 +779,8 @@ export default function DashboardPage() {
                   ) : null)}
 
                   {/* Gridlines + left Y labels */}
-                  {grids.map(g => (
-                    <g key={g.label}>
+                  {grids.map((g, i) => (
+                    <g key={`grid-${i}`}>
                       <line x1={ML} y1={g.y} x2={W - MR} y2={g.y} stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4,4" />
                       <text x={ML - 6} y={g.y + 4} textAnchor="end" fontSize="9" fill="#9ca3af" fontFamily="system-ui,sans-serif">{g.label}</text>
                     </g>
@@ -804,7 +800,7 @@ export default function DashboardPage() {
                     const gx = ML + i * groupW + pad;
                     const isH = hoveredMonth === i;
                     return (
-                      <g key={i}>
+                      <g key={`bar-${i}`}>
                         {isH && <rect x={ML + i * groupW + 1} y={MT} width={groupW - 2} height={cH} fill="#f9fafb" rx="2" />}
                         {activeSeries.revenue && (
                           <rect x={gx} y={yOf(Number(m.revenue) || 0)} width={barW - 1} height={hOf(Number(m.revenue) || 0)}
@@ -839,7 +835,7 @@ export default function DashboardPage() {
                     <>
                       <polyline points={occPts} fill="none" stroke="#a855f7" strokeWidth="2" strokeDasharray="6,3" opacity="0.9" />
                       {monthly.map((m: any, i: number) => (
-                        <circle key={i} cx={groupCx(i)} cy={occY(Number(m.occupancy) || 0)} r="3"
+                        <circle key={`occ-${i}`} cx={groupCx(i)} cy={occY(Number(m.occupancy) || 0)} r="3"
                           fill="#a855f7" stroke="white" strokeWidth="1.5" />
                       ))}
                     </>

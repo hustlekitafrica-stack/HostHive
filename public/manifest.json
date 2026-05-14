@@ -1,7 +1,7 @@
 {
-  "name": "HostBooks KE - Property Management",
-  "short_name": "HostBooks KE",
-  "description": "Complete property management system for short-term rentals in Kenya",
+  "name": "Kogelo Suites - Property Management",
+  "short_name": "Kogelo Suites",
+  "description": "Kogelo Suites — Your home away from home in Kogelo, Kenya",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

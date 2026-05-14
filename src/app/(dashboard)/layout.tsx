@@ -21,75 +21,18 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Check trial expiry — try DB first, fallback to localStorage
-      const checkExpiry = async () => {
-        try {
-          const res = await fetch('/api/subscription');
-          if (res.ok) {
-            const data = await res.json();
-            // Sync localStorage with DB values
-            localStorage.setItem('subscription_status', data.is_paid ? 'paid' : 'trial');
-            if (data.trial_start) localStorage.setItem('trial_start', data.trial_start);
-            if (data.whatsapp_phone) localStorage.setItem('user_phone', data.whatsapp_phone);
-            return data.is_expired as boolean;
-          }
-        } catch { /* offline or demo mode */ }
-
-        // Fallback: localStorage
-        const isPaid = localStorage.getItem('subscription_status') === 'paid';
-        if (isPaid) return false;
-        const trialStart = localStorage.getItem('trial_start');
-        if (!trialStart) return false;
-        const diffDays = (Date.now() - new Date(trialStart).getTime()) / (1000 * 60 * 60 * 24);
-        return diffDays > 14;
-      };
-
-      const isExpired = await checkExpiry();
-      if (isExpired) {
-        const alreadyNotified = localStorage.getItem('trial_expired_notified');
-        if (!alreadyNotified) {
-          const phone = localStorage.getItem('user_phone') || '';
-          const email = localStorage.getItem('user_email') || '';
-          if (phone) {
-            fetch('/api/notifications/trial-expired', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ phone, email }),
-            }).catch(() => {});
-          }
-          localStorage.setItem('trial_expired_notified', 'true');
-        }
-        router.push('/upgrade?expired=true');
-        return;
-      }
-
-      // Check for demo token first
       const demoToken = localStorage.getItem('auth_token');
-      if (demoToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      // Then check Supabase auth
+      if (demoToken) { setIsLoading(false); return; }
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-
-        if (!user) {
-          router.push('/auth/login');
-          return;
-        }
-      } catch (error) {
-        // If Supabase fails, check for demo token
-        if (!demoToken) {
-          router.push('/auth/login');
-          return;
-        }
+        if (!user) { router.push('/auth/login'); return; }
+      } catch {
+        router.push('/auth/login');
+        return;
       }
-
       setIsLoading(false);
     };
-
     checkAuth();
   }, [router]);
 

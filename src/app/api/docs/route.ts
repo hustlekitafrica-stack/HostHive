@@ -4,13 +4,13 @@ export async function GET() {
   const apiDocs = {
     openapi: '3.0.0',
     info: {
-      title: 'HostBooks KE API',
+      title: 'Kogelo Suites API',
       description: 'Complete REST API for property management system',
       version: '1.0.0',
       contact: {
-        name: 'HostBooks KE Support',
-        email: 'support@hostbooks-ke.com',
-        url: 'https://hostbooks-ke.com',
+        name: 'Kogelo Suites Support',
+        email: 'support@Kogelo Suites-ke.com',
+        url: 'https://Kogelo Suites-ke.com',
       },
     },
     servers: [
@@ -19,7 +19,7 @@ export async function GET() {
         description: 'Development server',
       },
       {
-        url: 'https://api.hostbooks-ke.com',
+        url: 'https://api.Kogelo Suites-ke.com',
         description: 'Production server',
       },
     ],

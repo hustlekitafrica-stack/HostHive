@@ -9,7 +9,6 @@ import { createClient } from '@/lib/supabase/client';
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
-  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,7 +16,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !businessName || !email || !password || !confirmPassword) {
+    if (!fullName || !email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -34,7 +33,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword, fullName, businessName }),
+        body: JSON.stringify({ email, password, confirmPassword, fullName }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -49,7 +48,7 @@ export default function RegisterPage() {
         return;
       }
       toast.success('Account created successfully!');
-      router.push('/onboarding');
+      router.push('/dashboard');
     } catch {
       toast.error('Network error. Please try again.');
     } finally {
@@ -68,8 +67,8 @@ export default function RegisterPage() {
           <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6 border-b border-slate-700">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">HH</div>
-                <span className="text-sm text-white font-bold">Host Hive</span>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{background:'#9B1C1C'}}>KS</div>
+                <span className="text-sm text-white font-bold">Kogelo Suites</span>
               </div>
               <span className="text-xs text-slate-400">Need help?</span>
             </div>
@@ -80,10 +79,6 @@ export default function RegisterPage() {
               <input type="text" value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Full Name"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
-              <input type="text" value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Business Name"
                 className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               <input type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}

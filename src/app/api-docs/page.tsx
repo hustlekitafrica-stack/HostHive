@@ -146,7 +146,7 @@ export default function APIDocsPage() {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-surface-900">API Documentation</h1>
           <p className="text-surface-600 mt-2">
-            Complete REST API reference for HostBooks KE
+            Complete REST API reference for Kogelo Suites
           </p>
         </div>
 
@@ -155,11 +155,11 @@ export default function APIDocsPage() {
             <div className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Welcome to HostBooks KE API</CardTitle>
+                  <CardTitle>Welcome to Kogelo Suites API</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-surface-700">
-                    The HostBooks KE API allows you to programmatically manage your property
+                    The Kogelo Suites API allows you to programmatically manage your property
                     bookings, payments, guests, and more. Our API is built on REST principles
                     and returns JSON responses.
                   </p>
@@ -167,7 +167,7 @@ export default function APIDocsPage() {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h3 className="font-semibold text-blue-900 mb-2">Base URL</h3>
                     <code className="text-sm text-blue-800">
-                      https://api.hostbooks-ke.com/api
+                      https://api.Kogelo Suites-ke.com/api
                     </code>
                   </div>
 
@@ -198,7 +198,7 @@ export default function APIDocsPage() {
                   <div>
                     <h3 className="font-semibold text-surface-900 mb-2">2. Make Your First Request</h3>
                     <pre className="bg-surface-900 text-white p-4 rounded-lg text-sm overflow-x-auto">
-                      {`curl -X GET https://api.hostbooks-ke.com/api/properties \\
+                      {`curl -X GET https://api.Kogelo Suites-ke.com/api/properties \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"`}
                     </pre>
@@ -235,7 +235,7 @@ export default function APIDocsPage() {
                 <div>
                   <h3 className="font-semibold text-surface-900 mb-3">Getting Your API Key</h3>
                   <ol className="text-sm text-surface-600 space-y-2 list-decimal list-inside">
-                    <li>Log in to your HostBooks KE account</li>
+                    <li>Log in to your Kogelo Suites account</li>
                     <li>Go to Settings → API Keys</li>
                     <li>Click "Generate New Key"</li>
                     <li>Copy your key and store it securely</li>
@@ -361,7 +361,7 @@ export default function APIDocsPage() {
                     <h3 className="font-semibold text-surface-900 mb-2">JavaScript/Node.js</h3>
                     <pre className="bg-surface-900 text-white p-4 rounded-lg text-sm overflow-x-auto">
                       {`const response = await fetch(
-  'https://api.hostbooks-ke.com/api/properties',
+  'https://api.Kogelo Suites-ke.com/api/properties',
   {
     method: 'GET',
     headers: {
@@ -386,7 +386,7 @@ headers = {
 }
 
 response = requests.get(
-    'https://api.hostbooks-ke.com/api/properties',
+    'https://api.Kogelo Suites-ke.com/api/properties',
     headers=headers
 )
 
@@ -398,7 +398,7 @@ print(data)`}
                   <div>
                     <h3 className="font-semibold text-surface-900 mb-2">cURL</h3>
                     <pre className="bg-surface-900 text-white p-4 rounded-lg text-sm overflow-x-auto">
-                      {`curl -X GET https://api.hostbooks-ke.com/api/properties \\
+                      {`curl -X GET https://api.Kogelo Suites-ke.com/api/properties \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"`}
                     </pre>

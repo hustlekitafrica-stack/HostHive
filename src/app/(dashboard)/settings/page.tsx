@@ -27,7 +27,7 @@ const MONTHS = ['January','February','March','April','May','June','July','August
 
 export default function SettingsPage() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [userEmail, setUserEmail] = useState('demo@hostbooks.ke');
+  const [userEmail, setUserEmail] = useState('admin@kogelosuites.com');
   const [activeTab, setActiveTab] = useState<Tab>('general');
 
   // General tab state
@@ -74,7 +74,7 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    const email = localStorage.getItem('user_email') || 'demo@hostbooks.ke';
+    const email = localStorage.getItem('user_email') || 'admin@kogelosuites.com';
     setUserEmail(email);
   }, []);
 
@@ -395,7 +395,7 @@ export default function SettingsPage() {
               <p className="text-sm text-gray-500 mb-5">How your brand colors look in the interface.</p>
               <div className="border border-gray-200 rounded-lg overflow-hidden">
                 <div className="px-4 py-3 text-white text-sm font-bold" style={{ backgroundColor: primaryColor }}>
-                  Host Hive
+                  Kogelo Suites
                 </div>
                 <div className="bg-gray-50 px-4 py-3 space-y-2">
                   {['Dashboard', 'My Properties', 'Expenses', 'Reports Center'].map(item => (

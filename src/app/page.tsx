@@ -14,7 +14,7 @@ export default function Home() {
     <div className="flex items-center justify-center min-h-screen bg-surface-50">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-surface-900 mb-4">
-          HostBooks KE
+          Kogelo Suites
         </h1>
         <p className="text-surface-600 mb-8">
           Loading your dashboard...

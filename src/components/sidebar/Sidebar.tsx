@@ -15,27 +15,12 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
   const [userEmail, setUserEmail] = useState('');
-  const [trialDaysLeft, setTrialDaysLeft] = useState(14);
-  const [isPaid, setIsPaid] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
-  const [trialDismissed, setTrialDismissed] = useState(false);
 
   useEffect(() => {
-    setTrialDismissed(localStorage.getItem('trial_banner_dismissed') === 'true');
-    const email = localStorage.getItem('user_email') || 'kogelosutes@gmail.com';
+    const email = localStorage.getItem('user_email') || 'admin@kogelosuites.com';
     setUserEmail(email);
-
-    const applyLocal = () => {
-      const paid = localStorage.getItem('subscription_status') === 'paid';
-      setIsPaid(paid);
-      if (!paid) {
-        const trialStart = localStorage.getItem('trial_start');
-        if (trialStart) {
-          const elapsed = (Date.now() - new Date(trialStart).getTime()) / (1000 * 60 * 60 * 24);
-          setTrialDaysLeft(Math.max(0, Math.ceil(14 - elapsed)));
-        }
-      }
-    };
+    const applyLocal = () => {};
 
     let alertTotal = 0;
     fetch('/api/alerts')
@@ -53,18 +38,6 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
           })
           .catch(() => setAlertCount(alertTotal));
       });
-
-    fetch('/api/subscription')
-      .then(r => r.ok ? r.json() : Promise.reject(r.status))
-      .then(data => {
-        setIsPaid(data.is_paid);
-        if (!data.is_paid && data.days_left !== null) {
-          setTrialDaysLeft(data.days_left);
-        }
-        localStorage.setItem('subscription_status', data.is_paid ? 'paid' : 'trial');
-        if (data.trial_start) localStorage.setItem('trial_start', data.trial_start);
-      })
-      .catch(() => applyLocal());
   }, []);
 
   // Prevent body scroll when mobile sidebar is open
@@ -80,8 +53,6 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
   }, [isMobile, isOpen]);
 
   const isActive = (href: string) => pathname === href || pathname.startsWith(href);
-
-  const trialPercentage = ((14 - trialDaysLeft) / 14) * 100;
 
   return (
     <div
@@ -101,11 +72,11 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
             {typeof window !== 'undefined' && localStorage.getItem('brand_logo') ? (
               <img src={localStorage.getItem('brand_logo')!} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10" />
             ) : (
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
-                HH
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: '#9B1C1C' }}>
+                KS
               </div>
             )}
-            <span className="text-white font-bold text-lg">Host Hive</span>
+            <span className="text-white font-bold text-lg">Kogelo Suites</span>
           </div>
         )}
         {collapsed && (
@@ -113,8 +84,8 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
             {typeof window !== 'undefined' && localStorage.getItem('brand_logo') ? (
               <img src={localStorage.getItem('brand_logo')!} alt="Logo" className="w-8 h-8 rounded-lg object-contain bg-white/10" />
             ) : (
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}>
-                HH
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: '#9B1C1C' }}>
+                KS
               </div>
             )}
           </div>
@@ -256,6 +227,18 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
           />
           <SidebarItem
             icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            }
+            label="Booking Requests"
+            href="/requests"
+            isActive={isActive('/requests')}
+            collapsed={collapsed}
+          />
+          <SidebarItem
+            icon={
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -301,6 +284,18 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
 
         {/* BOOKKEEPING Section */}
         <SidebarSection title="BOOKKEEPING" collapsed={collapsed}>
+          <SidebarItem
+            icon={
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            }
+            label="Menu Management"
+            href="/menu"
+            isActive={isActive('/menu')}
+            collapsed={collapsed}
+          />
           <SidebarItem
             icon={
               <svg
@@ -400,39 +395,7 @@ export function Sidebar({ isOpen = true, onClose, isMobile = false }: SidebarPro
 
       {/* User Section */}
       <div className="px-2 py-4 border-t border-slate-800">
-        {/* Free Trial Card */}
-        {!collapsed && !isPaid && !trialDismissed && (
-          <div className="bg-slate-800/50 rounded-lg p-3 mt-2 relative">
-            <button
-              onClick={() => {
-                setTrialDismissed(true);
-                localStorage.setItem('trial_banner_dismissed', 'true');
-              }}
-              className="absolute top-2 right-2 text-slate-500 hover:text-slate-300 transition-colors"
-              aria-label="Dismiss trial notification"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <p className="text-xs font-semibold text-slate-300 mb-2">Free Trial</p>
-            <p className="text-sm font-bold text-white mb-2">{trialDaysLeft} days left</p>
-            <div className="w-full bg-slate-700 rounded-full h-2 overflow-hidden mb-2.5">
-              <div
-                className="h-full transition-all duration-300"
-                style={{ width: `${trialPercentage}%`, backgroundColor: 'var(--brand-secondary, #16a34a)' }}
-              ></div>
-            </div>
-            <a
-              href="/upgrade"
-              className="block w-full text-center text-xs font-semibold py-1.5 rounded-md text-white transition-colors"
-              style={{ backgroundColor: 'var(--brand-secondary, #16a34a)' }}
-            >
-              Upgrade Now
-            </a>
-          </div>
-        )}
-      </div>
+        </div>
     </div>
   );
 }

@@ -178,7 +178,7 @@ export default function BookingCalendarPage() {
   }, []);
 
   useEffect(() => {
-    const email = localStorage.getItem('user_email') || 'demo@hostbooks.ke';
+    const email = localStorage.getItem('user_email') || 'admin@kogelosuites.com';
     setUserEmail(email);
   }, []);
 

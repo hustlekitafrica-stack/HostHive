@@ -67,7 +67,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-surface-900 mb-2">
-              HostBooks KE
+              Kogelo Suites
             </h1>
             <p className="text-surface-600">
               Run your rentals. Know your numbers.
@@ -120,7 +120,7 @@ export default function LoginPage() {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-surface-500">
-                  New to HostBooks?
+                  New to Kogelo Suites?
                 </span>
               </div>
             </div>

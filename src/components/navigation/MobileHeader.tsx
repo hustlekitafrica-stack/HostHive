@@ -31,7 +31,7 @@ export function MobileHeader({
     if (pathname === '/expenses') return 'Expenses';
     if (pathname === '/reports') return 'Reports';
     if (pathname === '/settings') return 'Settings';
-    return 'Host Hive';
+    return 'Kogelo Suites';
   };
 
   // Hide header on pages that have their own sticky header
@@ -56,12 +56,9 @@ export function MobileHeader({
         </button>
 
         {/* Logo */}
-        <h1 className="text-base font-bold text-gray-900">Host Hive</h1>
+        <h1 className="text-base font-bold text-gray-900">Kogelo Suites</h1>
 
-        {/* Upgrade Button */}
-        <a href="/upgrade" className="bg-gray-900 text-white px-3 py-1.5 rounded-lg font-medium text-xs hover:bg-gray-800 transition-colors">
-          Upgrade
-        </a>
+        <div className="w-10" />
       </div>
 
     </div>
