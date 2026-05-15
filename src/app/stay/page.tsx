@@ -208,10 +208,10 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+      <section className="pt-20 pb-16 px-4 sm:px-6" style={{ background: 'linear-gradient(135deg, #1e293b, #16a34a)' }}>
         <div className="max-w-5xl mx-auto">
           {/* Search header */}
-          <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+          <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: 'linear-gradient(135deg, #1e293b, #16a34a)' }}>
             <div className="max-w-5xl mx-auto">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
                 Find your perfect stay
