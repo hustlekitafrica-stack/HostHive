@@ -41,72 +41,75 @@ function RoomsContent() {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
 
-      {/* Header */}
-      <div className="pt-20 pb-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Find Your Perfect Room</h1>
-          <p className="text-white/60 mb-6">40 units available — all in one exclusive compound</p>
+      {/* Search header */}
+      <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+            Find your next stay
+          </h1>
+          <p className="text-white/80 text-base sm:text-lg mb-14">
+            Search rooms, suites, and more at Kogelo Suites…
+          </p>
 
-          {/* Booking type cards */}
-          <div className="grid sm:grid-cols-2 gap-4 mb-8">
-            <Link href={`/stay/book/single${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
-              className="group flex items-center gap-4 rounded-2xl p-5 border border-white/20 hover:border-white/60 hover:bg-white/10 transition-all duration-200"
-              style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                <BedDouble className="w-6 h-6 text-white" />
-              </div>
+          <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706' }}>
+            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
+              <MapPin className="w-5 h-5 flex-shrink-0 text-gray-400" />
               <div className="flex-1">
-                <div className="font-black text-white text-base">Book a Single Room</div>
-                <div className="text-xs text-white/60 mt-0.5">For individuals, couples or families</div>
+                <p className="text-xs text-gray-400 mb-0.5">Destination</p>
+                <p className="text-sm font-semibold text-gray-900">Kogelo Suites, Kogelo</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0" />
-            </Link>
+            </div>
 
-            <Link href={`/stay/book/group${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
-              className="group flex items-center gap-4 rounded-2xl p-5 border border-white/20 hover:border-white/60 hover:bg-white/10 transition-all duration-200"
-              style={{ background: 'rgba(255,255,255,0.08)' }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(255,255,255,0.15)' }}>
-                <Users className="w-6 h-6 text-white" />
+            <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+              <div className="px-4 py-3 flex-1 border-r border-gray-200">
+                <label className="block text-xs text-gray-400 mb-0.5">Check-in</label>
+                <input type="date" value={checkIn} min={today}
+                  onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(''); }}
+                  className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
               </div>
-              <div className="flex-1">
-                <div className="font-black text-white text-base">Group Booking</div>
-                <div className="text-xs text-white/60 mt-0.5">Multiple rooms for a group or event</div>
+              <div className="px-4 py-3 flex-1">
+                <label className="block text-xs text-gray-400 mb-0.5">Check-out</label>
+                <input type="date" value={checkOut} min={checkIn || today}
+                  onChange={e => setCheckOut(e.target.value)}
+                  className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
               </div>
-              <ArrowRight className="w-4 h-4 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0" />
-            </Link>
+            </div>
+
+            <div className="flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
+              <Users className="w-5 h-5 flex-shrink-0 text-gray-400" />
+              <div>
+                <p className="text-xs text-gray-400 mb-0.5">Guests</p>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setGuestFilter(g => Math.max(1, g - 1))} className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center font-bold">−</button>
+                  <span className="text-gray-900 font-bold text-sm min-w-4 text-center">{guestFilter}</span>
+                  <button onClick={() => setGuestFilter(g => Math.min(20, g + 1))} className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center font-bold">+</button>
+                </div>
+              </div>
+            </div>
+
+            <button className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0" style={{ background: '#16a34a' }}>
+              <Search className="w-4 h-4" />
+              Search
+            </button>
           </div>
 
-          {/* Filter bar */}
-          <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-2xl p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Check In</label>
-              <input type="date" value={checkIn} min={today}
-                onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(''); }}
-                className="w-full text-sm font-semibold text-white bg-transparent outline-none border-b border-white/20 pb-1" />
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="flex gap-3">
+              <Link href={`/stay/book/single${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+                <BedDouble className="w-4 h-4" /> Single Room <ArrowRight className="w-3 h-3" />
+              </Link>
+              <Link href={`/stay/book/group${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
+                <Users className="w-4 h-4" /> Group Booking <ArrowRight className="w-3 h-3" />
+              </Link>
             </div>
-            <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Check Out</label>
-              <input type="date" value={checkOut} min={checkIn || today}
-                onChange={e => setCheckOut(e.target.value)}
-                className="w-full text-sm font-semibold text-white bg-transparent outline-none border-b border-white/20 pb-1" />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Guests</label>
-              <div className="flex items-center gap-2">
-                <button onClick={() => setGuestFilter(g => Math.max(1, g - 1))} className="w-6 h-6 rounded-full bg-white/20 text-white text-sm flex items-center justify-center font-bold">−</button>
-                <span className="text-white font-bold text-sm">{guestFilter}</span>
-                <button onClick={() => setGuestFilter(g => Math.min(20, g + 1))} className="w-6 h-6 rounded-full bg-white/20 text-white text-sm flex items-center justify-center font-bold">+</button>
-              </div>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Sort By</label>
-              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
-                className="w-full text-sm font-semibold text-white bg-transparent outline-none border-b border-white/20 pb-1">
-                <option value="price_asc" className="text-gray-900">Price: Low to High</option>
-                <option value="price_desc" className="text-gray-900">Price: High to Low</option>
-                <option value="name" className="text-gray-900">Name A–Z</option>
-              </select>
-            </div>
+            <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
+              className="bg-white text-gray-900 text-sm font-semibold rounded-lg px-4 py-2 outline-none">
+              <option value="price_asc">Price: Low to High</option>
+              <option value="price_desc">Price: High to Low</option>
+              <option value="name">Name A–Z</option>
+            </select>
           </div>
         </div>
       </div>
