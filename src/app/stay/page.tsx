@@ -426,7 +426,7 @@ export default function StayHomePage() {
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Ready to Experience Kogelo?</h2>
           <p className="text-white/70 mb-10 text-lg">Book your stay today. Flexible dates. Instant confirmation.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/stay/book" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold bg-white transition-all hover:bg-gray-100" style={{ color: '#16a34a' }}>
+            <Link href="/stay/rooms" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold bg-white transition-all hover:bg-gray-100" style={{ color: '#16a34a' }}>
               Book Your Stay
             </Link>
             <Link href="/stay/rooms" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold border-2 border-white/40 text-white hover:bg-white/10 transition-all">

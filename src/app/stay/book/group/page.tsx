@@ -126,7 +126,7 @@ function GroupBookingContent() {
       <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-5">
-            <Link href="/stay/book" className="text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back</Link>
+            <Link href="/stay/rooms" className="text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back</Link>
             <span className="text-white/30">/</span>
             <span className="text-white text-sm font-semibold">Group Booking</span>
           </div>

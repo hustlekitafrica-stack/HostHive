@@ -95,10 +95,6 @@ function RoomsContent() {
 
           <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="flex gap-3">
-              <Link href={`/stay/book/single${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
-                <BedDouble className="w-4 h-4" /> Single Room <ArrowRight className="w-3 h-3" />
-              </Link>
               <Link href={`/stay/book/group${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
                 <Users className="w-4 h-4" /> Group Booking <ArrowRight className="w-3 h-3" />
@@ -136,7 +132,7 @@ function RoomsContent() {
             {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
           </p>
           {(checkIn && checkOut) && (
-            <Link href={`/stay/book?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}`}
+            <Link href={`/stay/book/group?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}`}
               className="text-sm font-bold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"
               style={{ background: '#16a34a' }}>
               Book Multiple Rooms →
