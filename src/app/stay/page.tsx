@@ -161,7 +161,7 @@ function RoomCard({ property }: { property: any }) {
             <HomeIcon className="w-12 h-12 text-white/50" />
           </div>
         )}
-        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
+        <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
           {property.type || 'Room'}
         </div>
       </div>
@@ -224,15 +224,16 @@ export default function StayHomePage() {
           {/* Search bar */}
           <SearchWidget />
 
-          {/* Stats row */}
-          <div className="mt-10 flex items-center gap-6 flex-wrap">
-            {HIGHLIGHTS.map(h => (
-              <div key={h.label} className="flex items-center gap-2">
-                <span className="text-xl font-black text-white">{h.number}</span>
-                <span className="text-xs text-white/60">{h.label}</span>
-              </div>
-            ))}
+          {/* Heading */}
+          <div className="mt-10">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+              Find your next stay
+            </h1>
+            <p className="text-white/80 text-base sm:text-lg">
+              Search rooms, suites, and more at Kogelo Suites…
+            </p>
           </div>
+
         </div>
       </section>
 
