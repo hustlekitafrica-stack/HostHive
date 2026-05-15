@@ -12,7 +12,8 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     { href: '/stay',             label: 'Home' },
     { href: '/stay/rooms',       label: 'Rooms' },
     { href: '/stay/dining',      label: 'Dining' },
-    { href: '/stay/my-bookings', label: 'My Bookings' },
+    { href: '/stay/my-bookings', label: 'Trips' },
+    { href: '/stay/profile',     label: 'Profile' },
   ];
 
   return (
@@ -122,8 +123,9 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               {[
                 { href: '/stay/rooms',       label: 'Browse Rooms' },
                 { href: '/stay/dining',      label: 'Restaurant & Dining' },
-                { href: '/stay/book',        label: 'Make a Booking' },
-                { href: '/stay/my-bookings', label: 'My Bookings' },
+                { href: '/stay/rooms',       label: 'Make a Booking' },
+                { href: '/stay/my-bookings', label: 'Trips' },
+                { href: '/stay/profile',     label: 'Profile' },
               ].map(l => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</Link>

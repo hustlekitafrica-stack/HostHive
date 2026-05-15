@@ -67,7 +67,7 @@ function MyBookingsContent() {
       <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-3xl mx-auto">
           <Link href="/stay" className="text-white/60 hover:text-white text-sm font-semibold mb-4 inline-block transition-colors">← Home</Link>
-          <h1 className="text-3xl font-black text-white">My Bookings</h1>
+          <h1 className="text-3xl font-black text-white">Trips</h1>
           <p className="text-white/60 mt-1 text-sm">Track the status of your reservation requests.</p>
         </div>
       </div>

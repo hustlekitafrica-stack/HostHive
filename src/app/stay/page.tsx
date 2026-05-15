@@ -141,7 +141,7 @@ function SearchWidget() {
         {/* Search */}
         <button onClick={handleSearch}
           className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
-          style={{ background: '#1e293b' }}>
+          style={{ background: '#16a34a' }}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           Search
         </button>
