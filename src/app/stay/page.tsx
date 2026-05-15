@@ -32,49 +32,120 @@ const HIGHLIGHTS = [
 
 function SearchWidget() {
   const router = useRouter();
-  const today = new Date().toISOString().split('T')[0];
+  const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [checkIn,  setCheckIn]  = useState(today);
   const [checkOut, setCheckOut] = useState(tomorrow);
-  const [guests, setGuests] = useState(1);
+  const [adults,   setAdults]   = useState(2);
+  const [children, setChildren] = useState(0);
+  const [rooms,    setRooms]    = useState(1);
+  const [guestOpen, setGuestOpen] = useState(false);
+
+  const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
 
   const handleSearch = () => {
-    router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`);
+    setGuestOpen(false);
+    router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl p-2 flex flex-col md:flex-row items-stretch gap-2">
-      <div className="flex-1 grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-100">
-        <div className="px-4 py-3">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Check In</label>
-          <input type="date" value={checkIn} min={today}
-            onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(e.target.value); }}
-            className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent" />
-        </div>
-        <div className="px-4 py-3">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Check Out</label>
-          <input type="date" value={checkOut} min={checkIn}
-            onChange={e => setCheckOut(e.target.value)}
-            className="w-full text-sm font-semibold text-gray-900 outline-none bg-transparent" />
-        </div>
-        <div className="px-4 py-3">
-          <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Guests</label>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setGuests(g => Math.max(1, g - 1))} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">−</button>
-            <span className="text-sm font-semibold text-gray-900 w-4 text-center">{guests}</span>
-            <button onClick={() => setGuests(g => Math.min(20, g + 1))} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">+</button>
-            <span className="text-sm text-gray-500 ml-1">{guests === 1 ? 'guest' : 'guests'}</span>
+    <div className="relative w-full max-w-5xl mx-auto">
+      {/* Main bar */}
+      <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #FFB700' }}>
+
+        {/* Destination */}
+        <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
+          <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <div className="flex-1">
+            <input
+              type="text"
+              defaultValue="Kogelo Suites, Kogelo"
+              readOnly
+              className="w-full text-gray-900 font-semibold text-sm outline-none bg-transparent cursor-default placeholder-gray-400"
+              placeholder="Where are you going?"
+            />
+            <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">Kogelo, Siaya County, Kenya</p>
           </div>
         </div>
+
+        {/* Dates */}
+        <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+          <div className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200">
+            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
+              <input type="date" value={checkIn} min={today}
+                onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(e.target.value); }}
+                className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-4 py-3 flex-1">
+            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
+              <input type="date" value={checkOut} min={checkIn}
+                onChange={e => setCheckOut(e.target.value)}
+                className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
+            </div>
+          </div>
+        </div>
+
+        {/* Guests */}
+        <div className="relative flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+          <button onClick={() => setGuestOpen(o => !o)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
+            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <div>
+              <p className="text-xs text-gray-400 mb-0.5">Guests</p>
+              <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
+            </div>
+            <svg className={`w-4 h-4 text-gray-400 ml-2 transition-transform ${guestOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+          </button>
+
+          {/* Guest dropdown */}
+          {guestOpen && (
+            <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-2xl p-5 min-w-[280px]">
+              {[
+                { label: 'Adults', sub: 'Ages 18+', val: adults, set: setAdults, min: 1 },
+                { label: 'Children', sub: 'Ages 0–17', val: children, set: setChildren, min: 0 },
+                { label: 'Rooms', sub: '', val: rooms, set: setRooms, min: 1 },
+              ].map(row => (
+                <div key={row.label} className="flex items-center justify-between py-3 border-b last:border-0 border-gray-100">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{row.label}</p>
+                    {row.sub && <p className="text-xs text-gray-400">{row.sub}</p>}
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button onClick={() => row.set((v: number) => Math.max(row.min, v - 1))}
+                      className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-colors font-bold text-lg leading-none disabled:opacity-30"
+                      disabled={row.val === row.min}>−</button>
+                    <span className="text-sm font-bold w-4 text-center">{row.val}</span>
+                    <button onClick={() => row.set((v: number) => Math.min(20, v + 1))}
+                      className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-colors font-bold text-lg leading-none">+</button>
+                  </div>
+                </div>
+              ))}
+              <button onClick={() => setGuestOpen(false)}
+                className="mt-3 w-full py-2 rounded-lg text-sm font-bold text-white" style={{ background: '#003580' }}>Done</button>
+            </div>
+          )}
+        </div>
+
+        {/* Book Now */}
+        <button onClick={handleSearch}
+          className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
+          style={{ background: '#003580' }}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          Book Now
+        </button>
       </div>
-      <button
-        onClick={handleSearch}
-        className="md:w-40 py-4 md:py-3 px-6 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2"
-        style={{ background: '#9B1C1C' }}
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        Search
-      </button>
     </div>
   );
 }
@@ -137,41 +208,32 @@ export default function StayHomePage() {
     <div className="bg-[#FFFBF5]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(160deg, #1A0800 0%, #4a1010 45%, #7B1818 75%, #9B1C1C 100%)' }} />
-        <div className="absolute inset-0 opacity-10" style={{
-          backgroundImage: 'radial-gradient(circle at 20% 50%, #ffffff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #ffffff 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
+      <section className="relative pt-20 pb-16 sm:pb-24 px-4 sm:px-6" style={{ background: '#003580' }}>
+        <div className="max-w-5xl mx-auto">
 
-        <div className="relative z-10 text-center px-4 sm:px-6 max-w-5xl mx-auto pt-20 pb-32">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold text-white/80 border border-white/20 mb-8 backdrop-blur-sm" style={{ background: 'rgba(255,255,255,0.1)' }}>
-            <div className="flex gap-0.5">{[1,2,3,4,5].map(s => <Star key={s} className="w-3 h-3 fill-current" style={{ color: '#D97706' }} />)}</div>
-            <span>Nairobi's Premier Retreat</span>
+          {/* Heading */}
+          <div className="mb-8">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+              Find your next stay
+            </h1>
+            <p className="text-white/80 text-base sm:text-lg">
+              Search rooms, suites, and more at Kogelo Suites…
+            </p>
           </div>
 
-          <h1 className="text-5xl sm:text-6xl md:text-7xl font-black text-white mb-6 leading-tight tracking-tight">
-            Where Comfort<br />
-            <span style={{ color: '#D97706' }}>Meets Culture</span>
-          </h1>
-
-          <p className="text-lg sm:text-xl text-white/75 mb-12 max-w-2xl mx-auto leading-relaxed">
-            40 beautifully designed units. Authentic cuisine. Swimming pool. Unwind, dine and experience genuine Kenyan hospitality.
-          </p>
-
+          {/* Search bar */}
           <SearchWidget />
 
-          <div className="mt-8 flex items-center justify-center gap-6 flex-wrap">
+          {/* Stats row */}
+          <div className="mt-10 flex items-center gap-6 flex-wrap">
             {HIGHLIGHTS.map(h => (
-              <div key={h.label} className="text-center">
-                <div className="text-2xl font-black text-white">{h.number}</div>
-                <div className="text-xs text-white/60 mt-0.5">{h.label}</div>
+              <div key={h.label} className="flex items-center gap-2">
+                <span className="text-xl font-black text-white">{h.number}</span>
+                <span className="text-xs text-white/60">{h.label}</span>
               </div>
             ))}
           </div>
         </div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-24" style={{ background: 'linear-gradient(to top, #FFFBF5, transparent)' }} />
       </section>
 
       {/* ═══ AMENITIES ═══ */}

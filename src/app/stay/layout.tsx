@@ -2,19 +2,11 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 export default function StayLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const isHome = pathname === '/stay';
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   const navLinks = [
     { href: '/stay',             label: 'Home' },
@@ -23,39 +15,28 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     { href: '/stay/my-bookings', label: 'My Bookings' },
   ];
 
-  const transparent = isHome && !scrolled;
-
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
 
       {/* ── Navigation ── */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          transparent ? 'bg-transparent' : 'bg-white shadow-sm border-b border-gray-100'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#003580' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
           {/* Logo */}
-          <Link href="/stay" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#9B1C1C' }}>
-              <span className="text-white font-black text-sm">K</span>
-            </div>
-            <span className={`font-black text-xl tracking-tight transition-colors ${transparent ? 'text-white' : 'text-gray-900'}`}>
-              KOGELO
-            </span>
+          <Link href="/stay" className="flex items-center gap-2 flex-shrink-0">
+            <span className="font-black text-lg tracking-tight text-white">Kogelo Suites</span>
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {navLinks.map(l => (
               <Link
                 key={l.href}
                 href={l.href}
-                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
-                    ? transparent ? 'text-white bg-white/20' : 'text-[#9B1C1C] bg-red-50'
-                    : transparent ? 'text-white/90 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    ? 'text-white border-white'
+                    : 'text-white/80 border-transparent hover:text-white hover:bg-white/10'
                 }`}
               >
                 {l.label}
@@ -63,21 +44,22 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
 
-          {/* CTA + mobile menu */}
-          <div className="flex items-center gap-3">
-            <Link
-              href="/stay/book"
-              className="hidden md:inline-flex items-center px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-              style={{ background: '#9B1C1C' }}
-            >
-              Book Now
+          {/* Auth buttons + mobile menu */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Link href="/stay/auth"
+              className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-white border border-white/40 hover:bg-white/10 transition-colors">
+              Register
+            </Link>
+            <Link href="/stay/auth"
+              className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-[#003580] bg-white hover:bg-gray-100 transition-colors">
+              Sign in
             </Link>
             <button
               className="md:hidden p-2 rounded-lg"
               onClick={() => setMenuOpen(v => !v)}
               aria-label="Toggle menu"
             >
-              <svg className={`w-6 h-6 ${transparent ? 'text-white' : 'text-gray-900'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 {menuOpen ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/> : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
               </svg>
             </button>
@@ -86,25 +68,27 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
         {/* Mobile dropdown */}
         {menuOpen && (
-          <div className="md:hidden bg-white border-t border-gray-100 shadow-lg">
+          <div className="md:hidden border-t border-white/20" style={{ background: '#003580' }}>
             {navLinks.map(l => (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setMenuOpen(false)}
-                className={`block px-6 py-4 text-sm font-semibold border-b border-gray-50 ${pathname === l.href ? 'text-[#9B1C1C]' : 'text-gray-700'}`}
+                className={`block px-6 py-4 text-sm font-semibold border-b border-white/10 ${
+                  pathname === l.href ? 'text-white' : 'text-white/80'
+                }`}
               >
                 {l.label}
               </Link>
             ))}
-            <div className="p-4">
-              <Link
-                href="/stay/book"
-                onClick={() => setMenuOpen(false)}
-                className="block text-center py-3 rounded-xl text-sm font-bold text-white"
-                style={{ background: '#9B1C1C' }}
-              >
-                Book Now
+            <div className="p-4 flex gap-3">
+              <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
+                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-white border border-white/40">
+                Register
+              </Link>
+              <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
+                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-[#003580] bg-white">
+                Sign in
               </Link>
             </div>
           </div>
