@@ -208,31 +208,22 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-20 pb-16 sm:pb-24 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+      <section className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
-
-          {/* Heading */}
-          <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
-              Find your next stay
-            </h1>
-            <p className="text-white/80 text-base sm:text-lg">
-              Search rooms, suites, and more at Kogelo Suites…
-            </p>
+          {/* Search header */}
+          <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+            <div className="max-w-5xl mx-auto">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+                Find your perfect stay
+              </h1>
+              <p className="text-white/80 text-base sm:text-lg mb-14">
+                Discover rooms, suites, and more at Kogelo Suites…
+              </p>
+            </div>
           </div>
 
           {/* Search bar */}
           <SearchWidget />
-
-          {/* Heading */}
-          <div className="mt-10">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
-              Find your next stay
-            </h1>
-            <p className="text-white/80 text-base sm:text-lg">
-              Search rooms, suites, and more at Kogelo Suites…
-            </p>
-          </div>
 
         </div>
       </section>
