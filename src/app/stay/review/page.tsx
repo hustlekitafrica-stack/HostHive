@@ -50,35 +50,35 @@ function ReviewContent() {
   const LABELS = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]">
-      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
     </div>
   );
 
   if (notFound) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16 text-center">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16 text-center">
       <AlertCircle className="w-14 h-14 text-gray-300 mb-4" />
       <h2 className="text-xl font-black text-gray-900 mb-2">Review link not found</h2>
       <p className="text-sm text-gray-400 mb-6">This link may have expired or is invalid.</p>
-      <Link href="/stay" className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#9B1C1C' }}>Back to Home</Link>
+      <Link href="/stay" className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#16a34a' }}>Back to Home</Link>
     </div>
   );
 
   if (success) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16 text-center">
-      <CheckCircle2 className="w-16 h-16 mb-5" style={{ color: '#9B1C1C' }} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16 text-center">
+      <CheckCircle2 className="w-16 h-16 mb-5" style={{ color: '#16a34a' }} />
       <h2 className="text-2xl font-black text-gray-900 mb-2">Thank you{info?.guest_name ? `, ${info.guest_name.split(' ')[0]}` : ''}!</h2>
       <p className="text-gray-500 text-sm mb-2">Your review has been submitted and will be featured on our website.</p>
       {Array.from({ length: rating || 5 }).map((_, i) => (
         <Star key={i} className="inline-block w-5 h-5 mb-4" fill="#F59E0B" stroke="#F59E0B" />
       ))}
-      <Link href="/stay" className="block text-sm font-bold text-white px-8 py-3 rounded-xl mt-2" style={{ background: '#9B1C1C' }}>Back to Home</Link>
+      <Link href="/stay" className="block text-sm font-bold text-white px-8 py-3 rounded-xl mt-2" style={{ background: '#16a34a' }}>Back to Home</Link>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
-      <div className="py-10 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
+      <div className="py-10 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <h1 className="text-2xl font-black text-white">Leave a Review</h1>
         <p className="text-white/60 mt-1 text-sm">Share your experience at Kogelo</p>
       </div>
@@ -123,7 +123,7 @@ function ReviewContent() {
 
         <button onClick={handleSubmit} disabled={submitting || !rating}
           className="w-full py-4 rounded-2xl text-base font-black text-white disabled:opacity-40 transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #9B1C1C, #4a1010)' }}>
+          style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
           {submitting ? 'Submitting…' : 'Submit Review'}
         </button>
       </div>
@@ -133,7 +133,7 @@ function ReviewContent() {
 
 export default function ReviewPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f8fafc]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <ReviewContent />
     </Suspense>
   );

@@ -93,9 +93,9 @@ function GroupBookingContent() {
 
   /* ── Success ── */
   if (step === 4) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-        <div className="flex justify-center mb-5"><CheckCircle2 className="w-16 h-16" style={{ color: '#9B1C1C' }} /></div>
+        <div className="flex justify-center mb-5"><CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} /></div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Group Booking Sent!</h2>
         <p className="text-gray-500 text-sm mb-6">
           We've received your group request for <strong>{totalRooms} room{totalRooms !== 1 ? 's' : ''}</strong> from <strong>{checkIn}</strong> to <strong>{checkOut}</strong>.
@@ -112,7 +112,7 @@ function GroupBookingContent() {
             <span>Estimated Total</span><span>KSh {total.toLocaleString()}</span>
           </div>
         </div>
-        <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center" style={{ background: '#9B1C1C' }}>
+        <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center" style={{ background: '#16a34a' }}>
           Back to Home
         </Link>
       </div>
@@ -120,10 +120,10 @@ function GroupBookingContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
 
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-5">
             <Link href="/stay/book" className="text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back</Link>
@@ -205,7 +205,7 @@ function GroupBookingContent() {
                     </div>
                   </div>
                   <button onClick={() => { if (!checkIn || !checkOut || nights <= 0) { setError('Please select valid dates.'); return; } setError(''); setStep(2); }}
-                    className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#9B1C1C' }}>
+                    className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>
                     Select Rooms →
                   </button>
                   {error && <p className="text-xs text-red-600 font-semibold text-center">{error}</p>}
@@ -222,7 +222,7 @@ function GroupBookingContent() {
                 </div>
                 <p className="text-sm text-gray-500 mb-4">Add as many room types as your group needs. You can adjust quantities per room type.</p>
                 {selected.length > 0 && (
-                  <div className="mb-4 px-4 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-between" style={{ background: '#9B1C1C' }}>
+                  <div className="mb-4 px-4 py-3 rounded-xl text-sm font-semibold text-white flex items-center justify-between" style={{ background: '#16a34a' }}>
                     <span>{totalRooms} room{totalRooms !== 1 ? 's' : ''} selected</span>
                     <span>KSh {total.toLocaleString()} total</span>
                   </div>
@@ -240,7 +240,7 @@ function GroupBookingContent() {
                               {prop.photos?.[0] ? (
                                 <img src={prop.photos[0]} alt={prop.name} className="w-full h-full object-cover" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a1010, #9B1C1C)' }}>
+                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
                                   <HomeIcon className="w-8 h-8 text-white/50" />
                                 </div>
                               )}
@@ -268,25 +268,25 @@ function GroupBookingContent() {
                                       onClick={e => { e.stopPropagation(); if (sel.qty > 1) setQty(prop.id, sel.qty - 1); }}
                                       disabled={sel.qty <= 1}
                                       className="w-7 h-7 rounded-full border-2 flex items-center justify-center disabled:opacity-30"
-                                      style={{ borderColor: '#9B1C1C', color: '#9B1C1C' }}>
+                                      style={{ borderColor: '#16a34a', color: '#16a34a' }}>
                                       <Minus className="w-3 h-3" />
                                     </button>
                                     <span className="font-black text-sm text-gray-900 w-5 text-center">{sel.qty}</span>
                                     <button
                                       onClick={e => { e.stopPropagation(); setQty(prop.id, sel.qty + 1); }}
                                       className="w-7 h-7 rounded-full flex items-center justify-center text-white"
-                                      style={{ background: '#9B1C1C' }}>
+                                      style={{ background: '#16a34a' }}>
                                       <Plus className="w-3 h-3" />
                                     </button>
                                     {nights > 0 && (
-                                      <span className="text-xs font-bold" style={{ color: '#9B1C1C' }}>
+                                      <span className="text-xs font-bold" style={{ color: '#16a34a' }}>
                                         KSh {(Number(prop.nightly_rate) * nights * sel.qty).toLocaleString()}
                                       </span>
                                     )}
                                     <button onClick={e => { e.stopPropagation(); toggleRoom(prop); }} className="text-xs font-semibold text-gray-400 hover:text-red-700 ml-1">Remove</button>
                                   </div>
                                 ) : (
-                                  <button onClick={e => { e.stopPropagation(); toggleRoom(prop); }} className="flex items-center gap-1.5 text-xs font-bold text-white px-4 py-1.5 rounded-lg" style={{ background: '#9B1C1C' }}>
+                                  <button onClick={e => { e.stopPropagation(); toggleRoom(prop); }} className="flex items-center gap-1.5 text-xs font-bold text-white px-4 py-1.5 rounded-lg" style={{ background: '#16a34a' }}>
                                     <Plus className="w-3 h-3" /> Add
                                   </button>
                                 )}
@@ -301,7 +301,7 @@ function GroupBookingContent() {
                 <div className="mt-6 flex gap-3">
                   <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-700 hover:border-gray-400">← Back</button>
                   <button onClick={() => { if (!selected.length) { setError('Please select at least one room.'); return; } setError(''); setStep(3); }}
-                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
                     Continue →
                   </button>
                 </div>
@@ -340,7 +340,7 @@ function GroupBookingContent() {
                   <div className="flex gap-3">
                     <button onClick={() => setStep(2)} className="flex-1 py-4 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-700 hover:border-gray-400">← Back</button>
                     <button onClick={handleSubmit} disabled={submitting}
-                      className="flex-1 py-4 rounded-xl text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-all" style={{ background: '#9B1C1C' }}>
+                      className="flex-1 py-4 rounded-xl text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-all" style={{ background: '#16a34a' }}>
                       {submitting ? 'Submitting…' : 'Submit Group Request'}
                     </button>
                   </div>
@@ -352,7 +352,7 @@ function GroupBookingContent() {
           {/* Sidebar summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+              <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <h3 className="font-black text-white text-sm">Group Summary</h3>
                 {groupName && <p className="text-xs text-white/60 mt-0.5">{groupName}</p>}
               </div>
@@ -389,7 +389,7 @@ function GroupBookingContent() {
 
 export default function GroupBookPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <GroupBookingContent />
     </Suspense>
   );

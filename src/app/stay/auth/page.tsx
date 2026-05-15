@@ -54,13 +54,13 @@ function StayAuthContent() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 pt-20"
-      style={{ background: 'linear-gradient(160deg, #1A0800 0%, #4a1010 50%, #FFFBF5 100%)' }}>
+      style={{ background: 'linear-gradient(160deg, #0f172a 0%, #0f172a 50%, #f8fafc 100%)' }}>
 
       {/* Logo */}
       <div className="text-center mb-8">
         <Link href="/stay">
           <div className="inline-flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-lg" style={{ background: '#9B1C1C' }}>K</div>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-lg" style={{ background: '#16a34a' }}>K</div>
             <span className="font-black text-2xl text-white tracking-tight">KOGELO SUITES</span>
           </div>
         </Link>
@@ -76,12 +76,12 @@ function StayAuthContent() {
         <div className="grid grid-cols-2 border-b border-gray-100">
           <button onClick={() => { setTab('login'); setError(''); }}
             className={`flex items-center justify-center gap-2 py-4 text-sm font-bold transition-colors ${tab === 'login' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
-            style={tab === 'login' ? { background: '#9B1C1C' } : {}}>
+            style={tab === 'login' ? { background: '#16a34a' } : {}}>
             <LogIn className="w-4 h-4" />Sign In
           </button>
           <button onClick={() => { setTab('register'); setError(''); }}
             className={`flex items-center justify-center gap-2 py-4 text-sm font-bold transition-colors ${tab === 'register' ? 'text-white' : 'text-gray-400 hover:text-gray-600'}`}
-            style={tab === 'register' ? { background: '#9B1C1C' } : {}}>
+            style={tab === 'register' ? { background: '#16a34a' } : {}}>
             <UserPlus className="w-4 h-4" />Create Account
           </button>
         </div>
@@ -114,7 +114,7 @@ function StayAuthContent() {
               </div>
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-2xl text-sm font-black text-white disabled:opacity-50 transition-all hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #9B1C1C, #4a1010)' }}>
+                style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
                 {loading ? 'Signing in…' : 'Sign In'}
               </button>
             </form>
@@ -151,7 +151,7 @@ function StayAuthContent() {
               </div>
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-2xl text-sm font-black text-white disabled:opacity-50 transition-all hover:opacity-90"
-                style={{ background: 'linear-gradient(135deg, #9B1C1C, #4a1010)' }}>
+                style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
                 {loading ? 'Creating account…' : 'Create Account'}
               </button>
             </form>
@@ -172,7 +172,7 @@ function StayAuthContent() {
 
 export default function StayAuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: '#1A0800' }}><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center" style={{ background: '#0f172a' }}><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <StayAuthContent />
     </Suspense>
   );

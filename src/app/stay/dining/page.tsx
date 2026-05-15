@@ -39,7 +39,7 @@ function MenuItemCard({ item, qty, onAdd, onRemove }: { item: MenuItem; qty: num
         <div className="flex items-start gap-2">
           <h4 className="font-bold text-gray-900 text-sm flex-1 leading-snug">{item.name}</h4>
           {item.tag === 'popular' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#D97706' }}><TrendingUp className="w-3 h-3" />Popular</span>}
-          {item.tag === 'special' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#9B1C1C' }}><Star className="w-3 h-3" />Special</span>}
+          {item.tag === 'special' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#16a34a' }}><Star className="w-3 h-3" />Special</span>}
         </div>
         {item.description && <p className="text-xs text-gray-500 mt-1 leading-snug">{item.description}</p>}
         <div className="mt-3 flex items-center justify-between">
@@ -49,12 +49,12 @@ function MenuItemCard({ item, qty, onAdd, onRemove }: { item: MenuItem; qty: num
           {item.price > 0 && (
             qty > 0 ? (
               <div className="flex items-center gap-2">
-                <button onClick={onRemove} className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors hover:bg-red-50" style={{ borderColor: '#9B1C1C', color: '#9B1C1C' }}>−</button>
+                <button onClick={onRemove} className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors hover:bg-red-50" style={{ borderColor: '#16a34a', color: '#16a34a' }}>−</button>
                 <span className="w-5 text-center font-black text-sm text-gray-900">{qty}</span>
-                <button onClick={onAdd} className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#9B1C1C' }}>+</button>
+                <button onClick={onAdd} className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>+</button>
               </div>
             ) : (
-              <button onClick={onAdd} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90" style={{ background: '#9B1C1C' }}>Add</button>
+              <button onClick={onAdd} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>Add</button>
             )
           )}
         </div>
@@ -145,20 +145,20 @@ export default function DiningPage() {
   };
 
   if (step === 'success') return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-        <div className="flex justify-center mb-4"><CheckCircle2 className="w-16 h-16" style={{ color: '#9B1C1C' }} /></div>
+        <div className="flex justify-center mb-4"><CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} /></div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Order Received!</h2>
-        {orderNum && <p className="text-sm font-bold mb-1" style={{ color: '#9B1C1C' }}>Order #{orderNum}</p>}
+        {orderNum && <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Order #{orderNum}</p>}
         <p className="text-gray-500 text-sm mb-6">
           {orderType === 'room_service' && 'Your meal will be delivered to your room shortly.'}
           {orderType === 'dine_in'      && 'Your order is being prepared. Please head to the restaurant.'}
           {orderType === 'delivery'     && 'Your order is on its way! You\'ll receive a call from us.'}
         </p>
         <a href={`tel:${ORDER_PHONE}`} className="flex items-center justify-center gap-1.5 text-sm text-gray-500 mb-6 hover:text-gray-700">
-          <Phone className="w-4 h-4" />Questions? Call us: <span className="font-bold" style={{ color: '#9B1C1C' }}>{ORDER_PHONE}</span>
+          <Phone className="w-4 h-4" />Questions? Call us: <span className="font-bold" style={{ color: '#16a34a' }}>{ORDER_PHONE}</span>
         </a>
-        <button onClick={() => setStep('menu')} className="w-full py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+        <button onClick={() => setStep('menu')} className="w-full py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
           Order Again
         </button>
       </div>
@@ -166,10 +166,10 @@ export default function DiningPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5]">
+    <div className="min-h-screen bg-[#f8fafc]">
 
       {/* ── Header ── */}
-      <div className="pt-20 pb-8 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="pt-20 pb-8 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-7xl mx-auto">
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
           <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Menu & Ordering</h1>
@@ -206,7 +206,7 @@ export default function DiningPage() {
                   className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                     activeTab === t.id ? 'text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400'
                   }`}
-                  style={activeTab === t.id ? { background: '#9B1C1C' } : {}}>
+                  style={activeTab === t.id ? { background: '#16a34a' } : {}}>
                   <span>{t.emoji}</span>{t.label}
                 </button>
               ))}
@@ -243,7 +243,7 @@ export default function DiningPage() {
           <div className="hidden lg:block">
             <div className="sticky top-24">
               <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-                <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+                <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                   <div className="flex items-center justify-between">
                     <h3 className="font-black text-white">Your Order</h3>
                     <span className="text-xs font-bold text-white/70">{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
@@ -265,7 +265,7 @@ export default function DiningPage() {
                         {cart.map(i => (
                           <div key={i.id} className="flex items-center justify-between gap-2 py-1.5">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-xs font-black text-white px-1.5 py-0.5 rounded" style={{ background: '#9B1C1C' }}>{i.qty}×</span>
+                              <span className="text-xs font-black text-white px-1.5 py-0.5 rounded" style={{ background: '#16a34a' }}>{i.qty}×</span>
                               <span className="text-sm text-gray-800 truncate">{i.name}</span>
                             </div>
                             <span className="text-sm font-bold text-gray-900 flex-shrink-0">KSh {(i.price * i.qty).toLocaleString()}</span>
@@ -278,14 +278,14 @@ export default function DiningPage() {
                         {deliveryFee > 0 && <div className="flex justify-between text-gray-500"><span>Delivery fee</span><span>KSh {deliveryFee.toLocaleString()}</span></div>}
                         <div className="flex justify-between font-black text-gray-900 text-base pt-2 border-t border-gray-100"><span>Total</span><span>KSh {total.toLocaleString()}</span></div>
                       </div>
-                      <button onClick={() => setStep('details')} className="w-full mt-4 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#9B1C1C' }}>
+                      <button onClick={() => setStep('details')} className="w-full mt-4 py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>
                         Proceed to Checkout →
                       </button>
                     </div>
                   )
                 ) : (
                   <div className="p-4 space-y-3">
-                    <button onClick={() => setStep('menu')} className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: '#9B1C1C' }}>
+                    <button onClick={() => setStep('menu')} className="text-xs font-semibold flex items-center gap-1 mb-1" style={{ color: '#16a34a' }}>
                       ← Back to menu
                     </button>
                     <div>
@@ -328,7 +328,7 @@ export default function DiningPage() {
                     <div className="flex justify-between font-black text-gray-900 text-base py-2 border-t border-gray-100"><span>Total</span><span>KSh {total.toLocaleString()}</span></div>
                     <button onClick={handleSubmitOrder} disabled={saving}
                       className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 disabled:opacity-50"
-                      style={{ background: '#9B1C1C' }}>
+                      style={{ background: '#16a34a' }}>
                       {saving ? 'Placing Order…' : 'Place Order'}
                     </button>
                   </div>
@@ -344,7 +344,7 @@ export default function DiningPage() {
         <div className="lg:hidden fixed bottom-6 left-4 right-4 z-40">
           <button onClick={() => setCartOpen(true)}
             className="w-full py-4 rounded-2xl text-sm font-bold text-white flex items-center justify-between px-6 shadow-2xl"
-            style={{ background: '#9B1C1C' }}>
+            style={{ background: '#16a34a' }}>
             <span className="flex items-center gap-2"><ShoppingCart className="w-4 h-4" />{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
             <span>KSh {total.toLocaleString()} · View Cart →</span>
           </button>
@@ -367,9 +367,9 @@ export default function DiningPage() {
                 <div key={i.id} className="flex items-center justify-between gap-3 py-2 border-b border-gray-50">
                   <span className="text-sm text-gray-800 flex-1">{i.name}</span>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => dispatch({ type: 'REMOVE', id: i.id })} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold" style={{ borderColor: '#9B1C1C', color: '#9B1C1C' }}>−</button>
+                    <button onClick={() => dispatch({ type: 'REMOVE', id: i.id })} className="w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs font-bold" style={{ borderColor: '#16a34a', color: '#16a34a' }}>−</button>
                     <span className="w-5 text-center text-sm font-bold">{i.qty}</span>
-                    <button onClick={() => dispatch({ type: 'ADD', item: i })} className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: '#9B1C1C' }}>+</button>
+                    <button onClick={() => dispatch({ type: 'ADD', item: i })} className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white" style={{ background: '#16a34a' }}>+</button>
                   </div>
                   <span className="text-sm font-bold text-gray-900 w-20 text-right">KSh {(i.price * i.qty).toLocaleString()}</span>
                 </div>
@@ -395,7 +395,7 @@ export default function DiningPage() {
                 {error && <p className="text-xs text-red-600 font-semibold">{error}</p>}
                 <button onClick={handleSubmitOrder} disabled={saving}
                   className="w-full py-4 rounded-xl text-sm font-bold text-white disabled:opacity-50"
-                  style={{ background: '#9B1C1C' }}>
+                  style={{ background: '#16a34a' }}>
                   {saving ? 'Placing Order…' : `Place Order · KSh ${total.toLocaleString()}`}
                 </button>
               </div>

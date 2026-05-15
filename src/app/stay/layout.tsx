@@ -19,7 +19,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
 
       {/* ── Navigation ── */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#003580' }}>
+      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
           {/* Logo */}
@@ -51,7 +51,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               Register
             </Link>
             <Link href="/stay/auth"
-              className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-[#003580] bg-white hover:bg-gray-100 transition-colors">
+              className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-[#1e293b] bg-white hover:bg-gray-100 transition-colors">
               Sign in
             </Link>
             <button
@@ -68,7 +68,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
         {/* Mobile dropdown */}
         {menuOpen && (
-          <div className="md:hidden border-t border-white/20" style={{ background: '#003580' }}>
+          <div className="md:hidden border-t border-white/20" style={{ background: '#1e293b' }}>
             {navLinks.map(l => (
               <Link
                 key={l.href}
@@ -87,7 +87,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 Register
               </Link>
               <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
-                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-[#003580] bg-white">
+                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-[#1e293b] bg-white">
                 Sign in
               </Link>
             </div>
@@ -101,12 +101,12 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       {/* ── Footer ── */}
-      <footer className="text-white" style={{ background: '#1A0800' }}>
+      <footer className="text-white" style={{ background: '#0f172a' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
 
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#9B1C1C' }}>
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#16a34a' }}>
                 <span className="text-white font-black text-sm">K</span>
               </div>
               <span className="font-black text-xl tracking-tight">KOGELO</span>

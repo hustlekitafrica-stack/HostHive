@@ -122,20 +122,20 @@ function CheckoutContent() {
 
   /* ── Loading ── */
   if (authLoading || propLoading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]">
-      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
     </div>
   );
 
   /* ── Success ── */
   if (success) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
         <div className="flex justify-center mb-5">
-          <CheckCircle2 className="w-16 h-16" style={{ color: '#9B1C1C' }} />
+          <CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} />
         </div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Reservation Requested!</h2>
-        {bookingRef && <p className="text-xs font-bold mb-3 font-mono" style={{ color: '#9B1C1C' }}>Ref: {bookingRef.slice(0, 8).toUpperCase()}</p>}
+        {bookingRef && <p className="text-xs font-bold mb-3 font-mono" style={{ color: '#16a34a' }}>Ref: {bookingRef.slice(0, 8).toUpperCase()}</p>}
         <p className="text-gray-500 text-sm mb-6">
           We've received your request for <strong>{rooms > 1 ? `${rooms}× ` : ''}{property?.name}</strong>,{' '}
           {checkIn} → {checkOut}. Our team will call <strong>{phone}</strong> within 2 hours to confirm.
@@ -149,7 +149,7 @@ function CheckoutContent() {
             <span>Estimated Total</span><span>KSh {total.toLocaleString()}</span>
           </div>
         </div>
-        <Link href="/stay/my-bookings" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center mb-3" style={{ background: '#9B1C1C' }}>
+        <Link href="/stay/my-bookings" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center mb-3" style={{ background: '#16a34a' }}>
           Track My Booking
         </Link>
         <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-center border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
@@ -160,10 +160,10 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
 
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center gap-3 mb-3">
             <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
@@ -185,20 +185,20 @@ function CheckoutContent() {
             {/* Auth status banner */}
             {authUser ? (
               <div className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-green-100 shadow-sm">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0F0' }}>
-                  <User className="w-5 h-5" style={{ color: '#9B1C1C' }} />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#f0fdf4' }}>
+                  <User className="w-5 h-5" style={{ color: '#16a34a' }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-black text-gray-900">Welcome back{authUser.name ? `, ${authUser.name.split(' ')[0]}` : ''}!</p>
                   <p className="text-xs text-gray-500 truncate">{authUser.email}</p>
                 </div>
-                <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full text-white" style={{ background: '#9B1C1C' }}>Signed in</span>
+                <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full text-white" style={{ background: '#16a34a' }}>Signed in</span>
               </div>
             ) : (
               <div className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
                 <LogIn className="w-5 h-5 flex-shrink-0 text-gray-400" />
                 <p className="text-sm text-gray-600 flex-1">
-                  <Link href={`/stay/auth?redirect=${encodeURIComponent('/stay/checkout?' + params.toString())}`} className="font-bold hover:underline" style={{ color: '#9B1C1C' }}>Sign in or create an account</Link>
+                  <Link href={`/stay/auth?redirect=${encodeURIComponent('/stay/checkout?' + params.toString())}`} className="font-bold hover:underline" style={{ color: '#16a34a' }}>Sign in or create an account</Link>
                   {' '}— required to complete your booking.
                 </p>
               </div>
@@ -241,7 +241,7 @@ function CheckoutContent() {
             {error && <p className="text-sm text-red-600 font-semibold px-1">{error}</p>}
             <button onClick={handleSubmit} disabled={submitting || !property}
               className="w-full py-4 rounded-2xl text-base font-black text-white disabled:opacity-50 transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, #9B1C1C, #4a1010)' }}>
+              style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
               {submitting ? 'Sending Request…' : `Confirm Reservation Request · KSh ${total.toLocaleString()}`}
             </button>
             <p className="text-xs text-center text-gray-400">
@@ -252,7 +252,7 @@ function CheckoutContent() {
           {/* ── Right: Booking summary ── */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="p-5" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+              <div className="p-5" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <p className="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">Booking Summary</p>
                 <h3 className="font-black text-white text-base">{property?.name ?? '—'}</h3>
                 {property?.location && <p className="text-xs text-white/60 mt-0.5">{property.location}</p>}
@@ -320,7 +320,7 @@ function CheckoutContent() {
 
 export default function CheckoutPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f8fafc]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <CheckoutContent />
     </Suspense>
   );

@@ -37,16 +37,16 @@ function RoomDetailContent({ id }: { id: string }) {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]">
-      <div className="animate-spin w-10 h-10 border-2 rounded-full border-t-transparent" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="animate-spin w-10 h-10 border-2 rounded-full border-t-transparent" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
     </div>
   );
 
   if (!property) return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#FFFBF5] pt-20">
+    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-[#f8fafc] pt-20">
       <Search className="w-16 h-16 text-gray-300" />
       <h2 className="text-2xl font-bold text-gray-900">Room not found</h2>
-      <Link href="/stay/rooms" className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#9B1C1C' }}>Back to Rooms</Link>
+      <Link href="/stay/rooms" className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#16a34a' }}>Back to Rooms</Link>
     </div>
   );
 
@@ -63,7 +63,7 @@ function RoomDetailContent({ id }: { id: string }) {
   ].filter(Boolean) as { Icon: LucideIcon; label: string }[];
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
 
       {/* ── Photo Gallery ── */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -94,7 +94,7 @@ function RoomDetailContent({ id }: { id: string }) {
             ))}
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a1010, #9B1C1C)' }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
             <HomeIcon className="w-20 h-20 text-white/40" />
           </div>
         )}
@@ -148,7 +148,7 @@ function RoomDetailContent({ id }: { id: string }) {
                   { Icon: HomeIcon,  label: `${(property.type || 'Room').charAt(0).toUpperCase() + (property.type || 'room').slice(1)}` } as { Icon: LucideIcon; label: string },
                 ].map(s => (
                   <div key={s.label} className="flex items-center gap-1.5 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
-                    <s.Icon className="w-4 h-4 flex-shrink-0" style={{ color: '#9B1C1C' }} /><span>{s.label}</span>
+                    <s.Icon className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a' }} /><span>{s.label}</span>
                   </div>
                 ))}
               </div>
@@ -169,7 +169,7 @@ function RoomDetailContent({ id }: { id: string }) {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {amenities.map(a => (
                     <div key={a} className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#9B1C1C' }} />
+                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a' }} />
                       {a}
                     </div>
                   ))}
@@ -184,7 +184,7 @@ function RoomDetailContent({ id }: { id: string }) {
                 <div className="grid sm:grid-cols-2 gap-3">
                   {HOUSE_RULES.map(r => (
                     <div key={r.label} className="flex items-center gap-3 text-sm text-gray-700 bg-gray-50 rounded-xl px-4 py-3">
-                      <r.Icon className="w-4 h-4" style={{ color: '#9B1C1C' }} />{r.label}
+                      <r.Icon className="w-4 h-4" style={{ color: '#16a34a' }} />{r.label}
                     </div>
                   ))}
                 </div>
@@ -210,7 +210,7 @@ function RoomDetailContent({ id }: { id: string }) {
           {/* Right — sticky booking widget */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+              <div className="p-6 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <div className="text-2xl font-black text-white">KSh {rate.toLocaleString()}</div>
                 <div className="text-white/60 text-sm">per night · per room</div>
               </div>
@@ -264,7 +264,7 @@ function RoomDetailContent({ id }: { id: string }) {
 
                 <button onClick={handleBook}
                   className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                  style={{ background: '#9B1C1C' }}>
+                  style={{ background: '#16a34a' }}>
                   Request Reservation
                 </button>
                 <p className="text-xs text-center text-gray-400">No payment now — we'll confirm within 2 hours.</p>
@@ -281,7 +281,7 @@ function RoomDetailContent({ id }: { id: string }) {
 export default function RoomDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full border-t-transparent" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full border-t-transparent" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <RoomDetailContent id={id} />
     </Suspense>
   );

@@ -10,8 +10,8 @@ function BookingTypeContent() {
   const qs = params.toString() ? `?${params.toString()}` : '';
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
-      <div className="py-14 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
+      <div className="py-14 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <h1 className="text-3xl sm:text-4xl font-black text-white mb-3">Book Your Stay</h1>
         <p className="text-white/60 text-base">How many rooms do you need?</p>
       </div>
@@ -20,8 +20,8 @@ function BookingTypeContent() {
 
         <Link href={`/stay/book/single${qs}`}
           className="group flex items-center gap-6 bg-white rounded-3xl p-7 border-2 border-transparent hover:border-red-800 shadow-sm hover:shadow-xl transition-all duration-300">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0F0' }}>
-            <BedDouble className="w-8 h-8" style={{ color: '#9B1C1C' }} />
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: '#f0fdf4' }}>
+            <BedDouble className="w-8 h-8" style={{ color: '#16a34a' }} />
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-black text-gray-900 mb-1">Single Room</h2>
@@ -32,8 +32,8 @@ function BookingTypeContent() {
 
         <Link href={`/stay/book/group${qs}`}
           className="group flex items-center gap-6 bg-white rounded-3xl p-7 border-2 border-transparent hover:border-red-800 shadow-sm hover:shadow-xl transition-all duration-300">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: '#FFF0F0' }}>
-            <Users className="w-8 h-8" style={{ color: '#9B1C1C' }} />
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ background: '#f0fdf4' }}>
+            <Users className="w-8 h-8" style={{ color: '#16a34a' }} />
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-black text-gray-900 mb-1">Group Booking</h2>
@@ -52,7 +52,7 @@ function BookingTypeContent() {
 
 export default function BookPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <BookingTypeContent />
     </Suspense>
   );

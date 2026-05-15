@@ -87,9 +87,9 @@ function SingleBookingContent() {
 
   /* ── Success ── */
   if (step === 4) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#FFFBF5] px-4 pt-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
-        <div className="flex justify-center mb-5"><CheckCircle2 className="w-16 h-16" style={{ color: '#9B1C1C' }} /></div>
+        <div className="flex justify-center mb-5"><CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} /></div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Booking Request Sent!</h2>
         <p className="text-gray-500 text-sm mb-6">
           We've received your request for <strong>{selected?.name}</strong> from <strong>{checkIn}</strong> to <strong>{checkOut}</strong>.
@@ -103,7 +103,7 @@ function SingleBookingContent() {
             <span>Estimated Total</span><span>KSh {total.toLocaleString()}</span>
           </div>
         </div>
-        <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center" style={{ background: '#9B1C1C' }}>
+        <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center" style={{ background: '#16a34a' }}>
           Back to Home
         </Link>
       </div>
@@ -111,10 +111,10 @@ function SingleBookingContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
 
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-3 mb-5">
             <Link href="/stay/book" className="text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back</Link>
@@ -189,7 +189,7 @@ function SingleBookingContent() {
                     </div>
                   </div>
                   <button onClick={() => { if (!checkIn || !checkOut || nights <= 0) { setError('Please select valid dates.'); return; } setError(''); setStep(2); }}
-                    className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#9B1C1C' }}>
+                    className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>
                     Choose a Room →
                   </button>
                   {error && <p className="text-xs text-red-600 font-semibold text-center">{error}</p>}
@@ -218,7 +218,7 @@ function SingleBookingContent() {
                               {prop.photos?.[0] ? (
                                 <img src={prop.photos[0]} alt={prop.name} className="w-full h-full object-cover" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a1010, #9B1C1C)' }}>
+                                <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
                                   <HomeIcon className="w-8 h-8 text-white/50" />
                                 </div>
                               )}
@@ -237,11 +237,11 @@ function SingleBookingContent() {
                                 <div className="text-right flex-shrink-0">
                                   <div className="font-black text-gray-900 text-sm">KSh {Number(prop.nightly_rate ?? 0).toLocaleString()}</div>
                                   <div className="text-xs text-gray-400">/ night</div>
-                                  {nights > 0 && <div className="text-xs font-bold mt-0.5" style={{ color: '#9B1C1C' }}>KSh {(Number(prop.nightly_rate ?? 0) * nights).toLocaleString()} total</div>}
+                                  {nights > 0 && <div className="text-xs font-bold mt-0.5" style={{ color: '#16a34a' }}>KSh {(Number(prop.nightly_rate ?? 0) * nights).toLocaleString()} total</div>}
                                 </div>
                               </div>
                               {isSelected && (
-                                <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: '#9B1C1C' }}>
+                                <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-full text-white" style={{ background: '#16a34a' }}>
                                   ✓ Selected
                                 </div>
                               )}
@@ -255,7 +255,7 @@ function SingleBookingContent() {
                 <div className="mt-6 flex gap-3">
                   <button onClick={() => setStep(1)} className="flex-1 py-3 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-700 hover:border-gray-400">← Back</button>
                   <button onClick={() => { if (!selected) { setError('Please select a room.'); return; } setError(''); setStep(3); }}
-                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+                    className="flex-1 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
                     Continue →
                   </button>
                 </div>
@@ -293,7 +293,7 @@ function SingleBookingContent() {
                   <div className="flex gap-3">
                     <button onClick={() => setStep(2)} className="flex-1 py-4 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-700 hover:border-gray-400">← Back</button>
                     <button onClick={handleSubmit} disabled={submitting}
-                      className="flex-1 py-4 rounded-xl text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-all" style={{ background: '#9B1C1C' }}>
+                      className="flex-1 py-4 rounded-xl text-sm font-bold text-white disabled:opacity-50 hover:opacity-90 transition-all" style={{ background: '#16a34a' }}>
                       {submitting ? 'Submitting…' : 'Submit Request'}
                     </button>
                   </div>
@@ -305,7 +305,7 @@ function SingleBookingContent() {
           {/* Sidebar summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+              <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <h3 className="font-black text-white text-sm">Booking Summary</h3>
               </div>
               <div className="p-5 space-y-3 text-sm">
@@ -339,7 +339,7 @@ function SingleBookingContent() {
 
 export default function SingleBookPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <SingleBookingContent />
     </Suspense>
   );

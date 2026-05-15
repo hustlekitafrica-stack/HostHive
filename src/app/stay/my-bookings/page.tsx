@@ -56,15 +56,15 @@ function MyBookingsContent() {
   };
 
   if (!authChecked) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]">
-      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16">
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-3xl mx-auto">
           <Link href="/stay" className="text-white/60 hover:text-white text-sm font-semibold mb-4 inline-block transition-colors">← Home</Link>
           <h1 className="text-3xl font-black text-white">My Bookings</h1>
@@ -87,14 +87,14 @@ function MyBookingsContent() {
               </div>
               <button type="submit" disabled={loading}
                 className="px-5 py-3 rounded-xl text-sm font-bold text-white flex items-center gap-2 disabled:opacity-50"
-                style={{ background: '#9B1C1C' }}>
+                style={{ background: '#16a34a' }}>
                 <Search className="w-4 h-4" />{loading ? 'Searching…' : 'Search'}
               </button>
             </form>
             {error && <p className="mt-2 text-xs text-red-600 font-semibold">{error}</p>}
             <p className="mt-4 text-xs text-gray-400">
               Have an account?{' '}
-              <Link href="/login?redirect=/stay/my-bookings" className="font-bold hover:underline" style={{ color: '#9B1C1C' }}>
+              <Link href="/login?redirect=/stay/my-bookings" className="font-bold hover:underline" style={{ color: '#16a34a' }}>
                 Sign in
               </Link>{' '}to see all your bookings automatically.
             </p>
@@ -119,7 +119,7 @@ function MyBookingsContent() {
             <p className="text-sm text-gray-400 mb-5">
               {userId ? "You haven't made any reservation requests yet." : "No bookings found for that phone number."}
             </p>
-            <Link href="/stay/rooms" className="text-sm font-bold text-white px-6 py-3 rounded-xl inline-block" style={{ background: '#9B1C1C' }}>
+            <Link href="/stay/rooms" className="text-sm font-bold text-white px-6 py-3 rounded-xl inline-block" style={{ background: '#16a34a' }}>
               Browse Rooms
             </Link>
           </div>
@@ -176,7 +176,7 @@ function MyBookingsContent() {
 
         {/* CTA */}
         <div className="text-center pt-4">
-          <Link href="/stay/rooms" className="inline-flex items-center gap-2 text-sm font-bold hover:underline" style={{ color: '#9B1C1C' }}>
+          <Link href="/stay/rooms" className="inline-flex items-center gap-2 text-sm font-bold hover:underline" style={{ color: '#16a34a' }}>
             Browse more rooms <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
@@ -187,7 +187,7 @@ function MyBookingsContent() {
 
 export default function MyBookingsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FFFBF5]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#f8fafc]"><div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} /></div>}>
       <MyBookingsContent />
     </Suspense>
   );

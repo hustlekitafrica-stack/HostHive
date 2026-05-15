@@ -39,10 +39,10 @@ function RoomsContent() {
     ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000) : 0;
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5]">
+    <div className="min-h-screen bg-[#f8fafc]">
 
       {/* Header */}
-      <div className="pt-20 pb-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #1A0800, #4a1010)' }}>
+      <div className="pt-20 pb-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Find Your Perfect Room</h1>
           <p className="text-white/60 mb-6">40 units available — all in one exclusive compound</p>
@@ -120,7 +120,7 @@ function RoomsContent() {
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
                 typeFilter === t ? 'text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400'
               }`}
-              style={typeFilter === t ? { background: '#9B1C1C' } : {}}>
+              style={typeFilter === t ? { background: '#16a34a' } : {}}>
               {t}
             </button>
           ))}
@@ -135,7 +135,7 @@ function RoomsContent() {
           {(checkIn && checkOut) && (
             <Link href={`/stay/book?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}`}
               className="text-sm font-bold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"
-              style={{ background: '#9B1C1C' }}>
+              style={{ background: '#16a34a' }}>
               Book Multiple Rooms →
             </Link>
           )}
@@ -160,7 +160,7 @@ function RoomsContent() {
             <div className="flex justify-center mb-4"><Search className="w-14 h-14 text-gray-300" /></div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No rooms match your filters</h3>
             <p className="text-gray-500 mb-6">Try adjusting your dates or guest count</p>
-            <button onClick={() => { setTypeFilter('All'); setGuestFilter(1); }} className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#9B1C1C' }}>
+            <button onClick={() => { setTypeFilter('All'); setGuestFilter(1); }} className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#16a34a' }}>
               Clear Filters
             </button>
           </div>
@@ -173,11 +173,11 @@ function RoomsContent() {
                   {p.photos?.[0] ? (
                     <img src={p.photos[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a1010, #9B1C1C)' }}>
+                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
                       <HomeIcon className="w-12 h-12 text-white/50" />
                     </div>
                   )}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#9B1C1C' }}>
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
                     {p.type || 'Room'}
                   </div>
                   {nights > 0 && (
@@ -205,7 +205,7 @@ function RoomsContent() {
                       <span className="font-black text-gray-900 text-base">KSh {Number(p.nightly_rate || 0).toLocaleString()}</span>
                       <span className="text-xs text-gray-400"> / night</span>
                     </div>
-                    <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg group-hover:opacity-90" style={{ background: '#9B1C1C' }}>
+                    <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg group-hover:opacity-90" style={{ background: '#16a34a' }}>
                       View Room
                     </span>
                   </div>

@@ -51,7 +51,7 @@ function SearchWidget() {
   return (
     <div className="relative w-full max-w-5xl mx-auto">
       {/* Main bar */}
-      <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #FFB700' }}>
+      <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706' }}>
 
         {/* Destination */}
         <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
@@ -133,7 +133,7 @@ function SearchWidget() {
                 </div>
               ))}
               <button onClick={() => setGuestOpen(false)}
-                className="mt-3 w-full py-2 rounded-lg text-sm font-bold text-white" style={{ background: '#003580' }}>Done</button>
+                className="mt-3 w-full py-2 rounded-lg text-sm font-bold text-white" style={{ background: '#1e293b' }}>Done</button>
             </div>
           )}
         </div>
@@ -141,7 +141,7 @@ function SearchWidget() {
         {/* Book Now */}
         <button onClick={handleSearch}
           className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
-          style={{ background: '#003580' }}>
+          style={{ background: '#1e293b' }}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           Book Now
         </button>
@@ -157,11 +157,11 @@ function RoomCard({ property }: { property: any }) {
         {property.photos?.[0] ? (
           <img src={property.photos[0]} alt={property.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #4a1010, #9B1C1C)' }}>
+          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
             <HomeIcon className="w-12 h-12 text-white/50" />
           </div>
         )}
-        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#9B1C1C' }}>
+        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
           {property.type || 'Room'}
         </div>
       </div>
@@ -181,7 +181,7 @@ function RoomCard({ property }: { property: any }) {
             <span className="font-black text-gray-900">KSh {Number(property.nightly_rate || 0).toLocaleString()}</span>
             <span className="text-xs text-gray-400"> / night</span>
           </div>
-          <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: '#9B1C1C' }}>View</span>
+          <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: '#16a34a' }}>View</span>
         </div>
       </div>
     </Link>
@@ -205,10 +205,10 @@ export default function StayHomePage() {
   }, []);
 
   return (
-    <div className="bg-[#FFFBF5]">
+    <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-20 pb-16 sm:pb-24 px-4 sm:px-6" style={{ background: '#003580' }}>
+      <section className="relative pt-20 pb-16 sm:pb-24 px-4 sm:px-6" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
 
           {/* Heading */}
@@ -239,7 +239,7 @@ export default function StayHomePage() {
       {/* ═══ AMENITIES ═══ */}
       <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
         <div className="text-center mb-14">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9B1C1C' }}>Everything You Need</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#16a34a' }}>Everything You Need</p>
           <h2 className="text-3xl sm:text-4xl font-black text-gray-900">World-Class Amenities</h2>
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">Every detail has been considered to make your stay exceptional.</p>
         </div>
@@ -247,7 +247,7 @@ export default function StayHomePage() {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
           {AMENITIES.map(a => (
             <div key={a.label} className="group bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-              <div className="flex justify-center mb-4"><a.Icon className="w-8 h-8" style={{ color: '#9B1C1C' }} /></div>
+              <div className="flex justify-center mb-4"><a.Icon className="w-8 h-8" style={{ color: '#16a34a' }} /></div>
               <h3 className="font-bold text-gray-900 text-sm mb-1">{a.label}</h3>
               <p className="text-xs text-gray-500 leading-snug">{a.desc}</p>
             </div>
@@ -260,11 +260,11 @@ export default function StayHomePage() {
         <div className="px-4 sm:px-6 max-w-7xl mx-auto">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#9B1C1C' }}>Choose Your Space</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#16a34a' }}>Choose Your Space</p>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Our Rooms</h2>
               <p className="text-gray-500 mt-2">40 units — studios to suites, all in one exclusive compound.</p>
             </div>
-            <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#9B1C1C' }}>
+            <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#16a34a' }}>
               View all rooms →
             </Link>
           </div>
@@ -289,7 +289,7 @@ export default function StayHomePage() {
           )}
 
           <div className="mt-8 text-center sm:hidden">
-            <Link href="/stay/rooms" className="inline-flex items-center gap-2 py-3 px-8 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+            <Link href="/stay/rooms" className="inline-flex items-center gap-2 py-3 px-8 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
               View All Rooms →
             </Link>
           </div>
@@ -299,7 +299,7 @@ export default function StayHomePage() {
       {/* ═══ DINING ═══ */}
       <section className="py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="rounded-3xl overflow-hidden grid md:grid-cols-2" style={{ background: 'linear-gradient(135deg, #1A0800, #4a1010)' }}>
+          <div className="rounded-3xl overflow-hidden grid md:grid-cols-2" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
             <div className="p-10 md:p-14 flex flex-col justify-center">
               <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
               <h2 className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">
@@ -350,7 +350,7 @@ export default function StayHomePage() {
       <section className="py-20 bg-white px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9B1C1C' }}>The Kogelo Experience</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#16a34a' }}>The Kogelo Experience</p>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Why Guests Love Us</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -360,8 +360,8 @@ export default function StayHomePage() {
               { Icon: HomeIcon, title: 'Feels Like Home',    desc: 'Fully furnished, clean, and comfortable units. Whether one night or one month, you will feel right at home.' },
             ].map(f => (
               <div key={f.title} className="rounded-2xl p-8 border border-gray-100 hover:border-transparent hover:shadow-lg transition-all">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: '#FFF0F0' }}>
-                  <f.Icon className="w-6 h-6" style={{ color: '#9B1C1C' }} />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: '#f0fdf4' }}>
+                  <f.Icon className="w-6 h-6" style={{ color: '#16a34a' }} />
                 </div>
                 <h3 className="font-black text-xl text-gray-900 mb-3">{f.title}</h3>
                 <p className="text-gray-500 leading-relaxed text-sm">{f.desc}</p>
@@ -373,10 +373,10 @@ export default function StayHomePage() {
 
       {/* ═══ Guest Reviews Carousel ═══ */}
       {reviews.length > 0 && (
-        <section className="py-20 px-4 sm:px-6" style={{ background: '#FFFBF5' }}>
+        <section className="py-20 px-4 sm:px-6" style={{ background: '#f8fafc' }}>
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-12">
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#9B1C1C' }}>Guest Stories</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#16a34a' }}>Guest Stories</p>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900">What Our Guests Say</h2>
             </div>
             <div className="relative">
@@ -410,7 +410,7 @@ export default function StayHomePage() {
                     {reviews.map((_, i) => (
                       <button key={i} onClick={() => setRevIdx(i)}
                         className="w-2 h-2 rounded-full transition-all"
-                        style={{ background: i === revIdx ? '#9B1C1C' : '#D1D5DB' }} />
+                        style={{ background: i === revIdx ? '#16a34a' : '#D1D5DB' }} />
                     ))}
                   </div>
                 </>
@@ -421,12 +421,12 @@ export default function StayHomePage() {
       )}
 
       {/* ═══ CTA ═══ */}
-      <section className="py-24 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(135deg, #9B1C1C, #4a1010)' }}>
+      <section className="py-24 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Ready to Experience Kogelo?</h2>
           <p className="text-white/70 mb-10 text-lg">Book your stay today. Flexible dates. Instant confirmation.</p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/stay/book" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold bg-white transition-all hover:bg-gray-100" style={{ color: '#9B1C1C' }}>
+            <Link href="/stay/book" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold bg-white transition-all hover:bg-gray-100" style={{ color: '#16a34a' }}>
               Book Your Stay
             </Link>
             <Link href="/stay/rooms" className="w-full sm:w-auto py-4 px-10 rounded-xl text-base font-bold border-2 border-white/40 text-white hover:bg-white/10 transition-all">
