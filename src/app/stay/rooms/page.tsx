@@ -44,13 +44,6 @@ function RoomsContent() {
       {/* Search header */}
       <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
-            Find your next stay
-          </h1>
-          <p className="text-white/80 text-base sm:text-lg mb-14">
-            Search rooms, suites, and more at Kogelo Suites…
-          </p>
-
           <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706' }}>
             <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
               <MapPin className="w-5 h-5 flex-shrink-0 text-gray-400" />
