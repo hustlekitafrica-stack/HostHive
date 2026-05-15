@@ -123,7 +123,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               {[
                 { href: '/stay/rooms',       label: 'Browse Rooms' },
                 { href: '/stay/dining',      label: 'Restaurant & Dining' },
-                { href: '/stay/rooms',       label: 'Make a Booking' },
+                { href: '/stay/book',        label: 'Make a Booking' },
                 { href: '/stay/my-bookings', label: 'Trips' },
                 { href: '/stay/profile',     label: 'Profile' },
               ].map(l => (
@@ -151,7 +151,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
         <div className="border-t border-gray-800">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-            <p className="text-xs text-gray-600">© {new Date().getFullYear()} Kogelo. All rights reserved.</p>
+            <p className="text-xs text-gray-600">  Kogelo. All rights reserved.</p>
             <p className="text-xs text-gray-600">Kogelo Suites &mdash; Kogelo, Kenya</p>
           </div>
         </div>
