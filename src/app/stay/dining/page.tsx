@@ -80,6 +80,8 @@ export default function DiningPage() {
   const [dynamicMenu,  setDynamicMenu]  = useState<MenuCategory[] | null>(null);
   const [properties,   setProperties]   = useState<{ id: string; name: string }[]>([]);
 
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
+
   useEffect(() => {
     fetch('/api/stay/properties')
       .then(r => r.json())
