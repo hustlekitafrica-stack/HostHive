@@ -4,22 +4,62 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
+const NAV_LINKS = [
+  {
+    href: '/stay',
+    label: 'Home',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      </svg>
+    ),
+  },
+  {
+    href: '/stay/rooms',
+    label: 'Rooms',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M3 14h18M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+      </svg>
+    ),
+  },
+  {
+    href: '/stay/dining',
+    label: 'Dining',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v18M8 7c0-2 1-4 4-4s4 2 4 4v2H8V7zM6 21h12" />
+      </svg>
+    ),
+  },
+  {
+    href: '/stay/my-bookings',
+    label: 'Trips',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+    ),
+  },
+  {
+    href: '/stay/profile',
+    label: 'Profile',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+    ),
+  },
+];
+
 export default function StayLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const navLinks = [
-    { href: '/stay',             label: 'Home' },
-    { href: '/stay/rooms',       label: 'Rooms' },
-    { href: '/stay/dining',      label: 'Dining' },
-    { href: '/stay/my-bookings', label: 'Trips' },
-    { href: '/stay/profile',     label: 'Profile' },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
 
-      {/* ── Navigation ── */}
+      {/* ── Top Navigation ── */}
       <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
@@ -30,22 +70,19 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {navLinks.map(l => (
-              <Link
-                key={l.href}
-                href={l.href}
+            {NAV_LINKS.map(l => (
+              <Link key={l.href} href={l.href}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
                     ? 'text-white border-white'
                     : 'text-white/80 border-transparent hover:text-white hover:bg-white/10'
-                }`}
-              >
+                }`}>
                 {l.label}
               </Link>
             ))}
           </nav>
 
-          {/* Auth buttons + mobile menu */}
+          {/* Auth buttons (desktop) + hamburger (mobile — auth only) */}
           <div className="flex items-center gap-2 flex-shrink-0">
             <Link href="/stay/auth"
               className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-white border border-white/40 hover:bg-white/10 transition-colors">
@@ -55,33 +92,19 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-[#1e293b] bg-white hover:bg-gray-100 transition-colors">
               Sign in
             </Link>
-            <button
-              className="md:hidden p-2 rounded-lg"
-              onClick={() => setMenuOpen(v => !v)}
-              aria-label="Toggle menu"
-            >
+            <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                {menuOpen ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/> : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
+                {menuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
               </svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile dropdown */}
+        {/* Mobile dropdown — auth only */}
         {menuOpen && (
           <div className="md:hidden border-t border-white/20" style={{ background: '#1e293b' }}>
-            {navLinks.map(l => (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setMenuOpen(false)}
-                className={`block px-6 py-4 text-sm font-semibold border-b border-white/10 ${
-                  pathname === l.href ? 'text-white' : 'text-white/80'
-                }`}
-              >
-                {l.label}
-              </Link>
-            ))}
             <div className="p-4 flex gap-3">
               <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
                 className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-white border border-white/40">
@@ -97,9 +120,25 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       </header>
 
       {/* ── Page content ── */}
-      <main className="flex-1">
+      <main className="flex-1 pb-20 md:pb-0">
         {children}
       </main>
+
+      {/* ── Mobile sticky bottom nav ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
+        {NAV_LINKS.map(l => {
+          const active = pathname === l.href;
+          return (
+            <Link key={l.href} href={l.href}
+              className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
+                active ? 'text-[#16a34a]' : 'text-white/50 hover:text-white'
+              }`}>
+              {l.icon}
+              <span className="text-[10px] font-semibold">{l.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
 
       {/* ── Footer ── */}
       <footer className="text-white" style={{ background: '#0f172a' }}>
