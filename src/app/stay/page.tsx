@@ -49,7 +49,7 @@ function SearchWidget() {
   };
 
   return (
-    <div className="relative w-full max-w-5xl mx-auto px-2 sm:px-8 overflow-x-hidden">
+    <div className="relative w-full max-w-full mx-auto px-2 sm:px-8 overflow-x-hidden">
       {/* Main bar */}
       <div className="flex flex-col lg:flex-row rounded-lg overflow-hidden w-full" style={{ border: '5px solid #d97706' }}>
 
