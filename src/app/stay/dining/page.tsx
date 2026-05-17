@@ -77,7 +77,15 @@ export default function DiningPage() {
   const [step, setStep] = useState<Step>('type');
   const [orderType, setOrderType] = useState<OrderType | null>(null);
   const [activeTab, setActiveTab] = useState<typeof MENU_TABS[0]['id']>('breakfast');
-  const [dynamicMenu, setDynamicMenu] = useState<MenuCategory[] | null>(null);
+  const [dynamicMenu,  setDynamicMenu]  = useState<MenuCategory[] | null>(null);
+  const [properties,   setProperties]   = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    fetch('/api/stay/properties')
+      .then(r => r.json())
+      .then(d => setProperties((d.properties ?? []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch('/api/stay/menu')
@@ -312,9 +320,19 @@ export default function DiningPage() {
           </div>
           {orderType === 'room_service' && (
             <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1">Room Number *</label>
-              <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. 12"
-                className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-green-500" />
+              <label className="block text-xs font-bold text-gray-500 mb-1">Room / Property *</label>
+              {properties.length > 0 ? (
+                <select value={room} onChange={e => setRoom(e.target.value)}
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-green-500 bg-white">
+                  <option value="">Select your room…</option>
+                  {properties.map(p => (
+                    <option key={p.id} value={p.name}>{p.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <input value={room} onChange={e => setRoom(e.target.value)} placeholder="e.g. Room 12"
+                  className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-green-500" />
+              )}
             </div>
           )}
           {orderType === 'delivery' && (
