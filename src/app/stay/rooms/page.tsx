@@ -172,7 +172,7 @@ function RoomsContent() {
             <div className="flex justify-center mb-4"><Search className="w-14 h-14 text-gray-300" /></div>
             <h3 className="text-xl font-bold text-gray-900 mb-2">No rooms match your filters</h3>
             <p className="text-gray-500 mb-6">Try adjusting your dates or guest count</p>
-            <button onClick={() => { setTypeFilter('All'); setGuestFilter(1); }} className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#16a34a' }}>
+            <button onClick={() => { setTypeFilter('All'); setAdults(2); setChildren(0); setRooms(1); }} className="text-sm font-bold text-white px-6 py-3 rounded-xl" style={{ background: '#16a34a' }}>
               Clear Filters
             </button>
           </div>
