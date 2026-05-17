@@ -162,7 +162,7 @@ export function DatePickerModal({ checkIn, checkOut, onConfirm, onClose }: DateP
 
             <p className="font-bold text-gray-900 text-base mt-6 mb-1">When do you want to go?</p>
             <p className="text-gray-400 text-sm mb-4">Select up to 3 months</p>
-            <div className="flex gap-3 overflow-x-auto pb-2">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
               {monthCards.map(mc => {
                 const sel = flexMonths.includes(mc.key);
                 return (

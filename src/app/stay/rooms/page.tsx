@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
+import CardImageCarousel from '@/components/stay/CardImageCarousel';
 
 const ROOM_TYPES = ['All', 'Studio', 'Apartment', 'Suite', 'Villa', 'Cottage', 'Loft', 'Penthouse'];
 
@@ -181,19 +182,13 @@ function RoomsContent() {
             {filtered.map(p => (
               <Link key={p.id} href={`/stay/rooms/${p.id}${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
                 className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-                <div className="relative h-52 overflow-hidden bg-gray-100">
-                  {p.photos?.[0] ? (
-                    <img src={p.photos[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
-                      <HomeIcon className="w-12 h-12 text-white/50" />
-                    </div>
-                  )}
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
+                <div className="relative">
+                  <CardImageCarousel photos={p.photos ?? []} alt={p.name} height="h-52" />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
                     {p.type || 'Room'}
                   </div>
                   {nights > 0 && (
-                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-black bg-white text-gray-900">
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-black bg-white text-gray-900 z-10">
                       KSh {(Number(p.nightly_rate || 0) * nights).toLocaleString()} total
                     </div>
                   )}

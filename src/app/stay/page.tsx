@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import SearchWidget from '@/components/stay/SearchWidget';
+import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import {
   Waves, Utensils, Wifi, Car, Bell, Leaf, ShieldCheck, Sparkles,
   BedDouble, Droplets, Users, MapPin, ChefHat, Home as HomeIcon,
@@ -34,15 +35,9 @@ const HIGHLIGHTS = [
 function RoomCard({ property }: { property: any }) {
   return (
     <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-72 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div className="relative h-48 overflow-hidden bg-gray-100">
-        {property.photos?.[0] ? (
-          <img src={property.photos[0]} alt={property.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
-            <HomeIcon className="w-12 h-12 text-white/50" />
-          </div>
-        )}
-        <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white capitalize" style={{ background: '#16a34a' }}>
+      <div className="relative">
+        <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-48" />
+        <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
           {property.type || 'Room'}
         </div>
       </div>
@@ -142,7 +137,7 @@ export default function StayHomePage() {
               {properties.slice(0, 8).map(p => <RoomCard key={p.id} property={p} />)}
             </div>
           ) : (
-            <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4">
+            <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
               {[1,2,3,4].map(i => (
                 <div key={i} className="flex-shrink-0 w-72 bg-gray-100 rounded-2xl overflow-hidden animate-pulse">
                   <div className="h-48 bg-gray-200" />
