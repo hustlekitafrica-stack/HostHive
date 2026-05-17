@@ -8,7 +8,6 @@ import {
   BedDouble, Droplets, Users, MapPin, ChefHat, Home as HomeIcon,
   Search, Phone, TrendingUp, Star, ChevronLeft, ChevronRight, type LucideIcon,
 } from 'lucide-react';
-import HeroBrushStroke from './HeroBrushStroke';
 
 type Review = { id: string; guest_name: string; property_name: string; stay_dates: string; rating: number; comment: string; submitted_at: string };
 
@@ -207,14 +206,27 @@ export default function StayHomePage() {
 
   return (
     <div className="bg-[#f8fafc]">
-      <HeroBrushStroke />
-      <div className="relative z-10 flex flex-col items-center justify-center h-[90vh] text-center text-white">
-        <h1 className="text-5xl font-bold mb-4">Find Your Perfect Stay</h1>
-        <p className="text-lg mb-8">Discover rooms, suites, and more at Kogelo Suites…</p>
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl">
+
+      {/* ═══ HERO ═══ */}
+      <section className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+        <div className="max-w-5xl mx-auto">
+          {/* Search header */}
+          <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+            <div className="max-w-5xl mx-auto">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+                Find your perfect stay
+              </h1>
+              <p className="text-white/80 text-base sm:text-lg mb-14">
+                Discover rooms, suites, and more at Kogelo Suites…
+              </p>
+            </div>
+          </div>
+
+          {/* Search bar */}
           <SearchWidget />
+
         </div>
-      </div>
+      </section>
 
       {/* ═══ AMENITIES ═══ */}
       <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
