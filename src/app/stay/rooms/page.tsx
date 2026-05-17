@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight } from 'lucide-react';
+import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 
 const ROOM_TYPES = ['All', 'Studio', 'Apartment', 'Suite', 'Villa', 'Cottage', 'Loft', 'Penthouse'];
 
@@ -12,10 +13,15 @@ function RoomsContent() {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState('All');
-  const [guestFilter, setGuestFilter] = useState(Number(params.get('guests') ?? 1));
+  const [adults,    setAdults]    = useState(Number(params.get('guests') ?? 2));
+  const [children,  setChildren]  = useState(0);
+  const [rooms,     setRooms]     = useState(1);
+  const guestFilter = adults + children;
   const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? '');
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? '');
   const [sortBy,   setSortBy]   = useState<'price_asc'|'price_desc'|'name'>('price_asc');
+  const [showDate,   setShowDate]   = useState(false);
+  const [showGuests, setShowGuests] = useState(false);
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -24,7 +30,12 @@ function RoomsContent() {
       .finally(() => setLoading(false));
   }, []);
 
-  const today = new Date().toISOString().split('T')[0];
+  function fmt(d: string) {
+    if (!d) return '';
+    const dt = new Date(d + 'T00:00:00');
+    return dt.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  }
+  const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
 
   const filtered = properties
     .filter(p => typeFilter === 'All' || (p.type || '').toLowerCase() === typeFilter.toLowerCase())
@@ -53,31 +64,40 @@ function RoomsContent() {
               </div>
             </div>
 
-            <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
-              <div className="px-4 py-3 flex-1 border-r border-gray-200">
-                <label className="block text-xs text-gray-400 mb-0.5">Check-in</label>
-                <input type="date" value={checkIn} min={today}
-                  onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(''); }}
-                  className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
-              </div>
-              <div className="px-4 py-3 flex-1">
-                <label className="block text-xs text-gray-400 mb-0.5">Check-out</label>
-                <input type="date" value={checkOut} min={checkIn || today}
-                  onChange={e => setCheckOut(e.target.value)}
-                  className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
-              </div>
+            {/* Dates */}
+            <div className="flex flex-1 bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+              <button onClick={() => setShowDate(true)}
+                className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200 text-left">
+                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
+                  <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
+                </div>
+              </button>
+              <button onClick={() => setShowDate(true)}
+                className="flex items-center gap-3 px-4 py-3 flex-1 text-left">
+                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
+                  <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
+                </div>
+              </button>
             </div>
 
-            <div className="flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
-              <Users className="w-5 h-5 flex-shrink-0 text-gray-400" />
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Guests</p>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setGuestFilter(g => Math.max(1, g - 1))} className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center font-bold">−</button>
-                  <span className="text-gray-900 font-bold text-sm min-w-4 text-center">{guestFilter}</span>
-                  <button onClick={() => setGuestFilter(g => Math.min(20, g + 1))} className="w-6 h-6 rounded-full border border-gray-300 text-gray-600 text-sm flex items-center justify-center font-bold">+</button>
+            {/* Guests */}
+            <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
+              <button onClick={() => setShowGuests(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
+                <Users className="w-5 h-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Guests</p>
+                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
                 </div>
-              </div>
+                <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+              </button>
             </div>
 
             <button className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0" style={{ background: '#16a34a' }}>
@@ -207,6 +227,21 @@ function RoomsContent() {
           </div>
         )}
       </div>
+
+      {showDate && (
+        <DatePickerModal
+          checkIn={checkIn} checkOut={checkOut}
+          onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDate(false); }}
+          onClose={() => setShowDate(false)}
+        />
+      )}
+      {showGuests && (
+        <GuestsModal
+          adults={adults} children={children} rooms={rooms}
+          onConfirm={(a, c, r) => { setAdults(a); setChildren(c); setRooms(r); setShowGuests(false); }}
+          onClose={() => setShowGuests(false)}
+        />
+      )}
     </div>
   );
 }

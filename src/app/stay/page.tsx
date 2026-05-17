@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import SearchWidget from '@/components/stay/SearchWidget';
 import {
   Waves, Utensils, Wifi, Car, Bell, Leaf, ShieldCheck, Sparkles,
   BedDouble, Droplets, Users, MapPin, ChefHat, Home as HomeIcon,
@@ -30,108 +30,6 @@ const HIGHLIGHTS = [
   { number: '1',  label: 'In-house Restaurant' },
 ];
 
-function SearchWidget() {
-  const router = useRouter();
-  const today    = new Date().toISOString().split('T')[0];
-  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [checkIn,  setCheckIn]  = useState(today);
-  const [checkOut, setCheckOut] = useState(tomorrow);
-  const [adults,   setAdults]   = useState(2);
-  const [children, setChildren] = useState(0);
-  const [rooms,    setRooms]    = useState(1);
-  const [guestOpen, setGuestOpen] = useState(false);
-
-  const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
-
-  const handleSearch = () => {
-    setGuestOpen(false);
-    router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
-  };
-
-  return (
-    <div className="relative w-full max-w-full mx-auto px-0 sm:px-0 overflow-x-hidden">
-      {/* Main bar */}
-      <div className="flex flex-col lg:flex-row rounded-lg overflow-hidden w-full" style={{ border: '5px solid #d97706' }}>
-
-        {/* Dates */}
-        <div className="flex flex-1 items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
-          <div className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200">
-            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
-              <input type="date" value={checkIn} min={today}
-                onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(e.target.value); }}
-                className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
-            </div>
-          </div>
-          <div className="flex items-center gap-3 px-4 py-3 flex-1">
-            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-            </svg>
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
-              <input type="date" value={checkOut} min={checkIn}
-                onChange={e => setCheckOut(e.target.value)}
-                className="text-sm font-semibold text-gray-900 outline-none bg-transparent w-32" />
-            </div>
-          </div>
-        </div>
-
-        {/* Guests */}
-        <div className="relative flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
-          <button onClick={() => setGuestOpen(o => !o)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
-            <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <div>
-              <p className="text-xs text-gray-400 mb-0.5">Guests</p>
-              <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
-            </div>
-            <svg className={`w-4 h-4 text-gray-400 ml-2 transition-transform ${guestOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-          </button>
-
-          {/* Guest dropdown */}
-          {guestOpen && (
-            <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-gray-200 rounded-xl shadow-2xl p-5 min-w-[280px]">
-              {[
-                { label: 'Adults', sub: 'Ages 18+', val: adults, set: setAdults, min: 1 },
-                { label: 'Children', sub: 'Ages 0–17', val: children, set: setChildren, min: 0 },
-                { label: 'Rooms', sub: '', val: rooms, set: setRooms, min: 1 },
-              ].map(row => (
-                <div key={row.label} className="flex items-center justify-between py-3 border-b last:border-0 border-gray-100">
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{row.label}</p>
-                    {row.sub && <p className="text-xs text-gray-400">{row.sub}</p>}
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <button onClick={() => row.set((v: number) => Math.max(row.min, v - 1))}
-                      className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-colors font-bold text-lg leading-none disabled:opacity-30"
-                      disabled={row.val === row.min}>−</button>
-                    <span className="text-sm font-bold w-4 text-center">{row.val}</span>
-                    <button onClick={() => row.set((v: number) => Math.min(20, v + 1))}
-                      className="w-8 h-8 rounded-full border-2 border-gray-300 flex items-center justify-center text-gray-600 hover:border-gray-900 transition-colors font-bold text-lg leading-none">+</button>
-                  </div>
-                </div>
-              ))}
-              <button onClick={() => setGuestOpen(false)}
-                className="mt-3 w-full py-2 rounded-lg text-sm font-bold text-white" style={{ background: '#1e293b' }}>Done</button>
-            </div>
-          )}
-        </div>
-
-        {/* Search */}
-        <button onClick={handleSearch}
-          className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
-          style={{ background: '#16a34a' }}>
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-          Search
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function RoomCard({ property }: { property: any }) {
   return (
