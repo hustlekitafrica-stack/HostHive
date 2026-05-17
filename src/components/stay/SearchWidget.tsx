@@ -301,46 +301,32 @@ export default function SearchWidget() {
           {/* Dates */}
           <div className="flex flex-1 bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
             <button onClick={() => setShowDate(true)}
-              className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200 text-left">
-              <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
-                <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
-              </div>
+              className="flex-1 px-4 py-3 border-r border-gray-200 text-left">
+              <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
+              <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
             </button>
             <button onClick={() => setShowDate(true)}
-              className="flex items-center gap-3 px-4 py-3 flex-1 text-left">
-              <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
-              </svg>
-              <div>
-                <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
-                <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
-              </div>
+              className="flex-1 px-4 py-3 text-left">
+              <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
+              <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
             </button>
           </div>
 
           {/* Guests */}
           <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
-            <button onClick={() => setShowGuests(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
-              <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+            <button onClick={() => setShowGuests(true)} className="flex items-center justify-between gap-2 px-4 py-3 w-full text-left">
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">Guests</p>
                 <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
               </div>
-              <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </button>
           </div>
 
           {/* Search */}
           <button onClick={handleSearch}
-            className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0"
+            className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center flex-shrink-0"
             style={{ background: '#16a34a' }}>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
             Search
           </button>
         </div>
