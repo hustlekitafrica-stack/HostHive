@@ -220,9 +220,9 @@ export default function DiningPage() {
         ))}
       </div>
       {totalItems > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 px-4 z-40">
+        <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4">
           <button onClick={() => setStep('details')}
-            className="w-full py-4 rounded-2xl text-sm font-bold text-white flex items-center justify-between px-5 shadow-2xl"
+            className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white flex items-center justify-between px-5 shadow-2xl"
             style={{ background: '#16a34a' }}>
             <span className="flex items-center gap-2"><ShoppingCart className="w-4 h-4" />{totalItems} item{totalItems !== 1 ? 's' : ''}</span>
             <span>KSh {total.toLocaleString()} · Checkout →</span>
@@ -303,10 +303,14 @@ export default function DiningPage() {
           </div>
         </div>
         {error && <p className="text-xs text-red-600 font-semibold px-1">{error}</p>}
+        <button onClick={() => setStep('menu')}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-800 pt-1">
+          <ArrowLeft className="w-4 h-4" /> Back to Menu
+        </button>
       </div>
-      <div className="fixed bottom-16 left-0 right-0 px-4 z-40 pb-1">
+      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-1">
         <button onClick={() => { if (validateDetails()) setStep('payment'); }}
-          className="w-full py-4 rounded-2xl text-sm font-bold text-white shadow-xl"
+          className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white shadow-xl"
           style={{ background: '#16a34a' }}>
           Continue to Payment →
         </button>
@@ -377,10 +381,14 @@ export default function DiningPage() {
           )}
         </div>
         {error && <p className="text-xs text-red-600 font-semibold px-1">{error}</p>}
+        <button onClick={() => setStep('details')}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-800 pt-1">
+          <ArrowLeft className="w-4 h-4" /> Back to Details
+        </button>
       </div>
-      <div className="fixed bottom-16 left-0 right-0 px-4 z-40 pb-1">
+      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-1">
         <button onClick={handleSubmitOrder} disabled={saving}
-          className="w-full py-4 rounded-2xl text-sm font-bold text-white shadow-xl disabled:opacity-50"
+          className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white shadow-xl disabled:opacity-50"
           style={{ background: '#16a34a' }}>
           {saving ? 'Confirming Order…' : `I've Paid · Confirm Order`}
         </button>
