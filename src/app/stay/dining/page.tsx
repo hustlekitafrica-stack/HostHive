@@ -4,6 +4,16 @@ import { useState, useReducer, useEffect } from 'react';
 import { MENU_DATA, MENU_TABS, ORDER_PHONE, ROOM_SERVICE_FEE, DELIVERY_FEE, type MenuItem, type MenuCategory } from '@/lib/menu-data';
 import { Bell, Utensils, Bike, ShoppingCart, TrendingUp, Star, Phone, CheckCircle2, ArrowLeft, ChevronRight, type LucideIcon } from 'lucide-react';
 
+function DotsLoader() {
+  return (
+    <span className="flex items-center justify-center gap-1.5">
+      <span className="w-2 h-2 rounded-full bg-current dot-bounce" />
+      <span className="w-2 h-2 rounded-full bg-current dot-bounce dot-bounce-2" />
+      <span className="w-2 h-2 rounded-full bg-current dot-bounce dot-bounce-3" />
+    </span>
+  );
+}
+
 type CartItem = MenuItem & { qty: number };
 type CartAction =
   | { type: 'ADD'; item: MenuItem }
@@ -95,9 +105,12 @@ export default function DiningPage() {
   const [address,  setAddress]  = useState('');
   const [dineTime, setDineTime] = useState('');
   const [notes,    setNotes]    = useState('');
-  const [error,    setError]    = useState('');
-  const [saving,   setSaving]   = useState(false);
-  const [orderNum, setOrderNum] = useState('');
+  const [error,      setError]      = useState('');
+  const [saving,     setSaving]     = useState(false);
+  const [orderNum,   setOrderNum]   = useState('');
+  const [mpesaPhone, setMpesaPhone] = useState('');
+  const [stkSent,    setStkSent]    = useState(false);
+  const [stkLoading, setStkLoading] = useState(false);
 
   const subtotal    = cart.reduce((s, i) => s + i.price * i.qty, 0);
   const serviceFee  = orderType === 'room_service' ? ROOM_SERVICE_FEE : 0;
@@ -114,6 +127,28 @@ export default function DiningPage() {
     if (orderType === 'room_service' && !room.trim())    { setError('Please enter your room number.'); return false; }
     if (orderType === 'delivery'     && !address.trim()) { setError('Please enter your delivery address.'); return false; }
     setError(''); return true;
+  };
+
+  const handleStkPush = async () => {
+    setError(''); setStkLoading(true);
+    const phoneToUse = mpesaPhone.trim() || phone.trim();
+    if (!phoneToUse) { setError('Please enter your M-Pesa phone number.'); setStkLoading(false); return; }
+    try {
+      const res = await fetch('/api/stay/mpesa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: phoneToUse,
+          amount: total,
+          account_ref: name.trim() || 'Kogelo Order',
+          description: `Food Order - ${selectedType?.label ?? ''}`,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); return; }
+      setStkSent(true);
+    } catch { setError('Could not send M-Pesa prompt. Please try again.');
+    } finally { setStkLoading(false); }
   };
 
   const handleSubmitOrder = async () => {
@@ -220,7 +255,7 @@ export default function DiningPage() {
         ))}
       </div>
       {totalItems > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4">
+        <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 md:static md:mt-6 md:px-0 md:mb-20">
           <button onClick={() => setStep('details')}
             className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white flex items-center justify-between px-5 shadow-2xl"
             style={{ background: '#16a34a' }}>
@@ -308,7 +343,7 @@ export default function DiningPage() {
           <ArrowLeft className="w-4 h-4" /> Back to Menu
         </button>
       </div>
-      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-1">
+      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-1 md:static md:mt-2 md:px-0 md:pb-0 md:mb-20">
         <button onClick={() => { if (validateDetails()) setStep('payment'); }}
           className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white shadow-xl"
           style={{ background: '#16a34a' }}>
@@ -318,11 +353,12 @@ export default function DiningPage() {
     </div>
   );
 
-  // ── STEP 4: M-Pesa Payment ───────────────────────────────────────────────
+  // ── STEP 4: M-Pesa STK Push ──────────────────────────────────────────────
   if (step === 'payment') return (
     <div className="min-h-screen bg-[#f8fafc] overflow-x-hidden">
       <div className="sticky top-0 z-30 bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => setStep('details')} className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100">
+        <button onClick={() => { setStep('details'); setStkSent(false); setError(''); }}
+          className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
@@ -330,39 +366,66 @@ export default function DiningPage() {
           <p className="text-xs text-gray-400">Step 4 of 4</p>
         </div>
       </div>
-      <div className="px-4 py-5 pb-36 space-y-4 max-w-lg mx-auto">
+
+      <div className="px-4 py-5 space-y-4 max-w-lg mx-auto pb-10 md:pb-20">
+        {/* Amount banner */}
         <div className="rounded-2xl p-6 text-center text-white" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
           <p className="text-sm text-white/70 mb-1">Amount Due</p>
           <p className="text-4xl font-black">KSh {total.toLocaleString()}</p>
           <p className="text-xs text-white/50 mt-1">{totalItems} item{totalItems !== 1 ? 's' : ''} · {selectedType?.label}</p>
         </div>
-        <div className="bg-white rounded-2xl p-5 border border-gray-100">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
-              <span className="text-white text-sm font-black">M</span>
-            </div>
-            <p className="font-black text-gray-900">M-Pesa Payment Steps</p>
-          </div>
-          <div className="space-y-3">
-            {[
-              'Go to M-Pesa on your phone',
-              'Select Send Money',
-              `Enter number: ${ORDER_PHONE}`,
-              `Enter amount: KSh ${total.toLocaleString()}`,
-              `Use reference: ${name || 'Your Name'}`,
-              'Enter your M-Pesa PIN and confirm',
-            ].map((text, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full text-xs font-black text-white flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>{i + 1}</span>
-                <p className="text-sm text-gray-700 pt-0.5 leading-snug">{text}</p>
+
+        {!stkSent ? (
+          /* ── Send STK prompt ── */
+          <div className="bg-white rounded-2xl p-5 border border-gray-100 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
+                <span className="text-white text-sm font-black">M</span>
               </div>
-            ))}
+              <p className="font-black text-gray-900">M-Pesa STK Push</p>
+            </div>
+            <p className="text-sm text-gray-500">We'll send a payment prompt directly to your phone. Enter your M-Pesa PIN when it arrives.</p>
+            <div>
+              <label className="block text-xs font-bold text-gray-500 mb-1">M-Pesa Phone Number</label>
+              <input
+                value={mpesaPhone || phone}
+                onChange={e => setMpesaPhone(e.target.value)}
+                placeholder="07XX XXX XXX"
+                type="tel"
+                className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-green-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">Pre-filled from your contact details — edit if different.</p>
+            </div>
+            {error && <p className="text-xs text-red-600 font-semibold">{error}</p>}
+            <button onClick={handleStkPush} disabled={stkLoading}
+              className="w-full py-4 rounded-2xl text-sm font-bold text-white disabled:opacity-50"
+              style={{ background: '#16a34a' }}>
+              {stkLoading ? <DotsLoader /> : `Send M-Pesa Prompt · KSh ${total.toLocaleString()}`}
+            </button>
           </div>
-          <div className="mt-4 rounded-xl p-3 text-center" style={{ background: '#f0fdf4' }}>
-            <p className="text-xs text-green-700 font-semibold">Send to M-Pesa number</p>
-            <p className="text-2xl font-black text-green-800 mt-0.5">{ORDER_PHONE}</p>
+        ) : (
+          /* ── Waiting for payment ── */
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center animate-pulse" style={{ background: '#f0fdf4' }}>
+                <span className="text-3xl font-black text-green-700">M</span>
+              </div>
+            </div>
+            <div>
+              <p className="font-black text-gray-900 text-lg">Check your phone!</p>
+              <p className="text-sm text-gray-500 mt-1">An M-Pesa prompt has been sent to <span className="font-bold text-gray-800">{mpesaPhone || phone}</span>. Enter your PIN to complete payment.</p>
+            </div>
+            <div className="rounded-xl p-3 text-sm" style={{ background: '#f0fdf4' }}>
+              <p className="text-green-800 font-semibold">Amount: <span className="font-black">KSh {total.toLocaleString()}</span></p>
+            </div>
+            <button onClick={() => { setStkSent(false); setError(''); }}
+              className="text-xs text-gray-400 underline hover:text-gray-600">
+              Didn't receive it? Send again
+            </button>
           </div>
-        </div>
+        )}
+
+        {/* Order summary */}
         <div className="bg-white rounded-2xl p-4 border border-gray-100">
           <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">Order for {name}</p>
           <div className="space-y-1.5">
@@ -380,17 +443,21 @@ export default function DiningPage() {
             </div>
           )}
         </div>
-        {error && <p className="text-xs text-red-600 font-semibold px-1">{error}</p>}
-        <button onClick={() => setStep('details')}
-          className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-800 pt-1">
+
+        {stkSent && (
+          <>
+            {error && <p className="text-xs text-red-600 font-semibold px-1">{error}</p>}
+            <button onClick={handleSubmitOrder} disabled={saving}
+              className="w-full py-4 rounded-2xl text-sm font-bold text-white shadow-xl disabled:opacity-50"
+              style={{ background: '#16a34a' }}>
+              {saving ? <DotsLoader /> : 'I\'ve Paid · Confirm Order'}
+            </button>
+          </>
+        )}
+
+        <button onClick={() => { setStep('details'); setStkSent(false); setError(''); }}
+          className="flex items-center gap-2 text-sm font-semibold text-gray-500 hover:text-gray-800">
           <ArrowLeft className="w-4 h-4" /> Back to Details
-        </button>
-      </div>
-      <div className="fixed bottom-16 left-0 right-0 z-40 flex justify-center px-4 pb-1">
-        <button onClick={handleSubmitOrder} disabled={saving}
-          className="w-full max-w-lg py-4 rounded-2xl text-sm font-bold text-white shadow-xl disabled:opacity-50"
-          style={{ background: '#16a34a' }}>
-          {saving ? 'Confirming Order…' : `I've Paid · Confirm Order`}
         </button>
       </div>
     </div>
