@@ -102,22 +102,87 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        {/* Mobile dropdown — auth only */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-white/20" style={{ background: '#1e293b' }}>
-            <div className="p-4 flex gap-3">
+      </header>
+
+      {/* ── Mobile full-page menu overlay ── */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-40 flex flex-col" style={{ background: '#0f172a' }}>
+          {/* Top bar with close */}
+          <div className="flex items-center justify-between px-5 h-14 border-b border-white/10" style={{ background: '#1e293b' }}>
+            <span className="font-black text-white text-lg">Kogelo Suites</span>
+            <button onClick={() => setMenuOpen(false)} className="p-2 text-white/70 hover:text-white">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
+
+            {/* Auth */}
+            <div className="flex gap-3">
               <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
-                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-white border border-white/40">
+                className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-white border border-white/30">
                 Register
               </Link>
               <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
-                className="flex-1 text-center py-2.5 rounded text-sm font-semibold text-[#1e293b] bg-white">
+                className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-[#0f172a] bg-white">
                 Sign in
               </Link>
             </div>
+
+            {/* Quick Links */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">Quick Links</p>
+              <ul className="space-y-1">
+                {[
+                  { href: '/stay/rooms',       label: 'Browse Rooms' },
+                  { href: '/stay/dining',       label: 'Restaurant & Dining' },
+                  { href: '/stay/rooms',        label: 'Make a Booking' },
+                  { href: '/stay/my-bookings',  label: 'My Trips' },
+                  { href: '/stay/profile',      label: 'My Profile' },
+                ].map((l, i) => (
+                  <li key={`${l.href}-${i}`}>
+                    <Link href={l.href} onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-3 py-3 border-b border-white/5 text-white/80 hover:text-white transition-colors text-base font-semibold">
+                      <svg className="w-4 h-4 flex-shrink-0 text-[#16a34a]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
+                      </svg>
+                      {l.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Contact */}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">Contact Us</p>
+              <ul className="space-y-4 text-white/70 text-sm">
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0 text-[#16a34a]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                  </svg>
+                  0726 566 795
+                </li>
+                <li className="flex items-center gap-3">
+                  <svg className="w-5 h-5 flex-shrink-0 text-[#16a34a]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                  </svg>
+                  Kogelo, Siaya County, Kenya
+                </li>
+              </ul>
+            </div>
+
           </div>
-        )}
-      </header>
+
+          {/* Bottom branding */}
+          <div className="px-6 py-4 border-t border-white/10">
+            <p className="text-xs text-white/30 text-center">© Kogelo Suites. All rights reserved.</p>
+          </div>
+        </div>
+      )}
 
       {/* ── Page content ── */}
       <main className="flex-1 pb-20 md:pb-0">
