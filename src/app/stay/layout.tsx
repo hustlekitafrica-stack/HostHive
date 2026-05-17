@@ -205,8 +205,8 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
         })}
       </nav>
 
-      {/* ── Footer ── */}
-      <footer className="text-white" style={{ background: '#0f172a' }}>
+      {/* ── Footer (desktop only) ── */}
+      <footer className="hidden md:block text-white" style={{ background: '#0f172a' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 grid grid-cols-1 md:grid-cols-3 gap-10">
 
           <div>
