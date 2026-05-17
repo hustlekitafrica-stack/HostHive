@@ -34,30 +34,28 @@ const ORDER_TYPES: { id: OrderType; label: string; Icon: LucideIcon; desc: strin
 
 function MenuItemCard({ item, qty, onAdd, onRemove }: { item: MenuItem; qty: number; onAdd: () => void; onRemove: () => void }) {
   return (
-    <div className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all flex gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start gap-2">
-          <h4 className="font-bold text-gray-900 text-sm flex-1 leading-snug">{item.name}</h4>
-          {item.tag === 'popular' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#D97706' }}><TrendingUp className="w-3 h-3" />Popular</span>}
-          {item.tag === 'special' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#16a34a' }}><Star className="w-3 h-3" />Special</span>}
-        </div>
-        {item.description && <p className="text-xs text-gray-500 mt-1 leading-snug">{item.description}</p>}
-        <div className="mt-3 flex items-center justify-between">
-          <span className="font-black text-gray-900 text-sm">
-            {item.price === 0 ? 'Free' : `KSh ${item.price.toLocaleString()}`}
-          </span>
-          {item.price > 0 && (
-            qty > 0 ? (
-              <div className="flex items-center gap-2">
-                <button onClick={onRemove} className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors hover:bg-red-50" style={{ borderColor: '#16a34a', color: '#16a34a' }}>−</button>
-                <span className="w-5 text-center font-black text-sm text-gray-900">{qty}</span>
-                <button onClick={onAdd} className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>+</button>
-              </div>
-            ) : (
-              <button onClick={onAdd} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:opacity-90" style={{ background: '#16a34a' }}>Add</button>
-            )
-          )}
-        </div>
+    <div className="bg-white rounded-2xl p-4 border border-gray-100 hover:border-gray-200 hover:shadow-sm transition-all">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <h4 className="font-bold text-gray-900 text-sm leading-snug flex-1 min-w-0">{item.name}</h4>
+        {item.tag === 'popular' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#D97706' }}><TrendingUp className="w-3 h-3" />Popular</span>}
+        {item.tag === 'special' && <span className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#16a34a' }}><Star className="w-3 h-3" />Special</span>}
+      </div>
+      {item.description && <p className="text-xs text-gray-500 mb-3 leading-snug">{item.description}</p>}
+      <div className="flex items-center justify-between mt-2">
+        <span className="font-black text-gray-900 text-sm">
+          {item.price === 0 ? 'Free' : `KSh ${item.price.toLocaleString()}`}
+        </span>
+        {item.price > 0 && (
+          qty > 0 ? (
+            <div className="flex items-center gap-2">
+              <button onClick={onRemove} className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-sm font-bold" style={{ borderColor: '#16a34a', color: '#16a34a' }}>−</button>
+              <span className="w-5 text-center font-black text-sm text-gray-900">{qty}</span>
+              <button onClick={onAdd} className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold text-white" style={{ background: '#16a34a' }}>+</button>
+            </div>
+          ) : (
+            <button onClick={onAdd} className="px-4 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: '#16a34a' }}>Add</button>
+          )
+        )}
       </div>
     </div>
   );
@@ -145,7 +143,7 @@ export default function DiningPage() {
   };
 
   if (step === 'success') return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-20 pb-24">
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
         <div className="flex justify-center mb-4"><CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} /></div>
         <h2 className="text-2xl font-black text-gray-900 mb-2">Order Received!</h2>
@@ -166,10 +164,10 @@ export default function DiningPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-[#f8fafc] overflow-x-hidden">
 
       {/* ── Header ── */}
-      <div className="pt-20 pb-6 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
+      <div className="pt-16 pb-6 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-7xl mx-auto">
           <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
           <h1 className="text-2xl sm:text-4xl font-black text-white mb-1">Menu & Ordering</h1>
@@ -193,7 +191,7 @@ export default function DiningPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-28 lg:pb-6">
         <div className="grid lg:grid-cols-3 gap-8">
 
           {/* ── Menu ── */}
