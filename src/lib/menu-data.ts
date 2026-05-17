@@ -1,5 +1,5 @@
 export const ORDER_PHONE = '0726566795';
-export const ROOM_SERVICE_FEE = 300;
+export const ROOM_SERVICE_FEE = 100;
 export const DELIVERY_FEE = 200;
 
 export type MenuItem = {

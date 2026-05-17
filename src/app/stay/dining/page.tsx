@@ -169,19 +169,19 @@ export default function DiningPage() {
     <div className="min-h-screen bg-[#f8fafc]">
 
       {/* ── Header ── */}
-      <div className="pt-20 pb-8 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
+      <div className="pt-20 pb-6 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-7xl mx-auto">
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
-          <h1 className="text-3xl sm:text-4xl font-black text-white mb-2">Menu & Ordering</h1>
-          <p className="text-white/60 text-sm">Breakfast · Mains · Snacks · Drinks &nbsp;·&nbsp;
-            <a href={`tel:${ORDER_PHONE}`} className="underline hover:text-white">Call to order: {ORDER_PHONE}</a>
+          <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
+          <h1 className="text-2xl sm:text-4xl font-black text-white mb-1">Menu & Ordering</h1>
+          <p className="text-white/60 text-xs sm:text-sm">
+            <a href={`tel:${ORDER_PHONE}`} className="underline hover:text-white">Call: {ORDER_PHONE}</a>
           </p>
 
           {/* Order type selector */}
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="mt-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
             {ORDER_TYPES.map(t => (
               <button key={t.id} onClick={() => setOrderType(t.id)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
                   orderType === t.id ? 'bg-white text-gray-900' : 'bg-white/10 text-white/80 hover:bg-white/20'
                 }`}>
                 <t.Icon className="w-4 h-4" />
@@ -220,7 +220,7 @@ export default function DiningPage() {
                     <h3 className="font-black text-gray-900">{cat.name}</h3>
                     {cat.description && <p className="text-xs text-gray-500 mt-0.5">{cat.description}</p>}
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {cat.items.map(item => {
                       const cartItem = cart.find(i => i.id === item.id);
                       return (
@@ -341,7 +341,7 @@ export default function DiningPage() {
 
       {/* ── Mobile floating cart button ── */}
       {totalItems > 0 && !cartOpen && (
-        <div className="lg:hidden fixed bottom-6 left-4 right-4 z-40">
+        <div className="lg:hidden fixed bottom-20 left-4 right-4 z-40">
           <button onClick={() => setCartOpen(true)}
             className="w-full py-4 rounded-2xl text-sm font-bold text-white flex items-center justify-between px-6 shadow-2xl"
             style={{ background: '#16a34a' }}>
