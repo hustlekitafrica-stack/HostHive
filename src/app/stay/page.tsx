@@ -54,7 +54,7 @@ function SearchWidget() {
       <div className="flex flex-col lg:flex-row rounded-lg overflow-hidden w-full" style={{ border: '5px solid #d97706' }}>
 
         {/* Dates */}
-        <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+        <div className="flex flex-1 items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
           <div className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200">
             <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -80,7 +80,7 @@ function SearchWidget() {
         </div>
 
         {/* Guests */}
-        <div className="relative flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+        <div className="relative flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
           <button onClick={() => setGuestOpen(o => !o)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
             <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
