@@ -54,6 +54,14 @@ textarea::placeholder {
 .dot-bounce-2 { animation-delay: 0.18s; }
 .dot-bounce-3 { animation-delay: 0.36s; }
 
+@keyframes dot-wave {
+  0%, 60%, 100% { transform: translateY(0) scale(1);    opacity: 0.5; }
+  30%           { transform: translateY(-14px) scale(1.3); opacity: 1;   }
+}
+.dot-wave   { animation: dot-wave 1s ease-in-out infinite; }
+.dot-wave-2 { animation-delay: 0.15s; }
+.dot-wave-3 { animation-delay: 0.30s; }
+
 @keyframes slide-in {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }

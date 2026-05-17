@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useCallback } from 'react';
 
 const NAV_LINKS = [
   {
@@ -53,8 +53,17 @@ const NAV_LINKS = [
 ];
 
 export default function StayLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname  = usePathname();
+  const router    = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [loading,  setLoading]  = useState(false);
+
+  const handleNavClick = useCallback((href: string) => {
+    setMenuOpen(false);
+    setLoading(true);
+    router.push(href);
+    setTimeout(() => setLoading(false), 5000);
+  }, [router]);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
@@ -71,14 +80,14 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {NAV_LINKS.map(l => (
-              <Link key={l.href} href={l.href}
+              <button key={l.href} onClick={() => handleNavClick(l.href)}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
                     ? 'text-white border-white'
                     : 'text-white/80 border-transparent hover:text-white hover:bg-white/10'
                 }`}>
                 {l.label}
-              </Link>
+              </button>
             ))}
           </nav>
 
@@ -121,14 +130,14 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
             {/* Auth */}
             <div className="flex gap-3">
-              <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
+              <button onClick={() => handleNavClick('/stay/auth')}
                 className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-white border border-white/30">
                 Register
-              </Link>
-              <Link href="/stay/auth" onClick={() => setMenuOpen(false)}
+              </button>
+              <button onClick={() => handleNavClick('/stay/auth')}
                 className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-[#0f172a] bg-white">
                 Sign in
-              </Link>
+              </button>
             </div>
 
             {/* Quick Links */}
@@ -143,13 +152,13 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                   { href: '/stay/profile',      label: 'My Profile' },
                 ].map((l, i) => (
                   <li key={`${l.href}-${i}`}>
-                    <Link href={l.href} onClick={() => setMenuOpen(false)}
-                      className="flex items-center gap-3 py-3 border-b border-white/5 text-white/80 hover:text-white transition-colors text-base font-semibold">
+                    <button onClick={() => handleNavClick(l.href)}
+                      className="w-full flex items-center gap-3 py-3 border-b border-white/5 text-white/80 hover:text-white transition-colors text-base font-semibold">
                       <svg className="w-4 h-4 flex-shrink-0 text-[#16a34a]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/>
                       </svg>
                       {l.label}
-                    </Link>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -189,18 +198,30 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
 
+      {/* ── Wave loading overlay ── */}
+      {loading && (
+        <div className="fixed inset-0 z-[200] flex flex-col items-center justify-center" style={{ background: 'rgba(15,23,42,0.85)' }}>
+          <div className="flex items-end gap-3 mb-4">
+            <span className="w-4 h-4 rounded-full bg-[#16a34a] dot-wave" />
+            <span className="w-4 h-4 rounded-full bg-[#16a34a] dot-wave dot-wave-2" />
+            <span className="w-4 h-4 rounded-full bg-[#16a34a] dot-wave dot-wave-3" />
+          </div>
+          <p className="text-white/60 text-sm font-medium tracking-wide">Loading…</p>
+        </div>
+      )}
+
       {/* ── Mobile sticky bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
         {NAV_LINKS.map(l => {
           const active = pathname === l.href;
           return (
-            <Link key={l.href} href={l.href}
+            <button key={l.href} onClick={() => handleNavClick(l.href)}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
                 active ? 'text-[#16a34a]' : 'text-white/50 hover:text-white'
               }`}>
               {l.icon}
               <span className="text-[10px] font-semibold">{l.label}</span>
-            </Link>
+            </button>
           );
         })}
       </nav>
