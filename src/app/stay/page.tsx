@@ -51,24 +51,7 @@ function SearchWidget() {
   return (
     <div className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 overflow-x-hidden">
       {/* Main bar */}
-      <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706', margin: '9px' }}>
-
-        {/* Destination */}
-        <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
-          <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
-          <div className="flex-1">
-            <input
-              type="text"
-              defaultValue="Kogelo Suites, Kogelo"
-              readOnly
-              className="w-full text-gray-900 font-semibold text-sm outline-none bg-transparent cursor-default placeholder-gray-400"
-              placeholder="Where are you going?"
-            />
-            <p className="text-xs text-gray-400 mt-0.5 hidden sm:block">Kogelo, Siaya County, Kenya</p>
-          </div>
-        </div>
+      <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706', borderWidth: '9px' }}>
 
         {/* Dates */}
         <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
