@@ -208,15 +208,15 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+      <section className="pt-10 pb-8 px-4 sm:px-6" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
           {/* Search header */}
-          <div className="pt-20 pb-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+          <div className="pt-10 pb-8 px-4 sm:px-6" style={{ background: '#1e293b' }}>
             <div className="max-w-5xl mx-auto">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
                 Find your perfect stay
               </h1>
-              <p className="text-white/80 text-base sm:text-lg mb-14">
+              <p className="text-white/80 text-sm sm:text-lg mb-7">
                 Discover rooms, suites, and more at Kogelo Suites…
               </p>
             </div>
