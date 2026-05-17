@@ -49,7 +49,7 @@ function SearchWidget() {
   };
 
   return (
-    <div className="relative w-full max-w-full mx-auto px-2 sm:px-8 overflow-x-hidden">
+    <div className="relative w-full max-w-full mx-auto px-0 sm:px-0 overflow-x-hidden">
       {/* Main bar */}
       <div className="flex flex-col lg:flex-row rounded-lg overflow-hidden w-full" style={{ border: '5px solid #d97706' }}>
 
@@ -191,19 +191,14 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="pt-10 pb-8 px-4 sm:px-6" style={{ background: '#1e293b' }}>
+      <section className="pt-10 pb-8 px-2 sm:px-6" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
-          {/* Search header */}
-          <div className="pt-10 pb-8 px-4 sm:px-6" style={{ background: '#1e293b' }}>
-            <div className="max-w-5xl mx-auto">
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight">
-                Find your perfect stay
-              </h1>
-              <p className="text-white/80 text-sm sm:text-lg mb-7">
-                Discover rooms, suites, and more at Kogelo Suites…
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
+            Find your perfect stay
+          </h1>
+          <p className="text-white/80 text-sm sm:text-lg mb-7 px-2 sm:px-0">
+            Discover rooms, suites, and more at Kogelo Suites…
+          </p>
 
           {/* Search bar */}
           <SearchWidget />
