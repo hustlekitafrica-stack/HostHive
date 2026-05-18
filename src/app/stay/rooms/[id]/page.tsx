@@ -601,7 +601,7 @@ function RoomDetailContent({ id }: { id: string }) {
       )}
 
       {/* ── Content + Booking Sidebar ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-28 lg:pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <div className="grid lg:grid-cols-3 gap-10">
 
           {/* Left — details */}
@@ -835,27 +835,6 @@ function RoomDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* ── Mobile sticky booking bar ── */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between lg:hidden z-40 shadow-lg">
-        <div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-base font-bold text-gray-900 underline">KSh {rate.toLocaleString()}</span>
-            {nights === 0 && <span className="text-sm text-gray-500"> / night</span>}
-          </div>
-          <p className="text-xs text-gray-500">
-            {nights > 0 ? `For ${nights} night${nights !== 1 ? 's' : ''} · ${fmtShort(checkIn)} – ${fmtShort(checkOut)}` : 'Select dates to see price'}
-          </p>
-          <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#16a34a' }}>
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-            Free cancellation
-          </p>
-        </div>
-        <button onClick={handleBook}
-          className="px-8 py-3.5 rounded-full text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95"
-          style={{ background: '#16a34a' }}>
-          Reserve
-        </button>
-      </div>
 
     </div>
   );
