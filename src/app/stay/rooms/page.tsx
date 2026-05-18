@@ -1,18 +1,22 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight, Heart } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
+import { createClient } from '@/lib/supabase/client';
 
 const ROOM_TYPES = ['All', 'Studio', 'Apartment', 'Suite', 'Villa', 'Cottage', 'Loft', 'Penthouse'];
 
 function RoomsContent() {
-  const params = useSearchParams();
-  const [properties, setProperties] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const params  = useSearchParams();
+  const router  = useRouter();
+  const [properties,  setProperties]  = useState<any[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [wishPending, setWishPending] = useState<Set<string>>(new Set());
   const [typeFilter, setTypeFilter] = useState('All');
   const [adults,    setAdults]    = useState(Number(params.get('guests') ?? 2));
   const [children,  setChildren]  = useState(0);
@@ -29,7 +33,23 @@ function RoomsContent() {
       .then(r => r.json())
       .then(d => setProperties(d.properties ?? []))
       .finally(() => setLoading(false));
+    fetch('/api/stay/wishlist')
+      .then(r => r.json())
+      .then(d => setWishlistIds(new Set(d.property_ids ?? [])));
   }, []);
+
+  const toggleWishlist = useCallback(async (e: React.MouseEvent, propertyId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { router.push(`/stay/auth?redirect=/stay/rooms`); return; }
+    if (wishPending.has(propertyId)) return;
+    setWishPending(prev => new Set(prev).add(propertyId));
+    setWishlistIds(prev => { const s = new Set(prev); s.has(propertyId) ? s.delete(propertyId) : s.add(propertyId); return s; });
+    await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyId }) });
+    setWishPending(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
+  }, [router, wishPending]);
 
   function fmt(d: string) {
     if (!d) return '';
@@ -187,6 +207,17 @@ function RoomsContent() {
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
                     {p.type || 'Room'}
                   </div>
+                  {/* Heart / wishlist button */}
+                  <button
+                    onClick={e => toggleWishlist(e, p.id)}
+                    className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-all hover:scale-110"
+                    title={wishlistIds.has(p.id) ? 'Remove from wishlist' : 'Save to wishlist'}>
+                    <Heart
+                      className="w-4 h-4 transition-colors"
+                      style={{ color: '#16a34a' }}
+                      fill={wishlistIds.has(p.id) ? '#16a34a' : 'none'}
+                    />
+                  </button>
                   {nights > 0 && (
                     <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-black bg-white text-gray-900 z-10">
                       KSh {(Number(p.nightly_rate || 0) * nights).toLocaleString()} total

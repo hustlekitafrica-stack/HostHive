@@ -3,7 +3,8 @@
 import { useState, useEffect, Suspense, use, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Clock, Check, ShieldOff, PawPrint, VolumeX, DoorOpen, Search, type LucideIcon } from 'lucide-react';
+import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Clock, Check, ShieldOff, PawPrint, VolumeX, DoorOpen, Search, Heart, type LucideIcon } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
 const CAL_DAY  = ['S','M','T','W','T','F','S'];
@@ -259,6 +260,8 @@ function RoomDetailContent({ id }: { id: string }) {
   const [rooms,    setRooms]    = useState(1);
   const [showPicker,     setShowPicker]     = useState<'in' | 'out' | null>(null);
   const [showGuestPanel, setShowGuestPanel] = useState(false);
+  const [wishlisted,     setWishlisted]     = useState(false);
+  const [wishLoading,    setWishLoading]    = useState(false);
   const guests = adults + children;
 
   useEffect(() => {
@@ -266,7 +269,21 @@ function RoomDetailContent({ id }: { id: string }) {
       .then(r => r.json())
       .then(d => setProperty(d.property ?? null))
       .finally(() => setLoading(false));
+    fetch('/api/stay/wishlist')
+      .then(r => r.json())
+      .then(d => setWishlisted((d.property_ids ?? []).includes(id)));
   }, [id]);
+
+  const handleWishlist = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { router.push(`/stay/auth?redirect=/stay/rooms/${id}`); return; }
+    setWishLoading(true);
+    const res = await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: id }) });
+    const data = await res.json();
+    setWishlisted(data.wishlisted);
+    setWishLoading(false);
+  };
 
   const nights = checkIn && checkOut && checkOut > checkIn
     ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000) : 0;
@@ -319,9 +336,17 @@ function RoomDetailContent({ id }: { id: string }) {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
               Share
             </button>
-            <button className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline hover:text-gray-900 transition-colors">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-              Save
+            <button
+              onClick={handleWishlist}
+              disabled={wishLoading}
+              className="flex items-center gap-1.5 text-sm font-semibold underline transition-colors hover:opacity-80 disabled:opacity-50"
+              style={{ color: wishlisted ? '#16a34a' : '#374151' }}>
+              <Heart
+                className="w-4 h-4 transition-all"
+                style={{ color: '#16a34a' }}
+                fill={wishlisted ? '#16a34a' : 'none'}
+              />
+              {wishlisted ? 'Saved' : 'Save'}
             </button>
           </div>
         </div>
