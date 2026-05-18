@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 const NAV_LINKS = [
   {
@@ -64,8 +65,16 @@ const NAV_LINKS = [
 export default function StayLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const router    = useRouter();
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [loading,  setLoading]  = useState(false);
+  const [menuOpen,   setMenuOpen]   = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [loggedIn,   setLoggedIn]   = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => setLoggedIn(!!data.session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => setLoggedIn(!!session));
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleNavClick = useCallback((href: string) => {
     setMenuOpen(false);
@@ -221,7 +230,11 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
       {/* ── Mobile sticky bottom nav ── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
-        {NAV_LINKS.map(l => {
+        {NAV_LINKS.filter(l => {
+          if (l.label === 'Rooms') return false;
+          if (l.label === 'Trips' && !loggedIn) return false;
+          return true;
+        }).map(l => {
           const active = pathname === l.href;
           return (
             <button key={l.href} onClick={() => handleNavClick(l.href)}
