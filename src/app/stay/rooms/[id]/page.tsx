@@ -281,7 +281,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
 
       {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
       <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
-        {MOCK_REVIEWS.map((r, i) => {
+        {reviews.map((r, i) => {
           const isExpanded = expanded.includes(i);
           const SHORT = 150;
           return (
@@ -454,7 +454,7 @@ function RoomDetailContent({ id }: { id: string }) {
   ].filter(Boolean) as { Icon: LucideIcon; label: string }[];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-0 sm:pt-16 overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8fafc] pt-0 sm:pt-16">
 
       {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
       <div className="block sm:hidden relative">

@@ -76,12 +76,17 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    setLoading(false);
+  }, [pathname]);
+
   const handleNavClick = useCallback((href: string) => {
     setMenuOpen(false);
+    if (href === pathname) return;
     setLoading(true);
     router.push(href);
-    setTimeout(() => setLoading(false), 5000);
-  }, [router]);
+    setTimeout(() => setLoading(false), 3000);
+  }, [router, pathname]);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
