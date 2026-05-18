@@ -44,9 +44,9 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
     const days = daysInMo(year, month);
     return (
       <div key={`${year}-${month}`} className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-center mb-3">{CAL_MON[month]} {year}</p>
-        <div className="grid grid-cols-7 mb-1">
-          {CAL_DAY.map((d, i) => <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">{d}</div>)}
+        <p className="text-base font-bold text-center mb-4">{CAL_MON[month]} {year}</p>
+        <div className="grid grid-cols-7 mb-2">
+          {CAL_DAY.map((d, i) => <div key={i} className="text-center text-sm font-semibold text-gray-500 py-1">{d}</div>)}
         </div>
         <div className="grid grid-cols-7">
           {Array.from({ length: fd }).map((_, i) => <div key={`e${i}`} />)}
@@ -59,19 +59,19 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
             const inRange = !!(checkIn && checkOut && ds > checkIn && ds < checkOut);
             return (
               <button key={day} disabled={isPast} onClick={() => !isPast && onSelect(activeField, ds)}
-                className={['relative h-10 w-full flex items-center justify-center text-sm transition-colors',
+                className={['relative h-12 w-full flex items-center justify-center text-sm transition-colors',
                   isPast ? 'cursor-not-allowed' : 'cursor-pointer',
                   inRange ? 'bg-gray-100' : '',
                 ].join(' ')}>
                 {isPast ? (
-                  <span className="line-through text-gray-300 text-xs">{day}</span>
+                  <span className="line-through text-gray-400 text-sm">{day}</span>
                 ) : (isCI || isCO) ? (
                   <>
-                    <span className="absolute w-9 h-9 rounded-full bg-gray-900" />
-                    <span className="relative text-white font-bold">{day}</span>
+                    <span className="absolute w-10 h-10 rounded-full bg-gray-900" />
+                    <span className="relative text-white font-bold text-sm">{day}</span>
                   </>
                 ) : (
-                  <span className="relative font-semibold text-gray-900 w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-200">{day}</span>
+                  <span className="relative font-semibold text-gray-900 text-sm w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200">{day}</span>
                 )}
               </button>
             );
@@ -85,25 +85,25 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
   const rightD = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1);
 
   return (
-    <div ref={ref} className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-5">
+    <div ref={ref} className="absolute left-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-7 w-[700px]">
       <div className="mb-4">
         <h3 className="text-base font-bold text-gray-900">
           {activeField === 'in' ? 'Select check-in date' : 'Select checkout date'}
         </h3>
         <p className="text-xs text-gray-500 mt-0.5">Minimum stay: 2 nights</p>
       </div>
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-3">
         <button onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0}
-          className="mt-8 p-1.5 rounded-full hover:bg-gray-100 disabled:opacity-20 flex-shrink-0">
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          className="mt-9 p-2 rounded-full hover:bg-gray-100 disabled:opacity-20 flex-shrink-0">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <div className="flex gap-6 flex-1">
+        <div className="flex gap-10 flex-1">
           {renderMonth(leftD.getFullYear(), leftD.getMonth())}
           {renderMonth(rightD.getFullYear(), rightD.getMonth())}
         </div>
         <button onClick={() => setOffset(o => o + 1)}
-          className="mt-8 p-1.5 rounded-full hover:bg-gray-100 flex-shrink-0">
-          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          className="mt-9 p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
+          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
         </button>
       </div>
       <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
@@ -251,9 +251,14 @@ function RoomDetailContent({ id }: { id: string }) {
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? today);
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? tomorrow);
-  const [guests,   setGuests]   = useState(Number(params.get('guests') ?? 1));
+  const [adults,   setAdults]   = useState(Number(params.get('guests') ?? 1));
+  const [children, setChildren] = useState(0);
+  const [infants,  setInfants]  = useState(0);
+  const [pets,     setPets]     = useState(0);
   const [rooms,    setRooms]    = useState(1);
-  const [showPicker, setShowPicker] = useState<'in' | 'out' | null>(null);
+  const [showPicker,     setShowPicker]     = useState<'in' | 'out' | null>(null);
+  const [showGuestPanel, setShowGuestPanel] = useState(false);
+  const guests = adults + children;
 
   useEffect(() => {
     fetch(`/api/stay/properties/${id}`)
@@ -268,7 +273,7 @@ function RoomDetailContent({ id }: { id: string }) {
   const total = rate * nights * rooms;
 
   const handleBook = () => {
-    router.push(`/stay/checkout?propertyId=${id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}&rooms=${rooms}`);
+    router.push(`/stay/checkout?propertyId=${id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
   };
 
   if (loading) return (
@@ -509,19 +514,64 @@ function RoomDetailContent({ id }: { id: string }) {
                   </div>
 
                   {/* Guests row */}
-                  <div className="border-t border-gray-200 px-3 py-3 flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Guests</p>
-                      <select
-                        value={guests}
-                        onChange={e => setGuests(Number(e.target.value))}
-                        className="text-sm font-semibold text-gray-900 bg-transparent outline-none w-full cursor-pointer">
-                        {Array.from({ length: property.max_guests ?? 10 }, (_, i) => i + 1).map(n => (
-                          <option key={n} value={n}>{n} guest{n !== 1 ? 's' : ''}</option>
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowGuestPanel(v => !v)}
+                      className={`w-full border-t border-gray-200 px-3 py-3 flex items-center justify-between text-left transition-colors ${
+                        showGuestPanel ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-b-xl' : ''
+                      }`}>
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Guests</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {guests} guest{guests !== 1 ? 's' : ''}
+                          {infants > 0 ? `, ${infants} infant${infants !== 1 ? 's' : ''}` : ''}
+                          {pets > 0 ? `, ${pets} pet${pets !== 1 ? 's' : ''}` : ''}
+                        </p>
+                      </div>
+                      <svg className="w-4 h-4 text-gray-500 flex-shrink-0 transition-transform" style={{ transform: showGuestPanel ? 'rotate(180deg)' : 'none' }} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+
+                    {/* Guest breakdown panel */}
+                    {showGuestPanel && (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-5">
+                        {([
+                          { label: 'Adults',   sub: 'Age 13+',     val: adults,   set: setAdults,   min: 1, max: property.max_guests ?? 10 },
+                          { label: 'Children', sub: 'Ages 2–12',   val: children, set: setChildren, min: 0, max: property.max_guests ?? 10 },
+                          { label: 'Infants',  sub: 'Under 2',     val: infants,  set: setInfants,  min: 0, max: 5 },
+                          { label: 'Pets',     sub: 'Bringing a service animal?', val: pets, set: setPets, min: 0, max: 5 },
+                        ] as const).map(row => (
+                          <div key={row.label} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
+                            <div>
+                              <p className="text-sm font-bold text-gray-900">{row.label}</p>
+                              <p className="text-xs font-medium" style={{ color: '#16a34a' }}>{row.sub}</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button
+                                onClick={() => (row.set as React.Dispatch<React.SetStateAction<number>>)(v => Math.max(row.min, v - 1))}
+                                disabled={row.val <= row.min}
+                                className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-lg font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                style={{ borderColor: '#16a34a', color: '#16a34a' }}>
+                                −
+                              </button>
+                              <span className="w-5 text-center text-sm font-semibold text-gray-900">{row.val}</span>
+                              <button
+                                onClick={() => (row.set as React.Dispatch<React.SetStateAction<number>>)(v => Math.min(row.max, v + 1))}
+                                disabled={row.val >= row.max || (row.label !== 'Infants' && row.label !== 'Pets' && adults + children >= (property.max_guests ?? 10))}
+                                className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-lg font-bold transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                style={{ borderColor: '#16a34a', color: '#16a34a' }}>
+                                +
+                              </button>
+                            </div>
+                          </div>
                         ))}
-                      </select>
-                    </div>
-                    <svg className="w-4 h-4 text-gray-500 flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+                        <p className="text-xs mt-3 mb-3" style={{ color: '#16a34a' }}>
+                          This place has a maximum of {property.max_guests ?? 10} guests, not including infants.
+                        </p>
+                        <div className="flex justify-end">
+                          <button onClick={() => setShowGuestPanel(false)} className="text-sm font-bold text-gray-900 underline hover:text-gray-600">Close</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
