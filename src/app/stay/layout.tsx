@@ -220,7 +220,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Page content ── */}
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-hidden">
         {children}
       </main>
 

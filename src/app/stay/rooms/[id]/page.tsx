@@ -458,7 +458,7 @@ function RoomDetailContent({ id }: { id: string }) {
   ].filter(Boolean) as { Icon: LucideIcon; label: string }[];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-0 sm:pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-0 sm:pt-16 overflow-x-hidden">
 
       {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
       <div className="block sm:hidden relative">
