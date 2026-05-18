@@ -262,61 +262,65 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
       <p className="md:hidden text-base font-bold text-gray-900 mb-3">Guest reviews mention</p>
 
       {/* Filter chips — horizontal scroll on mobile, wrap on desktop */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide md:flex-wrap md:overflow-visible">
-        {FILTER_TAGS.map((t: any) => (
-          <button key={t.label}
-            onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
-            className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
-              activeFilter === t.label
-                ? 'text-white border-transparent'
-                : 'border-gray-200 text-gray-700 hover:border-green-400'
-            }`}
-            style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
-            {t.emoji && <span className="text-base leading-none">{t.emoji}</span>}
-            {t.label}
-            <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
-          </button>
-        ))}
+      <div className="overflow-hidden mb-6">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:flex-wrap md:overflow-visible">
+          {FILTER_TAGS.map((t: any) => (
+            <button key={t.label}
+              onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
+                activeFilter === t.label
+                  ? 'text-white border-transparent'
+                  : 'border-gray-200 text-gray-700 hover:border-green-400'
+              }`}
+              style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
+              {t.emoji && <span className="text-base leading-none">{t.emoji}</span>}
+              {t.label}
+              <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
-        {reviews.map((r, i) => {
-          const isExpanded = expanded.includes(i);
-          const SHORT = 150;
-          return (
-            <div key={i} className="flex-shrink-0 w-[82vw] snap-start rounded-2xl border border-gray-100 bg-white p-4 md:w-auto md:rounded-none md:border-0 md:bg-transparent md:p-0">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                  style={{ background: '#16a34a' }}>
-                  {r.initials}
+      <div className="overflow-hidden">
+        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
+          {reviews.map((r, i) => {
+            const isExpanded = expanded.includes(i);
+            const SHORT = 150;
+            return (
+              <div key={i} className="flex-shrink-0 w-[82vw] snap-start rounded-2xl border border-gray-100 bg-white p-4 md:w-auto md:rounded-none md:border-0 md:bg-transparent md:p-0">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                    style={{ background: '#16a34a' }}>
+                    {r.initials}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
+                    <p className="text-xs text-gray-400">{r.years} staying here</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
-                  <p className="text-xs text-gray-400">{r.years} staying here</p>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, j) => (
+                      <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    ))}
+                  </div>
+                  <span className="text-xs text-gray-400">· {r.date}</span>
                 </div>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {isExpanded || r.text.length <= SHORT ? r.text.replace('...', '') : r.text.slice(0, SHORT) + '...'}
+                </p>
+                {r.text.length > SHORT && (
+                  <button
+                    onClick={() => setExpanded(prev => isExpanded ? prev.filter(x => x !== i) : [...prev, i])}
+                    className="text-sm font-bold underline text-gray-900 mt-1 hover:text-gray-600">
+                    {isExpanded ? 'Show less' : 'Show more'}
+                  </button>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 mb-2">
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                  ))}
-                </div>
-                <span className="text-xs text-gray-400">· {r.date}</span>
-              </div>
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {isExpanded || r.text.length <= SHORT ? r.text.replace('...', '') : r.text.slice(0, SHORT) + '...'}
-              </p>
-              {r.text.length > SHORT && (
-                <button
-                  onClick={() => setExpanded(prev => isExpanded ? prev.filter(x => x !== i) : [...prev, i])}
-                  className="text-sm font-bold underline text-gray-900 mt-1 hover:text-gray-600">
-                  {isExpanded ? 'Show less' : 'Show more'}
-                </button>
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );
