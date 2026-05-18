@@ -1,9 +1,243 @@
 'use client';
 
-import { useState, useEffect, Suspense, use } from 'react';
+import { useState, useEffect, Suspense, use, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Clock, Check, ShieldOff, PawPrint, VolumeX, DoorOpen, Search, type LucideIcon } from 'lucide-react';
+
+// ── Date helpers ──────────────────────────────────────────────────────────────
+const CAL_DAY  = ['S','M','T','W','T','F','S'];
+const CAL_MON  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function daysInMo(y: number, m: number) { return new Date(y, m + 1, 0).getDate(); }
+function firstDayMo(y: number, m: number) { return new Date(y, m, 1).getDay(); }
+function isoStr(d: Date) { return d.toISOString().split('T')[0]; }
+function fmtShort(d: string) {
+  if (!d) return '';
+  const dt = new Date(d + 'T00:00:00');
+  return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`;
+}
+
+// ── InlinePicker ──────────────────────────────────────────────────────────────
+interface InlinePickerProps {
+  checkIn: string; checkOut: string;
+  activeField: 'in' | 'out';
+  onSelect: (field: 'in' | 'out', date: string) => void;
+  onClear: () => void;
+  onClose: () => void;
+}
+function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClose }: InlinePickerProps) {
+  const [offset, setOffset] = useState(0);
+  const ref  = useRef<HTMLDivElement>(null);
+  const today = isoStr(new Date());
+  const now   = new Date();
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    }
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onClose]);
+
+  function renderMonth(year: number, month: number) {
+    const fd   = firstDayMo(year, month);
+    const days = daysInMo(year, month);
+    return (
+      <div key={`${year}-${month}`} className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-center mb-3">{CAL_MON[month]} {year}</p>
+        <div className="grid grid-cols-7 mb-1">
+          {CAL_DAY.map((d, i) => <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">{d}</div>)}
+        </div>
+        <div className="grid grid-cols-7">
+          {Array.from({ length: fd }).map((_, i) => <div key={`e${i}`} />)}
+          {Array.from({ length: days }).map((_, i) => {
+            const day = i + 1;
+            const ds  = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+            const isPast  = ds < today;
+            const isCI    = ds === checkIn;
+            const isCO    = ds === checkOut;
+            const inRange = !!(checkIn && checkOut && ds > checkIn && ds < checkOut);
+            return (
+              <button key={day} disabled={isPast} onClick={() => !isPast && onSelect(activeField, ds)}
+                className={['relative h-10 w-full flex items-center justify-center text-sm transition-colors',
+                  isPast ? 'cursor-not-allowed' : 'cursor-pointer',
+                  inRange ? 'bg-gray-100' : '',
+                ].join(' ')}>
+                {isPast ? (
+                  <span className="line-through text-gray-300 text-xs">{day}</span>
+                ) : (isCI || isCO) ? (
+                  <>
+                    <span className="absolute w-9 h-9 rounded-full bg-gray-900" />
+                    <span className="relative text-white font-bold">{day}</span>
+                  </>
+                ) : (
+                  <span className="relative font-semibold text-gray-900 w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-200">{day}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  const leftD  = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+  const rightD = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1);
+
+  return (
+    <div ref={ref} className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-5">
+      <div className="mb-4">
+        <h3 className="text-base font-bold text-gray-900">
+          {activeField === 'in' ? 'Select check-in date' : 'Select checkout date'}
+        </h3>
+        <p className="text-xs text-gray-500 mt-0.5">Minimum stay: 2 nights</p>
+      </div>
+      <div className="flex items-start gap-2">
+        <button onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0}
+          className="mt-8 p-1.5 rounded-full hover:bg-gray-100 disabled:opacity-20 flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div className="flex gap-6 flex-1">
+          {renderMonth(leftD.getFullYear(), leftD.getMonth())}
+          {renderMonth(rightD.getFullYear(), rightD.getMonth())}
+        </div>
+        <button onClick={() => setOffset(o => o + 1)}
+          className="mt-8 p-1.5 rounded-full hover:bg-gray-100 flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+        <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+          <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20M8 2v3M16 2v3"/>
+        </svg>
+        <button onClick={onClear} className="text-sm font-semibold underline text-gray-800 hover:text-gray-600">Clear dates</button>
+      </div>
+    </div>
+  );
+}
+
+// ── ReviewsSection ────────────────────────────────────────────────────────────
+const CAT_RATINGS = [
+  { label: 'Cleanliness',    score: 4.9, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.75a.75.75 0 00-1.5 0v.75H6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 006 22.5h12a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0018 4.5h-2.25V3.75a.75.75 0 00-1.5 0v.75h-4.5V3.75z"/></svg>) },
+  { label: 'Accuracy',       score: 4.8, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>) },
+  { label: 'Check-in',       score: 4.9, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>) },
+  { label: 'Communication',  score: 4.8, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z"/></svg>) },
+  { label: 'Location',       score: 4.8, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z"/></svg>) },
+  { label: 'Value',          score: 4.8, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z"/></svg>) },
+];
+const FILTER_TAGS = [
+  { label: 'Hospitality', count: 8 },
+  { label: 'Cleanliness', count: 5 },
+  { label: 'Location',    count: 4 },
+  { label: 'Comfort',     count: 3 },
+  { label: 'Amenities',   count: 2 },
+];
+const STAR_DIST = [7, 3, 1, 1, 0];
+const MOCK_REVIEWS = [
+  { name: 'James M.',  initials: 'JM', years: '2 years',  date: 'April 2026',    stay: 'Stayed a few nights', text: "Excellent property! The room was spotlessly clean and exactly as described. The host was very responsive and friendly throughout our stay. Great location close to everything you need..." },
+  { name: 'Amina W.',  initials: 'AW', years: '1 year',   date: 'March 2026',    stay: 'Stayed with family',  text: "Wonderful experience! Great for families with everything provided. Check-in was smooth and the host was incredibly helpful and welcoming. The room was spacious and comfortable..." },
+  { name: 'Peter K.',  initials: 'PK', years: '3 years',  date: 'February 2026', stay: 'Stayed about a week', text: "Fantastic property in a great location. Amenities were top-notch and everything was very clean. The host goes above and beyond to make guests feel at home. Will definitely return..." },
+  { name: 'Grace O.',  initials: 'GO', years: '2 years',  date: 'January 2026',  stay: 'Stayed a few nights', text: "Beautiful property with great views. The host was incredibly welcoming and made sure we had everything we needed. Room was immaculate and the bed was extremely comfortable..." },
+];
+const OVERALL_RATING = 4.92;
+const REVIEW_COUNT   = 12;
+
+function ReviewsSection() {
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [expanded,     setExpanded]     = useState<number[]>([]);
+  const maxBar = Math.max(...STAR_DIST);
+
+  return (
+    <div className="pt-8 border-t border-gray-100">
+      {/* Header */}
+      <div className="flex items-center gap-2 mb-0.5">
+        <svg className="w-5 h-5 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        <span className="text-xl font-bold text-gray-900">{OVERALL_RATING} · {REVIEW_COUNT} reviews</span>
+      </div>
+      <p className="text-xs text-gray-400 underline cursor-pointer mb-6">How reviews work</p>
+
+      {/* Rating breakdown */}
+      <div className="flex flex-wrap gap-8 mb-6 pb-6 border-b border-gray-100">
+        {/* Bar chart */}
+        <div className="min-w-[110px]">
+          <p className="text-xs font-semibold text-gray-700 mb-2">Overall rating</p>
+          {STAR_DIST.map((count, i) => (
+            <div key={i} className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs text-gray-500 w-2">{5 - i}</span>
+              <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                <div className="h-full bg-gray-900 rounded-full" style={{ width: `${maxBar > 0 ? (count / maxBar) * 100 : 0}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Category scores */}
+        {CAT_RATINGS.map(c => (
+          <div key={c.label} className="text-center min-w-[70px]">
+            <p className="text-xs font-semibold text-gray-700 mb-1">{c.label}</p>
+            <p className="text-xl font-bold text-gray-900">{c.score}</p>
+            {c.icon}
+          </div>
+        ))}
+      </div>
+
+      {/* Filter tags */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {FILTER_TAGS.map(t => (
+          <button key={t.label}
+            onClick={() => setActiveFilter(f => f === t.label ? null : t.label)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
+              activeFilter === t.label
+                ? 'border-gray-900 bg-gray-50 text-gray-900'
+                : 'border-gray-200 text-gray-700 hover:border-gray-500'
+            }`}>
+            {t.label}
+            <span className={activeFilter === t.label ? 'text-gray-500' : 'text-gray-400'}>{t.count}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Review cards — two column grid */}
+      <div className="grid md:grid-cols-2 gap-8">
+        {MOCK_REVIEWS.map((r, i) => {
+          const isExpanded = expanded.includes(i);
+          const SHORT = 150;
+          return (
+            <div key={i}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+                  style={{ background: '#16a34a' }}>
+                  {r.initials}
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
+                  <p className="text-xs text-gray-400">{r.years} staying here</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, j) => (
+                    <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                  ))}
+                </div>
+                <span className="text-xs text-gray-400">· {r.date} · {r.stay}</span>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {isExpanded || r.text.length <= SHORT ? r.text.replace('...', '') : r.text.slice(0, SHORT) + '...'}
+              </p>
+              {r.text.length > SHORT && (
+                <button
+                  onClick={() => setExpanded(prev => isExpanded ? prev.filter(x => x !== i) : [...prev, i])}
+                  className="text-sm font-bold underline text-gray-900 mt-1 hover:text-gray-600">
+                  {isExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function RoomDetailContent({ id }: { id: string }) {
   const router = useRouter();
@@ -19,6 +253,7 @@ function RoomDetailContent({ id }: { id: string }) {
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? tomorrow);
   const [guests,   setGuests]   = useState(Number(params.get('guests') ?? 1));
   const [rooms,    setRooms]    = useState(1);
+  const [showPicker, setShowPicker] = useState<'in' | 'out' | null>(null);
 
   useEffect(() => {
     fetch(`/api/stay/properties/${id}`)
@@ -205,52 +440,92 @@ function RoomDetailContent({ id }: { id: string }) {
                 </p>
               </div>
             )}
+
+            {/* Reviews */}
+            <ReviewsSection />
           </div>
 
-          {/* Right — sticky booking widget */}
+          {/* Right — Airbnb-style booking widget */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-              <div className="p-6 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
-                <div className="text-2xl font-black text-white">KSh {rate.toLocaleString()}</div>
-                <div className="text-white/60 text-sm">per night · per room</div>
-              </div>
-              <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
-                    <input type="date" value={checkIn} min={today}
-                      onChange={e => { setCheckIn(e.target.value); if (e.target.value >= checkOut) setCheckOut(''); }}
-                      className="w-full text-sm font-semibold text-gray-900 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-red-800" />
+            <div className="sticky top-24">
+              <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 relative">
+
+                {/* Header */}
+                {nights > 0 ? (
+                  <div className="mb-5">
+                    <span className="text-2xl font-black text-gray-900">KSh {rate.toLocaleString()}</span>
+                    <span className="text-gray-500 text-sm"> / night</span>
                   </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
-                    <input type="date" value={checkOut} min={checkIn || today}
-                      onChange={e => setCheckOut(e.target.value)}
-                      className="w-full text-sm font-semibold text-gray-900 border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-red-800" />
+                ) : (
+                  <h3 className="text-xl font-bold text-gray-900 mb-5">Add dates for prices</h3>
+                )}
+
+                {/* Date + Guests fields */}
+                <div className="rounded-xl border-2 border-gray-300 overflow-visible mb-4">
+                  {/* Check-in / Checkout row */}
+                  <div className="grid grid-cols-2">
+                    <button
+                      onClick={() => setShowPicker(v => v === 'in' ? null : 'in')}
+                      className={`px-3 py-3 text-left border-r border-gray-200 transition-colors ${
+                        showPicker === 'in' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tl-xl' : ''
+                      }`}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Check-in</p>
+                      <p className={`text-sm font-semibold ${checkIn ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {checkIn ? fmtShort(checkIn) : 'Add date'}
+                      </p>
+                    </button>
+                    <button
+                      onClick={() => setShowPicker(v => v === 'out' ? null : 'out')}
+                      className={`px-3 py-3 text-left transition-colors ${
+                        showPicker === 'out' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tr-xl' : ''
+                      }`}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Checkout</p>
+                      <p className={`text-sm font-semibold ${checkOut ? 'text-gray-900' : 'text-gray-400'}`}>
+                        {checkOut ? fmtShort(checkOut) : 'Add date'}
+                      </p>
+                    </button>
+                  </div>
+
+                  {/* Guests row */}
+                  <div className="border-t border-gray-200 px-3 py-3 flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Guests</p>
+                      <select
+                        value={guests}
+                        onChange={e => setGuests(Number(e.target.value))}
+                        className="text-sm font-semibold text-gray-900 bg-transparent outline-none w-full cursor-pointer">
+                        {Array.from({ length: property.max_guests ?? 10 }, (_, i) => i + 1).map(n => (
+                          <option key={n} value={n}>{n} guest{n !== 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-500 flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Guests</label>
-                  <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-2">
-                    <button onClick={() => setGuests(g => Math.max(1, g - 1))} className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">−</button>
-                    <span className="flex-1 text-center text-sm font-semibold">{guests} guest{guests !== 1 ? 's' : ''}</span>
-                    <button onClick={() => setGuests(g => Math.min(property.max_guests ?? 10, g + 1))} className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">+</button>
-                  </div>
-                </div>
+                {/* Inline date picker */}
+                {showPicker && (
+                  <InlinePicker
+                    checkIn={checkIn} checkOut={checkOut}
+                    activeField={showPicker}
+                    onSelect={(field, date) => {
+                      if (field === 'in') {
+                        setCheckIn(date);
+                        if (date >= checkOut) setCheckOut('');
+                        setShowPicker('out');
+                      } else {
+                        setCheckOut(date);
+                        setShowPicker(null);
+                      }
+                    }}
+                    onClear={() => { setCheckIn(''); setCheckOut(''); setShowPicker(null); }}
+                    onClose={() => setShowPicker(null)}
+                  />
+                )}
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Rooms</label>
-                  <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-2">
-                    <button onClick={() => setRooms(r => Math.max(1, r - 1))} className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">−</button>
-                    <span className="flex-1 text-center text-sm font-semibold">{rooms} room{rooms !== 1 ? 's' : ''}</span>
-                    <button onClick={() => setRooms(r => r + 1)} className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 hover:border-gray-600">+</button>
-                  </div>
-                  {rooms > 1 && <p className="text-xs text-gray-400 mt-1">Great for groups travelling together</p>}
-                </div>
-
+                {/* Price breakdown */}
                 {nights > 0 && (
-                  <div className="border-t border-gray-100 pt-4 space-y-2 text-sm">
+                  <div className="border-t border-gray-100 pt-4 space-y-2 text-sm mb-4">
                     <div className="flex justify-between text-gray-600">
                       <span>KSh {rate.toLocaleString()} × {nights} night{nights !== 1 ? 's' : ''}{rooms > 1 ? ` × ${rooms} rooms` : ''}</span>
                       <span>KSh {total.toLocaleString()}</span>
@@ -262,12 +537,13 @@ function RoomDetailContent({ id }: { id: string }) {
                   </div>
                 )}
 
+                {/* CTA */}
                 <button onClick={handleBook}
-                  className="w-full py-4 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                  style={{ background: '#16a34a' }}>
-                  Request Reservation
+                  className="w-full py-3.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+                  style={{ background: '#e11d48' }}>
+                  {nights > 0 ? 'Reserve' : 'Check availability'}
                 </button>
-                <p className="text-xs text-center text-gray-400">No payment now — we'll confirm within 2 hours.</p>
+                <p className="text-xs text-center text-gray-400 mt-3">No payment now — we'll confirm within 2 hours.</p>
               </div>
             </div>
           </div>
