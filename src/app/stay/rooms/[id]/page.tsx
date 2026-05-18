@@ -305,39 +305,77 @@ function RoomDetailContent({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-[#f8fafc] pt-16">
 
-      {/* ── Photo Gallery ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="mb-4">
-          <Link href="/stay/rooms" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-500 hover:text-gray-900 transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            All Rooms
-          </Link>
+      {/* ── Title row (above gallery) ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-3">
+        <Link href="/stay/rooms" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-700 transition-colors mb-3">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          All Rooms
+        </Link>
+        <div className="flex items-start justify-between gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-snug">{property.name}</h1>
+          <div className="flex items-center gap-4 flex-shrink-0 mt-0.5">
+            <button className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline hover:text-gray-900 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              Share
+            </button>
+            <button className="flex items-center gap-1.5 text-sm font-semibold text-gray-700 underline hover:text-gray-900 transition-colors">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+              Save
+            </button>
+          </div>
         </div>
+      </div>
 
+      {/* ── Photo Gallery ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {photos.length > 0 ? (
-          <div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-2xl overflow-hidden h-72 sm:h-96">
+          <div className="relative grid grid-cols-4 grid-rows-2 gap-1.5 rounded-xl overflow-hidden h-72 sm:h-[420px]">
             <div className="col-span-2 row-span-2 relative cursor-pointer" onClick={() => { setPhotoIdx(0); setLightbox(true); }}>
               <img src={photos[0]} alt={property.name} className="w-full h-full object-cover hover:brightness-90 transition-all" />
             </div>
             {photos.slice(1, 5).map((url, i) => (
-              <div key={i} className="relative cursor-pointer" onClick={() => { setPhotoIdx(i + 1); setLightbox(true); }}>
+              <div key={i} className="relative cursor-pointer overflow-hidden" onClick={() => { setPhotoIdx(i + 1); setLightbox(true); }}>
                 <img src={url} alt="" className="w-full h-full object-cover hover:brightness-90 transition-all" />
-                {i === 3 && photos.length > 5 && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">+{photos.length - 5} more</span>
-                  </div>
-                )}
               </div>
             ))}
             {Array.from({ length: Math.max(0, 4 - photos.length + 1) }).map((_, i) => (
               <div key={`empty-${i}`} className="bg-gray-200" />
             ))}
+            {/* Show all photos button */}
+            <button
+              onClick={() => { setPhotoIdx(0); setLightbox(true); }}
+              className="absolute bottom-4 right-4 flex items-center gap-2 bg-white text-gray-900 text-sm font-semibold px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 shadow-md transition-colors z-10">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+              </svg>
+              Show all photos
+            </button>
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
+          <div className="h-72 sm:h-[420px] rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
             <HomeIcon className="w-20 h-20 text-white/40" />
           </div>
         )}
+      </div>
+
+      {/* ── Below-gallery info bar ── */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-base font-semibold text-gray-900">
+            {(property.type ? property.type.charAt(0).toUpperCase() + property.type.slice(1) : 'Room')} in {[property.city, property.county, 'Kenya'].filter(Boolean).join(', ')}
+          </p>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {property.max_guests ?? 2} guest{(property.max_guests ?? 2) !== 1 ? 's' : ''} · 
+            {property.bedrooms ?? 1} bedroom{(property.bedrooms ?? 1) !== 1 ? 's' : ''} · 
+            {property.bathrooms ?? 1} bath{(property.bathrooms ?? 1) !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-full px-4 py-2 flex-shrink-0" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#16a34a' }}>
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor"/>
+          </svg>
+          <span className="text-sm font-semibold" style={{ color: '#16a34a' }}>Prices include all fees</span>
+        </div>
       </div>
 
       {/* ── Lightbox ── */}
@@ -364,34 +402,12 @@ function RoomDetailContent({ id }: { id: string }) {
           {/* Left — details */}
           <div className="lg:col-span-2 space-y-8">
 
-            {/* Title */}
-            <div>
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl font-black text-gray-900">{property.name}</h1>
-                  <p className="text-gray-500 mt-1 flex items-center gap-1.5">
-                    <MapPin className="w-4 h-4" />
-                    {[property.location, property.city, property.county].filter(Boolean).join(', ')}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-black text-gray-900">KSh {rate.toLocaleString()}</div>
-                  <div className="text-sm text-gray-400">per night</div>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
-                {[
-                  { Icon: BedDouble, label: `${property.bedrooms ?? 1} Bedroom${(property.bedrooms ?? 1) !== 1 ? 's' : ''}` } as { Icon: LucideIcon; label: string },
-                  { Icon: Droplets,  label: `${property.bathrooms ?? 1} Bathroom${(property.bathrooms ?? 1) !== 1 ? 's' : ''}` } as { Icon: LucideIcon; label: string },
-                  { Icon: Users,     label: `Up to ${property.max_guests ?? 2} guests` } as { Icon: LucideIcon; label: string },
-                  { Icon: HomeIcon,  label: `${(property.type || 'Room').charAt(0).toUpperCase() + (property.type || 'room').slice(1)}` } as { Icon: LucideIcon; label: string },
-                ].map(s => (
-                  <div key={s.label} className="flex items-center gap-1.5 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
-                    <s.Icon className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a' }} /><span>{s.label}</span>
-                  </div>
-                ))}
-              </div>
+            {/* Location detail */}
+            <div className="pb-4 border-b border-gray-100">
+              <p className="text-gray-500 flex items-center gap-1.5 text-sm">
+                <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a' }} />
+                {[property.location, property.city, property.county].filter(Boolean).join(', ')}
+              </p>
             </div>
 
             {/* Description */}
