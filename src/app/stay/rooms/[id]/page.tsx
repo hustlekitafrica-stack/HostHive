@@ -241,6 +241,56 @@ function ReviewsSection() {
   );
 }
 
+// ── Amenity icon map ─────────────────────────────────────────────────────────
+const IC = 'w-6 h-6 flex-shrink-0';
+const AMENITY_MAP: { keywords: string[]; svg: React.ReactNode }[] = [
+  { keywords: ['wifi','wi-fi','internet','wireless','broadband'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0"/><circle cx="12" cy="20" r="1" fill="currentColor"/></svg> },
+  { keywords: ['kitchen','cook','dining','microwave','oven','fridge','refrigerator'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 002-2V2M7 2v20M21 15V2a5 5 0 00-5 5v6c0 1.1.9 2 2 2h3v7"/></svg> },
+  { keywords: ['tv','television','netflix','cable','screen','projector'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="13" rx="2"/><path strokeLinecap="round" d="M8 7L12 3l4 4"/></svg> },
+  { keywords: ['parking','garage','car park'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path strokeLinecap="round" strokeLinejoin="round" d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg> },
+  { keywords: ['washer','washing','laundry','dryer'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="12" cy="13" r="5"/><path strokeLinecap="round" d="M8 5h.01M11 5h.01"/></svg> },
+  { keywords: ['air con','ac','a/c','climate','cooling','heating','heat'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" d="M9.59 4.59A2 2 0 1011 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1019.5 12H2"/></svg> },
+  { keywords: ['pool','swim','hot tub','jacuzzi'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" d="M2 12c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0M2 18c1.5-2 3-2 4.5 0s3 2 4.5 0 3-2 4.5 0 3 2 4.5 0"/><circle cx="7" cy="6" r="2"/><path strokeLinecap="round" d="M7 8v3"/></svg> },
+  { keywords: ['gym','fitness','workout','exercise'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 4v16M18 4v16M3 8h3M18 8h3M3 16h3M18 16h3M9 12h6"/></svg> },
+  { keywords: ['bath','tub','bathtub'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 6V3a1 1 0 011-1h1a1 1 0 011 1v1M4 10h16v2a6 6 0 01-6 6H10a6 6 0 01-6-6v-2zM2 18h20M6 22l1-4M18 22l-1-4"/></svg> },
+  { keywords: ['workspace','desk','office','work','laptop'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="14" rx="2"/><path strokeLinecap="round" d="M8 22h8M12 18v4"/></svg> },
+  { keywords: ['garden','yard','lawn','outdoor','patio','terrace','balcony'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 2a7 7 0 017 7c0 3.87-3.13 7-7 7s-7-3.13-7-7a7 7 0 017-7z"/><path strokeLinecap="round" d="M12 9v13M9 12l3-3 3 3"/></svg> },
+  { keywords: ['view','skyline','city','mountain','sea','ocean','lake','river'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path strokeLinecap="round" d="M2 13l5-5 4 4 3-3 8 5"/></svg> },
+  { keywords: ['security','camera','cctv','safe','lock','alarm'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg> },
+  { keywords: ['breakfast','coffee','tea','meals'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg> },
+  { keywords: ['elevator','lift'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path strokeLinecap="round" d="M9 10l3-3 3 3M9 14l3 3 3-3"/></svg> },
+  { keywords: ['pet','animal','dog','cat'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg> },
+  { keywords: ['towel','linen','bedding','sheets'],
+    svg: <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v2H4V4zm0 4h16v12H4V8zm4 3h8M8 15h5"/></svg> },
+];
+function getAmenityIcon(name: string): React.ReactNode {
+  const lower = name.toLowerCase();
+  for (const entry of AMENITY_MAP) {
+    if (entry.keywords.some(k => lower.includes(k))) return entry.svg;
+  }
+  return (
+    <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+  );
+}
+
 function RoomDetailContent({ id }: { id: string }) {
   const router = useRouter();
   const params = useSearchParams();
@@ -446,16 +496,23 @@ function RoomDetailContent({ id }: { id: string }) {
 
             {/* Amenities */}
             {amenities.length > 0 && (
-              <div>
-                <h2 className="text-lg font-black text-gray-900 mb-4">Amenities</h2>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {amenities.map(a => (
-                    <div key={a} className="flex items-center gap-2 text-sm text-gray-700">
-                      <Check className="w-4 h-4 flex-shrink-0" style={{ color: '#16a34a' }} />
-                      {a}
+              <div className="pt-6 border-t border-gray-100">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">What this place offers</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
+                  {(amenities.slice(0, 10)).map(a => (
+                    <div key={a} className="flex items-center gap-4 text-gray-800">
+                      <span className="text-gray-600">{getAmenityIcon(a)}</span>
+                      <span className="text-sm text-gray-800">{a}</span>
                     </div>
                   ))}
                 </div>
+                {amenities.length > 10 && (
+                  <button
+                    onClick={() => {}}
+                    className="mt-6 px-5 py-2.5 border-2 border-gray-800 rounded-lg text-sm font-semibold text-gray-900 hover:bg-gray-100 transition-colors">
+                    Show all {amenities.length} amenities
+                  </button>
+                )}
               </div>
             )}
 
