@@ -21,8 +21,8 @@
   }
 }
 
-html, body {
-  overflow-x: hidden;
+html {
+  overflow-x: clip;
 }
 
 body {

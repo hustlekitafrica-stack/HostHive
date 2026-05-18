@@ -280,7 +280,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
       </div>
 
       {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
         {reviews.map((r, i) => {
           const isExpanded = expanded.includes(i);
           const SHORT = 150;
