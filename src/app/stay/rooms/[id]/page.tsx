@@ -462,28 +462,50 @@ function RoomDetailContent({ id }: { id: string }) {
 
                 {/* Date + Guests fields */}
                 <div className="rounded-xl border-2 border-gray-300 overflow-visible mb-4">
-                  {/* Check-in / Checkout row */}
-                  <div className="grid grid-cols-2">
-                    <button
-                      onClick={() => setShowPicker(v => v === 'in' ? null : 'in')}
-                      className={`px-3 py-3 text-left border-r border-gray-200 transition-colors ${
-                        showPicker === 'in' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tl-xl' : ''
-                      }`}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Check-in</p>
-                      <p className={`text-sm font-semibold ${checkIn ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {checkIn ? fmtShort(checkIn) : 'Add date'}
-                      </p>
-                    </button>
-                    <button
-                      onClick={() => setShowPicker(v => v === 'out' ? null : 'out')}
-                      className={`px-3 py-3 text-left transition-colors ${
-                        showPicker === 'out' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tr-xl' : ''
-                      }`}>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Checkout</p>
-                      <p className={`text-sm font-semibold ${checkOut ? 'text-gray-900' : 'text-gray-400'}`}>
-                        {checkOut ? fmtShort(checkOut) : 'Add date'}
-                      </p>
-                    </button>
+                  {/* Check-in / Checkout row — relative so picker anchors here */}
+                  <div className="relative">
+                    <div className="grid grid-cols-2">
+                      <button
+                        onClick={() => setShowPicker(v => v === 'in' ? null : 'in')}
+                        className={`px-3 py-3 text-left border-r border-gray-200 transition-colors ${
+                          showPicker === 'in' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tl-xl' : ''
+                        }`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Check-in</p>
+                        <p className={`text-sm font-semibold ${checkIn ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {checkIn ? fmtShort(checkIn) : 'Add date'}
+                        </p>
+                      </button>
+                      <button
+                        onClick={() => setShowPicker(v => v === 'out' ? null : 'out')}
+                        className={`px-3 py-3 text-left transition-colors ${
+                          showPicker === 'out' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tr-xl' : ''
+                        }`}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Checkout</p>
+                        <p className={`text-sm font-semibold ${checkOut ? 'text-gray-900' : 'text-gray-400'}`}>
+                          {checkOut ? fmtShort(checkOut) : 'Add date'}
+                        </p>
+                      </button>
+                    </div>
+
+                    {/* Inline date picker — anchored right below the date row */}
+                    {showPicker && (
+                      <InlinePicker
+                        checkIn={checkIn} checkOut={checkOut}
+                        activeField={showPicker}
+                        onSelect={(field, date) => {
+                          if (field === 'in') {
+                            setCheckIn(date);
+                            if (date >= checkOut) setCheckOut('');
+                            setShowPicker('out');
+                          } else {
+                            setCheckOut(date);
+                            setShowPicker(null);
+                          }
+                        }}
+                        onClear={() => { setCheckIn(''); setCheckOut(''); setShowPicker(null); }}
+                        onClose={() => setShowPicker(null)}
+                      />
+                    )}
                   </div>
 
                   {/* Guests row */}
@@ -502,26 +524,6 @@ function RoomDetailContent({ id }: { id: string }) {
                     <svg className="w-4 h-4 text-gray-500 flex-shrink-0 pointer-events-none" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
                   </div>
                 </div>
-
-                {/* Inline date picker */}
-                {showPicker && (
-                  <InlinePicker
-                    checkIn={checkIn} checkOut={checkOut}
-                    activeField={showPicker}
-                    onSelect={(field, date) => {
-                      if (field === 'in') {
-                        setCheckIn(date);
-                        if (date >= checkOut) setCheckOut('');
-                        setShowPicker('out');
-                      } else {
-                        setCheckOut(date);
-                        setShowPicker(null);
-                      }
-                    }}
-                    onClear={() => { setCheckIn(''); setCheckOut(''); setShowPicker(null); }}
-                    onClose={() => setShowPicker(null)}
-                  />
-                )}
 
                 {/* Price breakdown */}
                 {nights > 0 && (
