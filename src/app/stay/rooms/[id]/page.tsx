@@ -169,17 +169,41 @@ const MOCK_REVIEWS = [
 const OVERALL_RATING = 4.92;
 const REVIEW_COUNT   = 12;
 
-function ReviewsSection() {
+function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; propertyName?: string }) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [expanded,     setExpanded]     = useState<number[]>([]);
+  const [realReviews,  setRealReviews]  = useState<any[] | null>(null);
   const maxBar = Math.max(...STAR_DIST);
+
+  useEffect(() => {
+    if (!propertyId) return;
+    fetch(`/api/stay/property-reviews?property_id=${propertyId}`)
+      .then(r => r.json())
+      .then(d => setRealReviews(d.reviews ?? []))
+      .catch(() => setRealReviews([]));
+  }, [propertyId]);
+
+  const reviews = realReviews && realReviews.length > 0
+    ? realReviews.map((r: any) => ({
+        name: r.reviewer_name,
+        initials: r.reviewer_name.split(' ').map((w: string) => w[0] ?? '').join('').slice(0, 2).toUpperCase(),
+        years: '',
+        date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+        text: r.comment,
+      }))
+    : MOCK_REVIEWS;
+
+  const overallRating = realReviews && realReviews.length > 0
+    ? Number((realReviews.reduce((s: number, r: any) => s + r.rating, 0) / realReviews.length).toFixed(2))
+    : OVERALL_RATING;
+  const reviewCount = realReviews && realReviews.length > 0 ? realReviews.length : REVIEW_COUNT;
 
   return (
     <div className="pt-8 border-t border-gray-100">
 
       {/* ── Mobile: Guest Favorite banner ── */}
       <div className="md:hidden text-center pb-5 mb-5 border-b border-gray-100">
-        <p className="text-6xl font-black text-gray-900 mb-1">{OVERALL_RATING}</p>
+        <p className="text-6xl font-black text-gray-900 mb-1">{overallRating}</p>
         <h3 className="text-2xl font-bold text-gray-900 mb-3">Guest favorite</h3>
         <p className="text-sm text-gray-500 leading-relaxed">
           This home is in the{' '}
@@ -187,13 +211,29 @@ function ReviewsSection() {
           of eligible listings based on ratings, reviews, and reliability
         </p>
         <button className="text-sm text-gray-400 underline mt-3">How reviews work</button>
+        {propertyId && (
+          <div className="mt-4">
+            <Link href={`/stay/reviews/new?property_id=${propertyId}&property_name=${encodeURIComponent(propertyName ?? '')}`}
+              className="inline-block px-6 py-2.5 rounded-full border-2 border-gray-800 text-sm font-bold text-gray-900 hover:bg-gray-100 transition-colors">
+              Write a review
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* ── Desktop: star + count header + breakdown ── */}
       <div className="hidden md:block">
-        <div className="flex items-center gap-2 mb-0.5">
-          <svg className="w-5 h-5 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <span className="text-xl font-bold text-gray-900">{OVERALL_RATING} · {REVIEW_COUNT} reviews</span>
+        <div className="flex items-center justify-between mb-0.5">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <span className="text-xl font-bold text-gray-900">{overallRating} · {reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
+          </div>
+          {propertyId && (
+            <Link href={`/stay/reviews/new?property_id=${propertyId}&property_name=${encodeURIComponent(propertyName ?? '')}`}
+              className="text-sm font-semibold underline text-gray-700 hover:text-gray-900 transition-colors">
+              Write a review
+            </Link>
+          )}
         </div>
         <p className="text-xs text-gray-400 underline cursor-pointer mb-6">How reviews work</p>
         <div className="flex flex-wrap gap-8 mb-6 pb-6 border-b border-gray-100">
@@ -675,7 +715,7 @@ function RoomDetailContent({ id }: { id: string }) {
             )}
 
             {/* Reviews */}
-            <ReviewsSection />
+            <ReviewsSection propertyId={id} propertyName={property.name} />
           </div>
 
           {/* Right — Airbnb-style booking widget (desktop only) */}

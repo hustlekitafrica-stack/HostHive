@@ -163,11 +163,12 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">Quick Links</p>
               <ul className="space-y-1">
                 {[
-                  { href: '/stay/rooms',       label: 'Browse Rooms' },
-                  { href: '/stay/dining',       label: 'Restaurant & Dining' },
-                  { href: '/stay/rooms',        label: 'Make a Booking' },
-                  { href: '/stay/my-bookings',  label: 'My Trips' },
-                  { href: '/stay/profile',      label: 'My Profile' },
+                  { href: '/stay/rooms',        label: 'Browse Rooms' },
+                  { href: '/stay/dining',        label: 'Restaurant & Dining' },
+                  { href: '/stay/rooms',         label: 'Make a Booking' },
+                  { href: '/stay/reviews/new',   label: 'Write a Review' },
+                  { href: '/stay/my-bookings',   label: 'My Trips' },
+                  { href: '/stay/profile',       label: 'My Profile' },
                 ].map((l, i) => (
                   <li key={`${l.href}-${i}`}>
                     <button onClick={() => handleNavClick(l.href)}
@@ -268,11 +269,12 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
             <h4 className="font-bold text-sm uppercase tracking-wider text-gray-300 mb-4">Quick Links</h4>
             <ul className="space-y-2">
               {[
-                { href: '/stay/rooms',       label: 'Browse Rooms' },
-                { href: '/stay/dining',      label: 'Restaurant & Dining' },
-                { href: '/stay/book',        label: 'Make a Booking' },
-                { href: '/stay/my-bookings', label: 'Trips' },
-                { href: '/stay/profile',     label: 'Profile' },
+                { href: '/stay/rooms',        label: 'Browse Rooms' },
+                { href: '/stay/dining',       label: 'Restaurant & Dining' },
+                { href: '/stay/book',         label: 'Make a Booking' },
+                { href: '/stay/reviews/new',  label: 'Write a Review' },
+                { href: '/stay/my-bookings',  label: 'Trips' },
+                { href: '/stay/profile',      label: 'Profile' },
               ].map(l => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</Link>
