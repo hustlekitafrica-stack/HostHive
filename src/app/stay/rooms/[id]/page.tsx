@@ -641,7 +641,7 @@ function RoomDetailContent({ id }: { id: string }) {
       )}
 
       {/* ── Content + Booking Sidebar ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-32 lg:pb-12">
         <div className="grid lg:grid-cols-3 gap-10">
 
           {/* Left — details */}
@@ -875,6 +875,36 @@ function RoomDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
+
+      {/* ── Mobile sticky booking bar ── */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white"
+        style={{ boxShadow: '0 -2px 16px rgba(0,0,0,0.10)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="flex items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-black text-gray-900">KSh {rate.toLocaleString()}</span>
+              <span className="text-sm text-gray-500">/ night</span>
+            </div>
+            {nights > 0 ? (
+              <p className="text-xs text-gray-500 truncate">
+                {fmtShort(checkIn)} – {fmtShort(checkOut)} · {nights} night{nights !== 1 ? 's' : ''}
+                {total > 0 && <> · <span className="font-semibold">KSh {total.toLocaleString()}</span> total</>}
+              </p>
+            ) : (
+              <p className="text-xs text-gray-400">Add dates for total price</p>
+            )}
+          </div>
+          <button
+            onClick={handleBook}
+            className="flex-shrink-0 px-6 py-3 rounded-full text-sm font-bold text-white transition-all active:scale-95"
+            style={{ background: '#16a34a' }}
+          >
+            {nights > 0 ? 'Reserve' : 'Check availability'}
+          </button>
+        </div>
+      </div>
 
     </div>
   );
