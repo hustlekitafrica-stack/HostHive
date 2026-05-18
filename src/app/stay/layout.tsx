@@ -97,7 +97,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {NAV_LINKS.map(l => (
+            {NAV_LINKS.filter(l => !(l.label === 'Trips' && !loggedIn)).map(l => (
               <button key={l.href} onClick={() => handleNavClick(l.href)}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
@@ -273,7 +273,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 { href: '/stay/dining',       label: 'Restaurant & Dining' },
                 { href: '/stay/book',         label: 'Make a Booking' },
                 { href: '/stay/reviews/new',  label: 'Write a Review' },
-                { href: '/stay/my-bookings',  label: 'Trips' },
+                ...(loggedIn ? [{ href: '/stay/my-bookings', label: 'Trips' }] : []),
                 { href: '/stay/profile',      label: 'Profile' },
               ].map(l => (
                 <li key={l.href}>
