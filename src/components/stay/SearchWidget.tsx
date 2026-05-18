@@ -362,7 +362,7 @@ function DesktopDateDropdown({ checkIn, checkOut, onConfirm, onClose }: DatePick
   const n = (start && end) ? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) : 0;
 
   return (
-    <div ref={ref} className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-6" style={{ width: '680px', maxWidth: '96vw' }}>
+    <div ref={ref} className="absolute top-full left-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[200] p-6" style={{ width: '680px', maxWidth: '96vw' }}>
       <div className="flex gap-6 border-b border-gray-200 mb-5">
         {(['calendar', 'flexible'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
@@ -458,7 +458,7 @@ function DesktopGuestsDropdown({ adults: ia, children: ic, rooms: ir, onConfirm,
   }, [onCloseCb]);
 
   return (
-    <div ref={ref} className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 p-5 w-80">
+    <div ref={ref} className="absolute top-full right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[200] p-5 w-80">
       {([
         { label: 'Adults',   val: adults,   set: setAdults,   min: 1 },
         { label: 'Children', val: children, set: setChildren, min: 0 },
@@ -520,11 +520,11 @@ export default function SearchWidget() {
   return (
     <>
       <div className="relative w-full">
-        <div className="flex flex-col lg:flex-row rounded-lg overflow-visible w-full" style={{ border: '5px solid #d97706' }}>
+        <div className="flex flex-col lg:flex-row rounded-2xl overflow-visible w-full p-2 gap-2" style={{ border: '3px solid #d97706' }}>
 
           {/* ── Dates ── */}
           {/* Mobile: two separate buttons */}
-          <div className="flex flex-1 bg-white border-b lg:hidden">
+          <div className="flex flex-1 bg-white rounded-xl lg:hidden">
             <button onClick={() => { setShowDate(true); setShowGuests(false); }}
               className="flex-1 px-4 py-3 border-r border-gray-200 text-left">
               <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
@@ -538,7 +538,7 @@ export default function SearchWidget() {
           </div>
 
           {/* Desktop: single combined date button with dropdown */}
-          <div className="hidden lg:block relative flex-1 bg-white border-r border-gray-200">
+          <div className="hidden lg:block relative flex-1 bg-white rounded-xl">
             <button onClick={() => { setShowDate(v => !v); setShowGuests(false); }}
               className="w-full h-full px-5 py-3 text-left flex items-center gap-3">
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -560,7 +560,7 @@ export default function SearchWidget() {
 
           {/* ── Guests ── */}
           {/* Mobile: opens full-screen modal */}
-          <div className="flex items-center bg-white border-b lg:hidden">
+          <div className="flex items-center bg-white rounded-xl lg:hidden">
             <button onClick={() => { setShowGuests(true); setShowDate(false); }} className="flex items-center justify-between gap-2 px-4 py-3 w-full text-left">
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">Guests</p>
@@ -571,7 +571,7 @@ export default function SearchWidget() {
           </div>
 
           {/* Desktop: opens inline dropdown */}
-          <div className="hidden lg:flex items-center bg-white border-r border-gray-200 relative flex-shrink-0">
+          <div className="hidden lg:flex items-center bg-white rounded-xl relative flex-shrink-0">
             <button onClick={() => { setShowGuests(v => !v); setShowDate(false); }} className="flex items-center gap-2 px-5 py-3 w-full text-left">
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
@@ -593,7 +593,7 @@ export default function SearchWidget() {
 
           {/* Search */}
           <button onClick={handleSearch}
-            className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center flex-shrink-0"
+            className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center flex-shrink-0 rounded-xl"
             style={{ background: '#16a34a' }}>
             Search
           </button>

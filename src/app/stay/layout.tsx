@@ -97,7 +97,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {NAV_LINKS.filter(l => !(l.label === 'Trips' && !loggedIn)).map(l => (
+            {NAV_LINKS.filter(l => !((l.label === 'Trips' || l.label === 'Profile') && !loggedIn)).map(l => (
               <button key={l.href} onClick={() => handleNavClick(l.href)}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
@@ -167,8 +167,10 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                   { href: '/stay/dining',        label: 'Restaurant & Dining' },
                   { href: '/stay/rooms',         label: 'Make a Booking' },
                   { href: '/stay/reviews/new',   label: 'Write a Review' },
-                  { href: '/stay/my-bookings',   label: 'My Trips' },
-                  { href: '/stay/profile',       label: 'My Profile' },
+                  ...(loggedIn ? [
+                    { href: '/stay/my-bookings', label: 'My Trips' },
+                    { href: '/stay/profile',     label: 'My Profile' },
+                  ] : []),
                 ].map((l, i) => (
                   <li key={`${l.href}-${i}`}>
                     <button onClick={() => handleNavClick(l.href)}
@@ -273,8 +275,10 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 { href: '/stay/dining',       label: 'Restaurant & Dining' },
                 { href: '/stay/book',         label: 'Make a Booking' },
                 { href: '/stay/reviews/new',  label: 'Write a Review' },
-                ...(loggedIn ? [{ href: '/stay/my-bookings', label: 'Trips' }] : []),
-                { href: '/stay/profile',      label: 'Profile' },
+                ...(loggedIn ? [
+                  { href: '/stay/my-bookings', label: 'Trips' },
+                  { href: '/stay/profile',     label: 'Profile' },
+                ] : []),
               ].map(l => (
                 <li key={l.href}>
                   <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</Link>

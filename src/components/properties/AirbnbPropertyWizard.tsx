@@ -310,6 +310,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [countdown, setCountdown] = useState(6);
   const [collapsedCats, setCollapsedCats] = useState<string[]>([]);
   const [customAmenity, setCustomAmenity] = useState('');
+  const [customRuleInput, setCustomRuleInput] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const [newSeason, setNewSeason] = useState({ name: '', start: '', end: '', price: '' });
   const [photoIdx, setPhotoIdx] = useState(0);
@@ -1017,9 +1018,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
               + Add period
             </button>
           </div>
-          {data.pricing.seasonal.length === 0 ? (
-            <p className="text-sm text-gray-400">e.g. Christmas / December holiday rates, August peak season</p>
-          ) : (
+          {data.pricing.seasonal.length === 0 && (
+            <p className="text-sm text-gray-400 mb-3">e.g. Christmas / December holiday rates, August peak season</p>
+          )}
+          {data.pricing.seasonal.length > 0 && (
             <div className="space-y-2 mb-3">
               {data.pricing.seasonal.map((s, i) => (
                 <div key={i} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm">
@@ -1027,14 +1029,14 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
                   <button onClick={() => upd('pricing', { ...data.pricing, seasonal: data.pricing.seasonal.filter((_, idx) => idx !== i) })} className="text-red-500 text-xs ml-2 hover:text-red-700">Remove</button>
                 </div>
               ))}
-              <div className="grid grid-cols-2 gap-2 mt-3">
-                <input value={newSeason.name} onChange={e => setNewSeason(s => ({ ...s, name: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
-                <input value={newSeason.price} onChange={e => setNewSeason(s => ({ ...s, price: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
-                <input type="date" value={newSeason.start} onChange={e => setNewSeason(s => ({ ...s, start: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
-                <input type="date" value={newSeason.end} onChange={e => setNewSeason(s => ({ ...s, end: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" />
-              </div>
             </div>
           )}
+          <div className="grid grid-cols-2 gap-2">
+            <input placeholder="Season name (e.g. Christmas)" value={newSeason.name} onChange={e => setNewSeason(s => ({ ...s, name: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600" />
+            <input placeholder="Rate (KSh)" type="number" value={newSeason.price} onChange={e => setNewSeason(s => ({ ...s, price: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600" />
+            <input type="date" value={newSeason.start} onChange={e => setNewSeason(s => ({ ...s, start: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600" />
+            <input type="date" value={newSeason.end} onChange={e => setNewSeason(s => ({ ...s, end: e.target.value }))} className="px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600" />
+          </div>
         </div>
       </div>
     );
@@ -1150,10 +1152,31 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
             })}
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Additional / custom rules (optional)</label>
-            <textarea value={data.rules.additionalRules} onChange={e => upd('rules', { ...data.rules, additionalRules: e.target.value })}
-              rows={2} placeholder="e.g. No smoking outside, Sort rubbish before leaving..."
-              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600 resize-y" />
+            <label className="block text-xs font-semibold text-gray-500 mb-1.5">Additional / custom rules</label>
+            {data.rules.additionalRules && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {data.rules.additionalRules.split('\n').filter(Boolean).map((rule, i) => (
+                  <span key={i} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-sm font-medium border border-green-600 bg-green-50 text-green-700">
+                    ✓ {rule}
+                    <button type="button" onClick={() => { const updated = data.rules.additionalRules.split('\n').filter(Boolean).filter((_,idx) => idx !== i).join('\n'); upd('rules', { ...data.rules, additionalRules: updated }); }} className="ml-0.5 text-green-400 hover:text-red-500 text-base leading-none">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2">
+              <input
+                value={customRuleInput}
+                onChange={e => setCustomRuleInput(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); if (customRuleInput.trim()) { const updated = [...data.rules.additionalRules.split('\n').filter(Boolean), customRuleInput.trim()].join('\n'); upd('rules', { ...data.rules, additionalRules: updated }); setCustomRuleInput(''); } } }}
+                placeholder="Type a custom rule…"
+                className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
+              />
+              <button type="button"
+                onClick={() => { if (customRuleInput.trim()) { const updated = [...data.rules.additionalRules.split('\n').filter(Boolean), customRuleInput.trim()].join('\n'); upd('rules', { ...data.rules, additionalRules: updated }); setCustomRuleInput(''); } }}
+                className="px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors">
+                Add
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1280,16 +1303,6 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           </div>
         )}
 
-        {/* Publish / Save button */}
-        <button onClick={handlePublish} disabled={publishing}
-          className="w-full py-4 bg-green-600 text-white rounded-xl font-bold text-base hover:bg-green-700 transition-colors flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed">
-          {publishing ? (
-            <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-          ) : (
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
-          )}
-          {publishing ? 'Saving…' : isEdit ? 'Save Changes' : 'Publish Property'}
-        </button>
       </div>
     );
   };
