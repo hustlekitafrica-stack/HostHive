@@ -262,8 +262,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
       <p className="md:hidden text-base font-bold text-gray-900 mb-3">Guest reviews mention</p>
 
       {/* Filter chips — horizontal scroll on mobile, wrap on desktop */}
-      <div className="overflow-hidden mb-6">
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide md:flex-wrap md:overflow-visible">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide md:flex-wrap md:overflow-visible">
           {FILTER_TAGS.map((t: any) => (
             <button key={t.label}
               onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
@@ -278,12 +277,10 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
               <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
             </button>
           ))}
-        </div>
       </div>
 
       {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
-      <div className="overflow-hidden">
-        <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
           {reviews.map((r, i) => {
             const isExpanded = expanded.includes(i);
             const SHORT = 150;
@@ -320,7 +317,6 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
               </div>
             );
           })}
-        </div>
       </div>
     </div>
   );
