@@ -61,17 +61,17 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
               <button key={day} disabled={isPast} onClick={() => !isPast && onSelect(activeField, ds)}
                 className={['relative h-12 w-full flex items-center justify-center text-sm transition-colors',
                   isPast ? 'cursor-not-allowed' : 'cursor-pointer',
-                  inRange ? 'bg-gray-100' : '',
+                  inRange ? 'bg-green-50' : '',
                 ].join(' ')}>
                 {isPast ? (
                   <span className="line-through text-gray-400 text-sm">{day}</span>
                 ) : (isCI || isCO) ? (
                   <>
-                    <span className="absolute w-10 h-10 rounded-full bg-gray-900" />
+                    <span className="absolute w-10 h-10 rounded-full" style={{ background: '#16a34a' }} />
                     <span className="relative text-white font-bold text-sm">{day}</span>
                   </>
                 ) : (
-                  <span className="relative font-semibold text-gray-900 text-sm w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-200">{day}</span>
+                  <span className="relative font-semibold text-gray-900 text-sm w-10 h-10 flex items-center justify-center rounded-full hover:bg-green-50">{day}</span>
                 )}
               </button>
             );
@@ -85,7 +85,7 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
   const rightD = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1);
 
   return (
-    <div ref={ref} className="absolute left-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-7 w-[700px]">
+    <div ref={ref} className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-7 w-[700px]">
       <div className="mb-4">
         <h3 className="text-base font-bold text-gray-900">
           {activeField === 'in' ? 'Select check-in date' : 'Select checkout date'}
@@ -187,9 +187,10 @@ function ReviewsSection() {
             onClick={() => setActiveFilter(f => f === t.label ? null : t.label)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
               activeFilter === t.label
-                ? 'border-gray-900 bg-gray-50 text-gray-900'
-                : 'border-gray-200 text-gray-700 hover:border-gray-500'
-            }`}>
+                ? 'text-white border-transparent'
+                : 'border-gray-200 text-gray-700 hover:border-green-400'
+            }`}
+            style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
             {t.label}
             <span className={activeFilter === t.label ? 'text-gray-500' : 'text-gray-400'}>{t.count}</span>
           </button>
@@ -489,8 +490,9 @@ function RoomDetailContent({ id }: { id: string }) {
                       <button
                         onClick={() => setShowPicker(v => v === 'in' ? null : 'in')}
                         className={`px-3 py-3 text-left border-r border-gray-200 transition-colors ${
-                          showPicker === 'in' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tl-xl' : ''
-                        }`}>
+                          showPicker === 'in' ? 'outline outline-2 -outline-offset-2 rounded-tl-xl' : ''
+                        }`}
+                        style={showPicker === 'in' ? { outlineColor: '#16a34a' } : {}}>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Check-in</p>
                         <p className={`text-sm font-semibold ${checkIn ? 'text-gray-900' : 'text-gray-400'}`}>
                           {checkIn ? fmtShort(checkIn) : 'Add date'}
@@ -499,8 +501,9 @@ function RoomDetailContent({ id }: { id: string }) {
                       <button
                         onClick={() => setShowPicker(v => v === 'out' ? null : 'out')}
                         className={`px-3 py-3 text-left transition-colors ${
-                          showPicker === 'out' ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-tr-xl' : ''
-                        }`}>
+                          showPicker === 'out' ? 'outline outline-2 -outline-offset-2 rounded-tr-xl' : ''
+                        }`}
+                        style={showPicker === 'out' ? { outlineColor: '#16a34a' } : {}}>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Checkout</p>
                         <p className={`text-sm font-semibold ${checkOut ? 'text-gray-900' : 'text-gray-400'}`}>
                           {checkOut ? fmtShort(checkOut) : 'Add date'}
@@ -534,8 +537,9 @@ function RoomDetailContent({ id }: { id: string }) {
                     <button
                       onClick={() => setShowGuestPanel(v => !v)}
                       className={`w-full border-t border-gray-200 px-3 py-3 flex items-center justify-between text-left transition-colors ${
-                        showGuestPanel ? 'outline outline-2 -outline-offset-2 outline-gray-900 rounded-b-xl' : ''
-                      }`}>
+                        showGuestPanel ? 'outline outline-2 -outline-offset-2 rounded-b-xl' : ''
+                      }`}
+                      style={showGuestPanel ? { outlineColor: '#16a34a' } : {}}>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-0.5">Guests</p>
                         <p className="text-sm font-semibold text-gray-900">
@@ -608,7 +612,7 @@ function RoomDetailContent({ id }: { id: string }) {
                 {/* CTA */}
                 <button onClick={handleBook}
                   className="w-full py-3.5 rounded-full text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
-                  style={{ background: '#e11d48' }}>
+                  style={{ background: '#16a34a' }}>
                   {nights > 0 ? 'Reserve' : 'Check availability'}
                 </button>
                 <p className="text-xs text-center text-gray-400 mt-3">No payment now — we'll confirm within 2 hours.</p>
