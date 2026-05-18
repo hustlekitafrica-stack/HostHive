@@ -338,6 +338,7 @@ function RoomDetailContent({ id }: { id: string }) {
   const [wishlisted,     setWishlisted]     = useState(false);
   const [wishLoading,    setWishLoading]    = useState(false);
   const [mobileSlide,    setMobileSlide]    = useState(0);
+  const swipeStartX = useRef(0);
   const guests = adults + children;
 
   useEffect(() => {
@@ -397,24 +398,33 @@ function RoomDetailContent({ id }: { id: string }) {
   ].filter(Boolean) as { Icon: LucideIcon; label: string }[];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-0 sm:pt-16">
 
       {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
       <div className="block sm:hidden relative">
         {photos.length > 0 ? (
-          <div className="relative w-full h-[300px] overflow-hidden bg-gray-900">
+          <div
+            className="relative w-full h-[340px] overflow-hidden bg-gray-900 select-none"
+            onTouchStart={e => { swipeStartX.current = e.touches[0].clientX; }}
+            onTouchEnd={e => {
+              const diff = swipeStartX.current - e.changedTouches[0].clientX;
+              if (Math.abs(diff) > 40) {
+                if (diff > 0) setMobileSlide(s => Math.min(photos.length - 1, s + 1));
+                else setMobileSlide(s => Math.max(0, s - 1));
+              }
+            }}
+          >
             <img
               src={photos[mobileSlide]}
               alt={property.name}
-              className="w-full h-full object-cover"
-              onClick={() => { setPhotoIdx(mobileSlide); setLightbox(true); }}
+              className="w-full h-full object-cover pointer-events-none"
             />
             {/* Back */}
-            <Link href="/stay/rooms" className="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow z-20">
+            <Link href="/stay/rooms" className="absolute top-16 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow z-20">
               <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
             </Link>
             {/* Share + Heart */}
-            <div className="absolute top-4 right-4 flex gap-2 z-20">
+            <div className="absolute top-16 right-4 flex gap-2 z-20">
               <button className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow">
                 <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
               </button>
@@ -422,24 +432,23 @@ function RoomDetailContent({ id }: { id: string }) {
                 <Heart className="w-4 h-4" style={{ color: '#16a34a' }} fill={wishlisted ? '#16a34a' : 'none'} />
               </button>
             </div>
-            {/* Prev / Next */}
-            {mobileSlide > 0 && (
-              <button onClick={() => setMobileSlide(s => s - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center z-20">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M15 18l-6-6 6-6"/></svg>
-              </button>
-            )}
-            {mobileSlide < photos.length - 1 && (
-              <button onClick={() => setMobileSlide(s => s + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center z-20">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M9 18l6-6-6-6"/></svg>
-              </button>
-            )}
-            {/* Counter */}
-            <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full z-20">
-              {mobileSlide + 1} / {photos.length}
+            {/* Dots / counter */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1.5 z-20">
+              {photos.length <= 12 ? (
+                photos.map((_, i) => (
+                  <div key={i} className={`rounded-full transition-all duration-200 ${
+                    i === mobileSlide ? 'w-2 h-2 bg-white shadow-md' : 'w-1.5 h-1.5 bg-white/50'
+                  }`} />
+                ))
+              ) : (
+                <div className="bg-black/60 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                  {mobileSlide + 1} / {photos.length}
+                </div>
+              )}
             </div>
           </div>
         ) : (
-          <div className="w-full h-[300px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
+          <div className="w-full h-[340px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
             <HomeIcon className="w-16 h-16 text-white/40" />
           </div>
         )}
