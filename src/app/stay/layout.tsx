@@ -64,6 +64,7 @@ const NAV_LINKS = [
 
 export default function StayLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
+  const isPropertyPage = /^\/stay\/rooms\/[^/]+/.test(pathname);
   const router    = useRouter();
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [loading,    setLoading]    = useState(false);
@@ -92,7 +93,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
 
       {/* ── Top Navigation ── */}
-      <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
+      {!isPropertyPage && <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
           {/* Logo */}
@@ -134,7 +135,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-      </header>
+      </header>}
 
       {/* ── Mobile full-page menu overlay ── */}
       {menuOpen && (
@@ -220,7 +221,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Page content ── */}
-      <main className="flex-1 overflow-x-hidden">
+      <main className={`flex-1 overflow-x-hidden${isPropertyPage ? '' : ' pt-14'}`}>
         {children}
       </main>
 
