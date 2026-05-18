@@ -221,7 +221,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Page content ── */}
-      <main className={`flex-1 overflow-x-hidden${isPropertyPage ? '' : ' pt-14'}`}>
+      <main className={`flex-1${isPropertyPage ? '' : ' pt-14'}`} style={{ overflowX: 'clip' }}>
         {children}
       </main>
 

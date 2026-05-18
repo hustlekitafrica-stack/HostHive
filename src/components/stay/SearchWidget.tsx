@@ -216,7 +216,7 @@ interface GuestsModalProps {
   adults: number;
   children: number;
   rooms: number;
-  onConfirm: (adults: number, children: number, rooms: number) => void;
+  onConfirm: (adults: number, children: number, rooms: number, pets: boolean) => void;
   onClose: () => void;
 }
 
@@ -270,7 +270,7 @@ export function GuestsModal({ adults: ia, children: ic, rooms: ir, onConfirm, on
       </div>
 
       <div className="px-5 py-4 border-t border-gray-200">
-        <button onClick={() => onConfirm(adults, children, rooms)}
+        <button onClick={() => onConfirm(adults, children, rooms, pets)}
           className="w-full py-4 rounded-xl text-base font-bold text-white"
           style={{ background: '#16a34a' }}>
           Done
@@ -489,7 +489,7 @@ function DesktopGuestsDropdown({ adults: ia, children: ic, rooms: ir, onConfirm,
           <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${pets ? 'translate-x-5' : 'translate-x-0'}`}/>
         </button>
       </div>
-      <button onClick={() => onConfirm(adults, children, rooms)}
+      <button onClick={() => onConfirm(adults, children, rooms, pets)}
         className="w-full mt-3 py-3 rounded-xl border-2 border-blue-600 text-blue-600 font-bold text-sm hover:bg-blue-50 transition-colors">
         Done
       </button>
@@ -507,6 +507,7 @@ export default function SearchWidget() {
   const [adults,     setAdults]     = useState(2);
   const [children,   setChildren]   = useState(0);
   const [rooms,      setRooms]      = useState(1);
+  const [pets,       setPets]       = useState(false);
   const [showDate,   setShowDate]   = useState(false);
   const [showGuests, setShowGuests] = useState(false);
 
@@ -514,7 +515,7 @@ export default function SearchWidget() {
   const dateLabel  = checkIn && checkOut ? `${fmtDesktop(checkIn)} — ${fmtDesktop(checkOut)}` : 'Select dates';
 
   const handleSearch = () => {
-    router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
+    router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}&pets=${pets}`);
   };
 
   return (
@@ -614,7 +615,7 @@ export default function SearchWidget() {
         <div className="lg:hidden">
           <GuestsModal
             adults={adults} children={children} rooms={rooms}
-            onConfirm={(a, c, r) => { setAdults(a); setChildren(c); setRooms(r); setShowGuests(false); }}
+            onConfirm={(a, c, r, p) => { setAdults(a); setChildren(c); setRooms(r); setPets(p); setShowGuests(false); }}
             onClose={() => setShowGuests(false)}
           />
         </div>

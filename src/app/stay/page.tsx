@@ -84,7 +84,7 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative z-10 pt-[86px] pb-8 px-2 sm:px-6 sm:pt-24" style={{ background: '#1e293b' }}>
+      <section className="relative pt-[86px] pb-8 px-2 sm:px-6 sm:pt-24" style={{ background: '#1e293b' }}>
         <div className="max-w-5xl mx-auto">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
             Find your perfect stay
