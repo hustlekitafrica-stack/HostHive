@@ -169,9 +169,42 @@ const MOCK_REVIEWS = [
 const OVERALL_RATING = 4.92;
 const REVIEW_COUNT   = 12;
 
+function ReviewCard({ r, short = 150 }: { r: any; short?: number }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="bg-white border border-gray-100 rounded-2xl p-5 h-full flex flex-col">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
+          style={{ background: '#16a34a' }}>{r.initials}</div>
+        <div>
+          <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
+          {r.years && <p className="text-xs text-gray-400">{r.years} staying here</p>}
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5 mb-3">
+        <div className="flex gap-0.5">
+          {Array.from({ length: 5 }).map((_, j) => (
+            <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          ))}
+        </div>
+        <span className="text-xs text-gray-400">· {r.date}</span>
+      </div>
+      <p className="text-sm text-gray-700 leading-relaxed flex-1">
+        {expanded || r.text.length <= short ? r.text.replace('...', '') : r.text.slice(0, short) + '…'}
+      </p>
+      {r.text.length > short && (
+        <button onClick={() => setExpanded(v => !v)}
+          className="text-sm font-bold underline text-gray-900 mt-2 self-start hover:text-gray-600">
+          {expanded ? 'Show less' : 'Show more'}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; propertyName?: string }) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [expanded,     setExpanded]     = useState<number[]>([]);
+  const [slide,        setSlide]        = useState(0);
   const [realReviews,  setRealReviews]  = useState<any[] | null>(null);
   const maxBar = Math.max(...STAR_DIST);
 
@@ -197,6 +230,10 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
     ? Number((realReviews.reduce((s: number, r: any) => s + r.rating, 0) / realReviews.length).toFixed(2))
     : OVERALL_RATING;
   const reviewCount = realReviews && realReviews.length > 0 ? realReviews.length : REVIEW_COUNT;
+
+  const clampedSlide = Math.min(slide, reviews.length - 1);
+  const prev = () => setSlide(s => Math.max(0, s - 1));
+  const next = () => setSlide(s => Math.min(reviews.length - 1, s + 1));
 
   return (
     <div className="pt-8 border-t border-gray-100">
@@ -253,65 +290,72 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
         </div>
       </div>
 
-      {/* ── Mobile: section heading ── */}
-      <p className="md:hidden text-base font-bold text-gray-900 mb-3">Guest reviews mention</p>
-
       {/* Filter chips — horizontal scroll on mobile, wrap on desktop */}
+      <p className="md:hidden text-base font-bold text-gray-900 mb-3">Guest reviews mention</p>
       <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide md:flex-wrap md:overflow-visible">
-          {FILTER_TAGS.map((t: any) => (
-            <button key={t.label}
-              onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
-              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
-                activeFilter === t.label
-                  ? 'text-white border-transparent'
-                  : 'border-gray-200 text-gray-700 hover:border-green-400'
-              }`}
-              style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
-              {t.emoji && <span className="text-base leading-none">{t.emoji}</span>}
-              {t.label}
-              <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
-            </button>
-          ))}
+        {FILTER_TAGS.map((t: any) => (
+          <button key={t.label}
+            onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
+              activeFilter === t.label ? 'text-white border-transparent' : 'border-gray-200 text-gray-700 hover:border-green-400'
+            }`}
+            style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
+            {t.emoji && <span className="text-base leading-none">{t.emoji}</span>}
+            {t.label}
+            <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
-      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
-          {reviews.map((r, i) => {
-            const isExpanded = expanded.includes(i);
-            const SHORT = 150;
-            return (
-              <div key={i} className="flex-shrink-0 w-[82vw] snap-start rounded-2xl border border-gray-100 bg-white p-4 md:w-auto md:rounded-none md:border-0 md:bg-transparent md:p-0">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                    style={{ background: '#16a34a' }}>
-                    {r.initials}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
-                    <p className="text-xs text-gray-400">{r.years} staying here</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="flex gap-0.5">
-                    {Array.from({ length: 5 }).map((_, j) => (
-                      <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-                    ))}
-                  </div>
-                  <span className="text-xs text-gray-400">· {r.date}</span>
-                </div>
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  {isExpanded || r.text.length <= SHORT ? r.text.replace('...', '') : r.text.slice(0, SHORT) + '...'}
-                </p>
-                {r.text.length > SHORT && (
-                  <button
-                    onClick={() => setExpanded(prev => isExpanded ? prev.filter(x => x !== i) : [...prev, i])}
-                    className="text-sm font-bold underline text-gray-900 mt-1 hover:text-gray-600">
-                    {isExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
+      {/* ── Mobile: Carousel ── */}
+      <div className="md:hidden">
+        <div className="relative overflow-hidden rounded-2xl">
+          <div
+            className="flex transition-transform duration-300 ease-in-out"
+            style={{ transform: `translateX(-${clampedSlide * 100}%)` }}
+          >
+            {reviews.map((r, i) => (
+              <div key={i} className="w-full flex-shrink-0 px-0.5">
+                <ReviewCard r={r} />
               </div>
-            );
-          })}
+            ))}
+          </div>
+        </div>
+
+        {/* Carousel controls */}
+        <div className="flex items-center justify-between mt-4 px-1">
+          <button
+            onClick={prev}
+            disabled={clampedSlide === 0}
+            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center transition-colors disabled:opacity-30 hover:border-gray-400"
+            aria-label="Previous review">
+            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+
+          <div className="flex items-center gap-1.5">
+            {reviews.map((_, i) => (
+              <button key={i} onClick={() => setSlide(i)} aria-label={`Go to review ${i + 1}`}
+                className={`rounded-full transition-all duration-200 ${
+                  i === clampedSlide ? 'w-5 h-2 bg-gray-900' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
+                }`} />
+            ))}
+          </div>
+
+          <button
+            onClick={next}
+            disabled={clampedSlide === reviews.length - 1}
+            className="w-9 h-9 rounded-full border border-gray-200 flex items-center justify-center transition-colors disabled:opacity-30 hover:border-gray-400"
+            aria-label="Next review">
+            <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-gray-400 mt-2">{clampedSlide + 1} of {reviews.length}</p>
+      </div>
+
+      {/* ── Desktop: 2-col grid ── */}
+      <div className="hidden md:grid md:grid-cols-2 md:gap-6">
+        {reviews.map((r, i) => <ReviewCard key={i} r={r} />)}
       </div>
     </div>
   );
@@ -364,6 +408,165 @@ function getAmenityIcon(name: string): React.ReactNode {
     <svg className={IC} fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/>
     </svg>
+  );
+}
+
+function MobileBookingCalendar({
+  checkIn, checkOut, setCheckIn, setCheckOut, rate, nights, total, city, cancellationPolicy, onReserve,
+}: {
+  checkIn: string; checkOut: string;
+  setCheckIn: (d: string) => void; setCheckOut: (d: string) => void;
+  rate: number; nights: number; total: number;
+  city?: string; cancellationPolicy?: string; onReserve: () => void;
+}) {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const initD = checkIn && checkIn >= todayStr ? new Date(checkIn + 'T00:00:00') : new Date();
+  const [month, setMonth] = useState({ year: initD.getFullYear(), month: initD.getMonth() });
+  const [selecting, setSelecting] = useState<'in'|'out'>(checkOut ? 'in' : 'out');
+
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  function handleDayClick(ds: string) {
+    if (ds < todayStr) return;
+    if (selecting === 'in' || (checkIn && checkOut)) {
+      setCheckIn(ds); setCheckOut(''); setSelecting('out');
+    } else {
+      if (ds <= checkIn) { setCheckIn(ds); setCheckOut(''); }
+      else { setCheckOut(ds); setSelecting('in'); }
+    }
+  }
+
+  const firstDay  = new Date(month.year, month.month, 1).getDay();
+  const daysCount = new Date(month.year, month.month + 1, 0).getDate();
+  const now = new Date();
+  const isPrevDisabled = month.year === now.getFullYear() && month.month === now.getMonth();
+
+  function fmtLong(d: string) {
+    if (!d) return '';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function isInRange(ds: string) {
+    return !!(checkIn && checkOut && ds > checkIn && ds < checkOut);
+  }
+
+  return (
+    <div className="lg:hidden bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+
+      {/* Heading */}
+      <div className="mb-6">
+        {nights > 0 ? (
+          <>
+            <h3 className="text-2xl font-bold text-gray-900">
+              {nights} night{nights !== 1 ? 's' : ''}{city ? ` in ${city}` : ''}
+            </h3>
+            <p className="text-sm text-gray-500 mt-0.5">{fmtLong(checkIn)} – {fmtLong(checkOut)}</p>
+          </>
+        ) : (
+          <>
+            <h3 className="text-2xl font-bold text-gray-900">Select dates</h3>
+            <p className="text-sm text-gray-500 mt-0.5">Add dates to see the total price</p>
+          </>
+        )}
+      </div>
+
+      {/* Month navigation */}
+      <div className="flex items-center justify-between mb-4">
+        <button
+          onClick={() => setMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+          disabled={isPrevDisabled}
+          className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors">
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span className="font-bold text-base text-gray-900">{MONTH_NAMES[month.month]} {month.year}</span>
+        <button
+          onClick={() => setMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+
+      {/* Day headers */}
+      <div className="grid grid-cols-7 mb-1">
+        {['S','M','T','W','T','F','S'].map((d, i) => (
+          <p key={i} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</p>
+        ))}
+      </div>
+
+      {/* Calendar grid */}
+      <div className="grid grid-cols-7">
+        {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
+        {Array.from({ length: daysCount }).map((_, i) => {
+          const day = i + 1;
+          const ds  = `${month.year}-${String(month.month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+          const isStart = ds === checkIn;
+          const isEnd   = ds === checkOut;
+          const inRange = isInRange(ds);
+          const isPast  = ds < todayStr;
+          const rangeHL = inRange || (isStart && !!checkOut) || (isEnd && !!checkIn);
+          return (
+            <div key={day}
+              className={`flex items-center justify-center h-11
+                ${rangeHL ? 'bg-gray-100' : ''}
+                ${isStart && checkOut ? 'rounded-l-full' : ''}
+                ${isEnd ? 'rounded-r-full' : ''}
+              `}>
+              <button
+                disabled={isPast}
+                onClick={() => handleDayClick(ds)}
+                className={`w-10 h-10 flex items-center justify-center text-sm rounded-full transition-colors
+                  ${isPast ? 'text-gray-300 line-through cursor-not-allowed' : ''}
+                  ${(isStart || isEnd) ? 'bg-gray-900 !text-white font-bold' : ''}
+                  ${!isStart && !isEnd && !isPast ? 'text-gray-900 hover:bg-gray-200 font-medium' : ''}
+                `}>
+                {day}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Clear dates */}
+      {(checkIn || checkOut) && (
+        <div className="mt-5 pt-4 border-t border-gray-100 text-center">
+          <button
+            onClick={() => { setCheckIn(''); setCheckOut(''); setSelecting('in'); }}
+            className="text-sm font-semibold underline text-gray-700 hover:text-gray-900">
+            Clear dates
+          </button>
+        </div>
+      )}
+
+      {/* Divider + price + CTA */}
+      <div className="mt-5 pt-4 border-t border-gray-100">
+        {nights > 0 ? (
+          <div className="space-y-2 mb-5">
+            <div className="flex justify-between text-sm text-gray-600">
+              <span>KSh {rate.toLocaleString()} × {nights} night{nights !== 1 ? 's' : ''}</span>
+              <span>KSh {total.toLocaleString()}</span>
+            </div>
+            <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-100">
+              <span>Total</span>
+              <span>KSh {total.toLocaleString()}</span>
+            </div>
+            {cancellationPolicy === 'flexible' && (
+              <div className="flex items-center gap-1.5 pt-1">
+                <svg className="w-4 h-4 flex-shrink-0 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span className="text-sm text-gray-600">Free cancellation</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 mb-5">Select check-in &amp; check-out dates to see total price</p>
+        )}
+        <button onClick={onReserve}
+          className="w-full py-4 rounded-full text-base font-bold text-white transition-all hover:opacity-90 active:scale-95"
+          style={{ background: '#16a34a' }}>
+          {nights > 0 ? 'Reserve' : 'Check availability'}
+        </button>
+        <p className="text-xs text-center text-gray-400 mt-3">No payment now — we'll confirm within 2 hours.</p>
+      </div>
+    </div>
   );
 }
 
@@ -696,8 +899,8 @@ function RoomDetailContent({ id }: { id: string }) {
 
             {/* Cancellation */}
             {property.cancellation_policy && (
-              <div className="bg-amber-50 border border-amber-100 rounded-2xl p-5">
-                <h2 className="text-sm font-black text-gray-900 mb-1">
+              <div className="w-full bg-amber-50 border border-amber-100 rounded-2xl p-5 overflow-hidden">
+                <h2 className="text-sm font-black text-gray-900 mb-1 break-words">
                   Cancellation Policy — {(property.cancellation_policy).charAt(0).toUpperCase() + property.cancellation_policy.slice(1)}
                 </h2>
                 <p className="text-sm text-gray-600">
@@ -708,6 +911,16 @@ function RoomDetailContent({ id }: { id: string }) {
                 </p>
               </div>
             )}
+
+            {/* Mobile Booking Calendar */}
+            <MobileBookingCalendar
+              checkIn={checkIn} checkOut={checkOut}
+              setCheckIn={setCheckIn} setCheckOut={setCheckOut}
+              rate={rate} nights={nights} total={total}
+              city={property.city}
+              cancellationPolicy={property.cancellation_policy}
+              onReserve={handleBook}
+            />
 
             {/* Reviews */}
             <ReviewsSection propertyId={id} propertyName={property.name} />
