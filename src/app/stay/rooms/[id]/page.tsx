@@ -337,6 +337,7 @@ function RoomDetailContent({ id }: { id: string }) {
   const [showGuestPanel, setShowGuestPanel] = useState(false);
   const [wishlisted,     setWishlisted]     = useState(false);
   const [wishLoading,    setWishLoading]    = useState(false);
+  const [mobileSlide,    setMobileSlide]    = useState(0);
   const guests = adults + children;
 
   useEffect(() => {
@@ -398,8 +399,86 @@ function RoomDetailContent({ id }: { id: string }) {
   return (
     <div className="min-h-screen bg-[#f8fafc] pt-16">
 
-      {/* ── Title row (above gallery) ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-3">
+      {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
+      <div className="block sm:hidden relative">
+        {photos.length > 0 ? (
+          <div className="relative w-full h-[300px] overflow-hidden bg-gray-900">
+            <img
+              src={photos[mobileSlide]}
+              alt={property.name}
+              className="w-full h-full object-cover"
+              onClick={() => { setPhotoIdx(mobileSlide); setLightbox(true); }}
+            />
+            {/* Back */}
+            <Link href="/stay/rooms" className="absolute top-4 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow z-20">
+              <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </Link>
+            {/* Share + Heart */}
+            <div className="absolute top-4 right-4 flex gap-2 z-20">
+              <button className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow">
+                <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+              </button>
+              <button onClick={handleWishlist} disabled={wishLoading} className="w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow">
+                <Heart className="w-4 h-4" style={{ color: '#16a34a' }} fill={wishlisted ? '#16a34a' : 'none'} />
+              </button>
+            </div>
+            {/* Prev / Next */}
+            {mobileSlide > 0 && (
+              <button onClick={() => setMobileSlide(s => s - 1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center z-20">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M15 18l-6-6 6-6"/></svg>
+              </button>
+            )}
+            {mobileSlide < photos.length - 1 && (
+              <button onClick={() => setMobileSlide(s => s + 1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center z-20">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M9 18l6-6-6-6"/></svg>
+              </button>
+            )}
+            {/* Counter */}
+            <div className="absolute bottom-3 right-3 bg-black/60 text-white text-xs font-semibold px-2.5 py-1 rounded-full z-20">
+              {mobileSlide + 1} / {photos.length}
+            </div>
+          </div>
+        ) : (
+          <div className="w-full h-[300px] flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #0f172a, #16a34a)' }}>
+            <HomeIcon className="w-16 h-16 text-white/40" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Mobile Hero Info ── */}
+      <div className="block sm:hidden bg-white px-4 pt-5 pb-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">{property.name}</h1>
+        <p className="text-sm text-gray-600 mb-0.5">
+          {property.type ? `Entire ${property.type} in` : 'Property in'} {[property.city, 'Kenya'].filter(Boolean).join(', ')}
+        </p>
+        <p className="text-sm text-gray-500 mb-4">
+          {property.max_guests ?? 2} guest{(property.max_guests ?? 2) !== 1 ? 's' : ''} · 
+          {property.bedrooms ?? 1} bedroom{(property.bedrooms ?? 1) !== 1 ? 's' : ''} · 
+          {property.bathrooms ?? 1} bath{(property.bathrooms ?? 1) !== 1 ? 's' : ''}
+        </p>
+        <div className="flex items-center gap-3 py-3 border-t border-b border-gray-100 mb-3">
+          <div>
+            <p className="text-base font-bold text-gray-900">4.92</p>
+            <p className="text-yellow-400 text-sm leading-none">★★★★★</p>
+          </div>
+          <div className="w-px h-8 bg-gray-200" />
+          <div className="text-center flex-1">
+            <p className="text-xs font-bold text-gray-800">Guest favorite</p>
+          </div>
+          <div className="w-px h-8 bg-gray-200" />
+          <div className="text-right">
+            <p className="text-base font-bold text-gray-900">12</p>
+            <p className="text-xs text-gray-500">Reviews</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 rounded-full px-4 py-2 w-fit" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ color: '#16a34a' }}><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><circle cx="7" cy="7" r="1" fill="currentColor"/></svg>
+          <span className="text-sm font-semibold" style={{ color: '#16a34a' }}>Prices include all fees</span>
+        </div>
+      </div>
+
+      {/* ── Title row (above gallery, desktop only) ── */}
+      <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-3">
         <Link href="/stay/rooms" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-700 transition-colors mb-3">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           All Rooms
@@ -427,8 +506,8 @@ function RoomDetailContent({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* ── Photo Gallery ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      {/* ── Photo Gallery (desktop only) ── */}
+      <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6">
         {photos.length > 0 ? (
           <div className="relative grid grid-cols-4 grid-rows-2 gap-1.5 rounded-xl overflow-hidden h-72 sm:h-[420px]">
             <div className="col-span-2 row-span-2 relative cursor-pointer" onClick={() => { setPhotoIdx(0); setLightbox(true); }}>
@@ -459,8 +538,8 @@ function RoomDetailContent({ id }: { id: string }) {
         )}
       </div>
 
-      {/* ── Below-gallery info bar ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+      {/* ── Below-gallery info bar (desktop only) ── */}
+      <div className="hidden sm:flex max-w-7xl mx-auto px-4 sm:px-6 py-4 flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-base font-semibold text-gray-900">
             {(property.type ? property.type.charAt(0).toUpperCase() + property.type.slice(1) : 'Room')} in {[property.city, property.county, 'Kenya'].filter(Boolean).join(', ')}
@@ -497,7 +576,7 @@ function RoomDetailContent({ id }: { id: string }) {
       )}
 
       {/* ── Content + Booking Sidebar ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-28 lg:pb-20">
         <div className="grid lg:grid-cols-3 gap-10">
 
           {/* Left — details */}
@@ -574,8 +653,8 @@ function RoomDetailContent({ id }: { id: string }) {
             <ReviewsSection />
           </div>
 
-          {/* Right — Airbnb-style booking widget */}
-          <div className="lg:col-span-1">
+          {/* Right — Airbnb-style booking widget (desktop only) */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24">
               <div className="bg-white rounded-2xl shadow-xl border border-gray-200 p-6 relative">
 
@@ -730,6 +809,29 @@ function RoomDetailContent({ id }: { id: string }) {
 
         </div>
       </div>
+
+      {/* ── Mobile sticky booking bar ── */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between lg:hidden z-40 shadow-lg">
+        <div>
+          <div className="flex items-baseline gap-1">
+            <span className="text-base font-bold text-gray-900 underline">KSh {rate.toLocaleString()}</span>
+            {nights === 0 && <span className="text-sm text-gray-500"> / night</span>}
+          </div>
+          <p className="text-xs text-gray-500">
+            {nights > 0 ? `For ${nights} night${nights !== 1 ? 's' : ''} · ${fmtShort(checkIn)} – ${fmtShort(checkOut)}` : 'Select dates to see price'}
+          </p>
+          <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: '#16a34a' }}>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
+            Free cancellation
+          </p>
+        </div>
+        <button onClick={handleBook}
+          className="px-8 py-3.5 rounded-full text-white font-bold text-sm transition-all hover:opacity-90 active:scale-95"
+          style={{ background: '#16a34a' }}>
+          Reserve
+        </button>
+      </div>
+
     </div>
   );
 }
