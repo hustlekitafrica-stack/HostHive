@@ -19,18 +19,30 @@ function fmtShort(d: string) {
 }
 
 // ── InlinePicker ──────────────────────────────────────────────────────────────
+function fmtLong(d: string) {
+  if (!d) return '';
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+}
 interface InlinePickerProps {
   checkIn: string; checkOut: string;
   activeField: 'in' | 'out';
+  city?: string;
   onSelect: (field: 'in' | 'out', date: string) => void;
   onClear: () => void;
   onClose: () => void;
 }
-function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClose }: InlinePickerProps) {
+function InlinePicker({ checkIn, checkOut, activeField, city, onSelect, onClear, onClose }: InlinePickerProps) {
   const [offset, setOffset] = useState(0);
-  const ref  = useRef<HTMLDivElement>(null);
+  const ref   = useRef<HTMLDivElement>(null);
   const today = isoStr(new Date());
   const now   = new Date();
+
+  const nights = checkIn && checkOut && checkOut > checkIn
+    ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000) : 0;
+
+  const headerTitle = nights > 0
+    ? `${nights} night${nights !== 1 ? 's' : ''}${city ? ` in ${city}` : ''}`
+    : activeField === 'in' ? 'Select check-in date' : 'Select checkout date';
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -45,9 +57,10 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
     const days = daysInMo(year, month);
     return (
       <div key={`${year}-${month}`} className="flex-1 min-w-0">
-        <p className="text-base font-bold text-center mb-4">{CAL_MON[month]} {year}</p>
-        <div className="grid grid-cols-7 mb-2">
-          {CAL_DAY.map((d, i) => <div key={i} className="text-center text-sm font-semibold text-gray-500 py-1">{d}</div>)}
+        <div className="grid grid-cols-7 mb-3">
+          {CAL_DAY.map((d, i) => (
+            <div key={i} className="text-center text-xs font-semibold text-gray-400 py-1 tracking-wide">{d}</div>
+          ))}
         </div>
         <div className="grid grid-cols-7">
           {Array.from({ length: fd }).map((_, i) => <div key={`e${i}`} />)}
@@ -60,19 +73,19 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
             const inRange = !!(checkIn && checkOut && ds > checkIn && ds < checkOut);
             return (
               <button key={day} disabled={isPast} onClick={() => !isPast && onSelect(activeField, ds)}
-                className={['relative h-12 w-full flex items-center justify-center text-sm transition-colors',
+                className={['relative h-11 w-full flex items-center justify-center transition-colors',
                   isPast ? 'cursor-not-allowed' : 'cursor-pointer',
                   inRange ? 'bg-green-50' : '',
                 ].join(' ')}>
                 {isPast ? (
-                  <span className="line-through text-gray-400 text-sm">{day}</span>
+                  <span className="line-through text-gray-300 text-sm select-none">{day}</span>
                 ) : (isCI || isCO) ? (
                   <>
                     <span className="absolute w-10 h-10 rounded-full" style={{ background: '#16a34a' }} />
                     <span className="relative text-white font-bold text-sm">{day}</span>
                   </>
                 ) : (
-                  <span className="relative font-semibold text-gray-900 text-sm w-10 h-10 flex items-center justify-center rounded-full hover:bg-green-50">{day}</span>
+                  <span className="relative font-medium text-gray-900 text-sm w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">{day}</span>
                 )}
               </button>
             );
@@ -87,31 +100,43 @@ function InlinePicker({ checkIn, checkOut, activeField, onSelect, onClear, onClo
 
   return (
     <div ref={ref} className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 p-7 w-[700px]">
-      <div className="mb-4">
-        <h3 className="text-base font-bold text-gray-900">
-          {activeField === 'in' ? 'Select check-in date' : 'Select checkout date'}
-        </h3>
-        <p className="text-xs text-gray-500 mt-0.5">Minimum stay: 2 nights</p>
+      {/* Header */}
+      <div className="mb-5">
+        <h3 className="text-xl font-bold text-gray-900 leading-tight">{headerTitle}</h3>
+        {checkIn && checkOut && nights > 0 && (
+          <p className="text-sm mt-1 font-medium" style={{ color: '#0d9488' }}>
+            {fmtLong(checkIn)} – {fmtLong(checkOut)}
+          </p>
+        )}
       </div>
-      <div className="flex items-start gap-3">
+      {/* Month nav + grids */}
+      <div className="flex items-start gap-2">
         <button onClick={() => setOffset(o => Math.max(0, o - 1))} disabled={offset === 0}
-          className="mt-9 p-2 rounded-full hover:bg-gray-100 disabled:opacity-20 flex-shrink-0">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+          className="mt-5 p-1.5 rounded-full hover:bg-gray-100 disabled:opacity-20 flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <div className="flex gap-10 flex-1">
-          {renderMonth(leftD.getFullYear(), leftD.getMonth())}
-          {renderMonth(rightD.getFullYear(), rightD.getMonth())}
+        <div className="flex gap-8 flex-1">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-center mb-3 text-gray-900">{CAL_MON[leftD.getMonth()]} {leftD.getFullYear()}</p>
+            {renderMonth(leftD.getFullYear(), leftD.getMonth())}
+          </div>
+          <div className="w-px bg-gray-100 self-stretch" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-center mb-3 text-gray-900">{CAL_MON[rightD.getMonth()]} {rightD.getFullYear()}</p>
+            {renderMonth(rightD.getFullYear(), rightD.getMonth())}
+          </div>
         </div>
         <button onClick={() => setOffset(o => o + 1)}
-          className="mt-9 p-2 rounded-full hover:bg-gray-100 flex-shrink-0">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+          className="mt-5 p-1.5 rounded-full hover:bg-gray-100 flex-shrink-0">
+          <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" d="M9 18l6-6-6-6"/></svg>
         </button>
       </div>
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+      {/* Footer */}
+      <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
         <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
           <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 9h20M8 2v3M16 2v3"/>
         </svg>
-        <button onClick={onClear} className="text-sm font-semibold underline text-gray-800 hover:text-gray-600">Clear dates</button>
+        <button onClick={onClear} className="text-sm font-semibold text-gray-900 hover:text-gray-600 transition-colors">Clear dates</button>
       </div>
     </div>
   );
@@ -598,6 +623,7 @@ function RoomDetailContent({ id }: { id: string }) {
                       <InlinePicker
                         checkIn={checkIn} checkOut={checkOut}
                         activeField={showPicker}
+                        city={property.city ?? property.county ?? ''}
                         onSelect={(field, date) => {
                           if (field === 'in') {
                             setCheckIn(date);
