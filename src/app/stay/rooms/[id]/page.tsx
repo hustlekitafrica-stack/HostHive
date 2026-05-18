@@ -152,11 +152,12 @@ const CAT_RATINGS = [
   { label: 'Value',          score: 4.8, icon: (<svg className="w-5 h-5 mx-auto mt-1 text-gray-600" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/><path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6z"/></svg>) },
 ];
 const FILTER_TAGS = [
-  { label: 'Hospitality', count: 8 },
-  { label: 'Cleanliness', count: 5 },
-  { label: 'Location',    count: 4 },
-  { label: 'Comfort',     count: 3 },
-  { label: 'Amenities',   count: 2 },
+  { label: 'Cleanliness', count: 8,  emoji: '🧹' },
+  { label: 'Walkability', count: 6,  emoji: '🚶' },
+  { label: 'Location',    count: 5,  emoji: '📍' },
+  { label: 'Comfort',     count: 4,  emoji: '🛋️' },
+  { label: 'Hospitality', count: 3,  emoji: '😊' },
+  { label: 'Amenities',   count: 2,  emoji: '✨' },
 ];
 const STAR_DIST = [7, 3, 1, 1, 0];
 const MOCK_REVIEWS = [
@@ -175,61 +176,76 @@ function ReviewsSection() {
 
   return (
     <div className="pt-8 border-t border-gray-100">
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-0.5">
-        <svg className="w-5 h-5 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <span className="text-xl font-bold text-gray-900">{OVERALL_RATING} · {REVIEW_COUNT} reviews</span>
-      </div>
-      <p className="text-xs text-gray-400 underline cursor-pointer mb-6">How reviews work</p>
 
-      {/* Rating breakdown */}
-      <div className="flex flex-wrap gap-8 mb-6 pb-6 border-b border-gray-100">
-        {/* Bar chart */}
-        <div className="min-w-[110px]">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Overall rating</p>
-          {STAR_DIST.map((count, i) => (
-            <div key={i} className="flex items-center gap-2 mb-1.5">
-              <span className="text-xs text-gray-500 w-2">{5 - i}</span>
-              <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                <div className="h-full bg-gray-900 rounded-full" style={{ width: `${maxBar > 0 ? (count / maxBar) * 100 : 0}%` }} />
+      {/* ── Mobile: Guest Favorite banner ── */}
+      <div className="md:hidden text-center pb-5 mb-5 border-b border-gray-100">
+        <p className="text-6xl font-black text-gray-900 mb-1">{OVERALL_RATING}</p>
+        <h3 className="text-2xl font-bold text-gray-900 mb-3">Guest favorite</h3>
+        <p className="text-sm text-gray-500 leading-relaxed">
+          This home is in the{' '}
+          <strong className="font-bold text-gray-900">top 10%</strong>{' '}
+          of eligible listings based on ratings, reviews, and reliability
+        </p>
+        <button className="text-sm text-gray-400 underline mt-3">How reviews work</button>
+      </div>
+
+      {/* ── Desktop: star + count header + breakdown ── */}
+      <div className="hidden md:block">
+        <div className="flex items-center gap-2 mb-0.5">
+          <svg className="w-5 h-5 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <span className="text-xl font-bold text-gray-900">{OVERALL_RATING} · {REVIEW_COUNT} reviews</span>
+        </div>
+        <p className="text-xs text-gray-400 underline cursor-pointer mb-6">How reviews work</p>
+        <div className="flex flex-wrap gap-8 mb-6 pb-6 border-b border-gray-100">
+          <div className="min-w-[110px]">
+            <p className="text-xs font-semibold text-gray-700 mb-2">Overall rating</p>
+            {STAR_DIST.map((count, i) => (
+              <div key={i} className="flex items-center gap-2 mb-1.5">
+                <span className="text-xs text-gray-500 w-2">{5 - i}</span>
+                <div className="w-24 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-gray-900 rounded-full" style={{ width: `${maxBar > 0 ? (count / maxBar) * 100 : 0}%` }} />
+                </div>
               </div>
+            ))}
+          </div>
+          {CAT_RATINGS.map(c => (
+            <div key={c.label} className="text-center min-w-[70px]">
+              <p className="text-xs font-semibold text-gray-700 mb-1">{c.label}</p>
+              <p className="text-xl font-bold text-gray-900">{c.score}</p>
+              {c.icon}
             </div>
           ))}
         </div>
-        {/* Category scores */}
-        {CAT_RATINGS.map(c => (
-          <div key={c.label} className="text-center min-w-[70px]">
-            <p className="text-xs font-semibold text-gray-700 mb-1">{c.label}</p>
-            <p className="text-xl font-bold text-gray-900">{c.score}</p>
-            {c.icon}
-          </div>
-        ))}
       </div>
 
-      {/* Filter tags */}
-      <div className="flex flex-wrap gap-2 mb-8">
-        {FILTER_TAGS.map(t => (
+      {/* ── Mobile: section heading ── */}
+      <p className="md:hidden text-base font-bold text-gray-900 mb-3">Guest reviews mention</p>
+
+      {/* Filter chips — horizontal scroll on mobile, wrap on desktop */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide md:flex-wrap md:overflow-visible">
+        {FILTER_TAGS.map((t: any) => (
           <button key={t.label}
-            onClick={() => setActiveFilter(f => f === t.label ? null : t.label)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
+            onClick={() => setActiveFilter((f: string | null) => f === t.label ? null : t.label)}
+            className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-semibold transition-colors ${
               activeFilter === t.label
                 ? 'text-white border-transparent'
                 : 'border-gray-200 text-gray-700 hover:border-green-400'
             }`}
             style={activeFilter === t.label ? { background: '#16a34a', borderColor: '#16a34a' } : {}}>
+            {t.emoji && <span className="text-base leading-none">{t.emoji}</span>}
             {t.label}
-            <span className={activeFilter === t.label ? 'text-gray-500' : 'text-gray-400'}>{t.count}</span>
+            <span className={activeFilter === t.label ? 'text-white/70' : 'text-gray-400'}>{t.count}</span>
           </button>
         ))}
       </div>
 
-      {/* Review cards — two column grid */}
-      <div className="grid md:grid-cols-2 gap-8">
+      {/* Review cards — horizontal scroll on mobile, 2-col grid on desktop */}
+      <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:overflow-visible md:grid md:grid-cols-2 md:gap-8 md:pb-0">
         {MOCK_REVIEWS.map((r, i) => {
           const isExpanded = expanded.includes(i);
           const SHORT = 150;
           return (
-            <div key={i}>
+            <div key={i} className="flex-shrink-0 w-[82vw] snap-start rounded-2xl border border-gray-100 bg-white p-4 md:w-auto md:rounded-none md:border-0 md:bg-transparent md:p-0">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
                   style={{ background: '#16a34a' }}>
@@ -240,13 +256,13 @@ function ReviewsSection() {
                   <p className="text-xs text-gray-400">{r.years} staying here</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1.5 mb-2">
                 <div className="flex gap-0.5">
                   {Array.from({ length: 5 }).map((_, j) => (
                     <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                   ))}
                 </div>
-                <span className="text-xs text-gray-400">· {r.date} · {r.stay}</span>
+                <span className="text-xs text-gray-400">· {r.date}</span>
               </div>
               <p className="text-sm text-gray-700 leading-relaxed">
                 {isExpanded || r.text.length <= SHORT ? r.text.replace('...', '') : r.text.slice(0, SHORT) + '...'}
