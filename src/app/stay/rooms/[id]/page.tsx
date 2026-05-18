@@ -412,10 +412,11 @@ function getAmenityIcon(name: string): React.ReactNode {
 }
 
 function MobileBookingCalendar({
-  checkIn, checkOut, setCheckIn, setCheckOut, rate, nights, total, city, cancellationPolicy, onReserve,
+  checkIn, checkOut, setCheckIn, setCheckOut, adults, setAdults, rate, nights, total, city, cancellationPolicy, onReserve,
 }: {
   checkIn: string; checkOut: string;
   setCheckIn: (d: string) => void; setCheckOut: (d: string) => void;
+  adults: number; setAdults: (n: number) => void;
   rate: number; nights: number; total: number;
   city?: string; cancellationPolicy?: string; onReserve: () => void;
 }) {
@@ -537,6 +538,28 @@ function MobileBookingCalendar({
         </div>
       )}
 
+      {/* Guests stepper */}
+      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-gray-900">Guests</p>
+          <p className="text-xs text-gray-400">{adults} guest{adults !== 1 ? 's' : ''}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setAdults(Math.max(1, adults - 1))}
+            disabled={adults <= 1}
+            className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold text-gray-700 disabled:opacity-30 hover:border-gray-500 transition-colors">
+            −
+          </button>
+          <span className="w-5 text-center text-sm font-semibold text-gray-900">{adults}</span>
+          <button
+            onClick={() => setAdults(Math.min(20, adults + 1))}
+            className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold text-gray-700 hover:border-gray-500 transition-colors">
+            +
+          </button>
+        </div>
+      </div>
+
       {/* Divider + price + CTA */}
       <div className="mt-5 pt-4 border-t border-gray-100">
         {nights > 0 ? (
@@ -652,7 +675,7 @@ function RoomDetailContent({ id }: { id: string }) {
   ].filter(Boolean) as { Icon: LucideIcon; label: string }[];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] overflow-x-hidden">
+    <div className="min-h-screen bg-[#f8fafc]" style={{ overflowX: 'clip' }}>
 
       {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
       <div className="block sm:hidden relative">
@@ -916,6 +939,7 @@ function RoomDetailContent({ id }: { id: string }) {
             <MobileBookingCalendar
               checkIn={checkIn} checkOut={checkOut}
               setCheckIn={setCheckIn} setCheckOut={setCheckOut}
+              adults={adults} setAdults={(n) => setAdults(n)}
               rate={rate} nights={nights} total={total}
               city={property.city}
               cancellationPolicy={property.cancellation_policy}
