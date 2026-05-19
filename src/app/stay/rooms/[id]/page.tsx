@@ -232,8 +232,17 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
   const reviewCount = realReviews && realReviews.length > 0 ? realReviews.length : REVIEW_COUNT;
 
   const clampedSlide = Math.min(slide, reviews.length - 1);
-  const prev = () => setSlide(s => Math.max(0, s - 1));
-  const next = () => setSlide(s => Math.min(reviews.length - 1, s + 1));
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  function scrollToSlide(i: number) {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: i * el.offsetWidth, behavior: 'smooth' });
+    setSlide(i);
+  }
+
+  const prev = () => scrollToSlide(Math.max(0, clampedSlide - 1));
+  const next = () => scrollToSlide(Math.min(reviews.length - 1, clampedSlide + 1));
 
   return (
     <div className="pt-8 border-t border-gray-100">
@@ -309,21 +318,19 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
 
       {/* ── Mobile: Carousel ── */}
       <div className="md:hidden">
-        <div className="overflow-hidden rounded-2xl w-full">
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: `repeat(${reviews.length}, 100%)`,
-              transform: `translateX(-${reviews.length > 0 ? (clampedSlide / reviews.length) * 100 : 0}%)`,
-              transition: 'transform 300ms ease-in-out',
-            }}
-          >
-            {reviews.map((r, i) => (
-              <div key={i} className="min-w-0">
-                <ReviewCard r={r} />
-              </div>
-            ))}
-          </div>
+        <div
+          ref={scrollRef}
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-2xl"
+          onScroll={e => {
+            const w = e.currentTarget.offsetWidth;
+            if (w) setSlide(Math.round(e.currentTarget.scrollLeft / w));
+          }}
+        >
+          {reviews.map((r, i) => (
+            <div key={i} className="min-w-full snap-start">
+              <ReviewCard r={r} />
+            </div>
+          ))}
         </div>
 
         {/* Carousel controls */}
@@ -338,7 +345,7 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
 
           <div className="flex items-center gap-1.5">
             {reviews.map((_, i) => (
-              <button key={i} onClick={() => setSlide(i)} aria-label={`Go to review ${i + 1}`}
+              <button key={i} onClick={() => scrollToSlide(i)} aria-label={`Go to review ${i + 1}`}
                 className={`rounded-full transition-all duration-200 ${
                   i === clampedSlide ? 'w-5 h-2 bg-gray-900' : 'w-2 h-2 bg-gray-300 hover:bg-gray-400'
                 }`} />
@@ -511,12 +518,11 @@ function MobileBookingCalendar({
           const rangeHL = inRange || (isStart && !!checkOut) || (isEnd && !!checkIn);
           return (
             <div key={day}
-              className={`flex items-center justify-center
+              className={`aspect-square flex items-center justify-center
                 ${rangeHL ? 'bg-gray-100' : ''}
                 ${isStart && checkOut ? 'rounded-l-full' : ''}
                 ${isEnd ? 'rounded-r-full' : ''}
-              `}
-              style={{ height: 'calc((100vw - 4rem) / 7)' }}>
+              `}>
               <button
                 disabled={isPast}
                 onClick={() => handleDayClick(ds)}
