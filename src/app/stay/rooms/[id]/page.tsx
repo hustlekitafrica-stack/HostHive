@@ -170,17 +170,10 @@ const FILTER_TAGS = [
   { label: 'Amenities',   count: 2,  emoji: '✨' },
 ];
 const STAR_DIST = [7, 3, 1, 1, 0];
-const MOCK_REVIEWS = [
-  { name: 'James M.',  initials: 'JM', years: '2 years',  date: 'April 2026',    stay: 'Stayed a few nights', text: "Excellent property! The room was spotlessly clean and exactly as described. The host was very responsive and friendly throughout our stay. Great location close to everything you need..." },
-  { name: 'Amina W.',  initials: 'AW', years: '1 year',   date: 'March 2026',    stay: 'Stayed with family',  text: "Wonderful experience! Great for families with everything provided. Check-in was smooth and the host was incredibly helpful and welcoming. The room was spacious and comfortable..." },
-  { name: 'Peter K.',  initials: 'PK', years: '3 years',  date: 'February 2026', stay: 'Stayed about a week', text: "Fantastic property in a great location. Amenities were top-notch and everything was very clean. The host goes above and beyond to make guests feel at home. Will definitely return..." },
-  { name: 'Grace O.',  initials: 'GO', years: '2 years',  date: 'January 2026',  stay: 'Stayed a few nights', text: "Beautiful property with great views. The host was incredibly welcoming and made sure we had everything we needed. Room was immaculate and the bed was extremely comfortable..." },
-];
-const OVERALL_RATING = 4.92;
-const REVIEW_COUNT   = 12;
 
 function ReviewCard({ r, short = 150 }: { r: any; short?: number }) {
   const [expanded, setExpanded] = useState(false);
+  const rating = Number(r.rating ?? 5);
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-5 h-full flex flex-col">
       <div className="flex items-center gap-3 mb-3">
@@ -188,19 +181,19 @@ function ReviewCard({ r, short = 150 }: { r: any; short?: number }) {
           style={{ background: '#16a34a' }}>{r.initials}</div>
         <div>
           <p className="font-semibold text-gray-900 text-sm">{r.name}</p>
-          {r.years && <p className="text-xs text-gray-400">{r.years} staying here</p>}
+          {r.stay && <p className="text-xs text-gray-400">{r.stay}</p>}
         </div>
       </div>
       <div className="flex items-center gap-1.5 mb-3">
         <div className="flex gap-0.5">
           {Array.from({ length: 5 }).map((_, j) => (
-            <svg key={j} className="w-3 h-3 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <svg key={j} className={`w-3 h-3 ${j < rating ? 'fill-amber-400' : 'fill-gray-200'}`} viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           ))}
         </div>
         <span className="text-xs text-gray-400">· {r.date}</span>
       </div>
       <p className="text-sm text-gray-700 leading-relaxed flex-1">
-        {expanded || r.text.length <= short ? r.text.replace('...', '') : r.text.slice(0, short) + '…'}
+        {expanded || r.text.length <= short ? r.text : r.text.slice(0, short) + '…'}
       </p>
       {r.text.length > short && (
         <button onClick={() => setExpanded(v => !v)}
@@ -215,31 +208,30 @@ function ReviewCard({ r, short = 150 }: { r: any; short?: number }) {
 function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; propertyName?: string }) {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [slide,        setSlide]        = useState(0);
-  const [realReviews,  setRealReviews]  = useState<any[] | null>(null);
+  const [rawReviews,   setRawReviews]   = useState<any[] | null>(null);
   const maxBar = Math.max(...STAR_DIST);
 
   useEffect(() => {
     if (!propertyId) return;
-    fetch(`/api/stay/property-reviews?property_id=${propertyId}`)
+    fetch(`/api/stay/reviews?property_id=${propertyId}`)
       .then(r => r.json())
-      .then(d => setRealReviews(d.reviews ?? []))
-      .catch(() => setRealReviews([]));
+      .then(d => setRawReviews(d.reviews ?? []))
+      .catch(() => setRawReviews([]));
   }, [propertyId]);
 
-  const reviews = realReviews && realReviews.length > 0
-    ? realReviews.map((r: any) => ({
-        name: r.reviewer_name,
-        initials: r.reviewer_name.split(' ').map((w: string) => w[0] ?? '').join('').slice(0, 2).toUpperCase(),
-        years: '',
-        date: new Date(r.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-        text: r.comment,
-      }))
-    : MOCK_REVIEWS;
+  const reviews = (rawReviews ?? []).map((r: any) => ({
+    name: r.guest_name || 'Guest',
+    initials: (r.guest_name || 'G').split(' ').map((w: string) => w[0] ?? '').join('').slice(0, 2).toUpperCase(),
+    stay: r.stay_dates || '',
+    date: r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '',
+    rating: r.rating ?? 5,
+    text: r.comment || '',
+  }));
 
-  const overallRating = realReviews && realReviews.length > 0
-    ? Number((realReviews.reduce((s: number, r: any) => s + r.rating, 0) / realReviews.length).toFixed(2))
-    : OVERALL_RATING;
-  const reviewCount = realReviews && realReviews.length > 0 ? realReviews.length : REVIEW_COUNT;
+  const overallRating = reviews.length > 0
+    ? Number((reviews.reduce((s: number, r: any) => s + r.rating, 0) / reviews.length).toFixed(1))
+    : 0;
+  const reviewCount = reviews.length;
 
   const clampedSlide = Math.min(slide, reviews.length - 1);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -254,13 +246,23 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
   const prev = () => scrollToSlide(Math.max(0, clampedSlide - 1));
   const next = () => scrollToSlide(Math.min(reviews.length - 1, clampedSlide + 1));
 
+  if (rawReviews !== null && reviews.length === 0) {
+    return (
+      <div className="pt-8 border-t border-gray-100 text-center py-12">
+        <svg className="w-10 h-10 text-gray-200 mx-auto mb-3" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.184-4.183a1.14 1.14 0 01.778-.332 48.294 48.294 0 005.83-.498c1.585-.233 2.708-1.626 2.708-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z"/></svg>
+        <p className="text-sm font-semibold text-gray-500">No reviews yet</p>
+        <p className="text-xs text-gray-400 mt-1">Be the first to review this property after your stay.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="pt-8 border-t border-gray-100">
 
       {/* ── Mobile: compact rating row ── */}
       <div className="md:hidden flex items-center justify-between mb-5 pb-5 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 fill-gray-900" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <svg className="w-4 h-4 fill-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           <span className="text-base font-bold text-gray-900">{overallRating}</span>
           <span className="text-sm text-gray-500">· {reviewCount} review{reviewCount !== 1 ? 's' : ''}</span>
         </div>

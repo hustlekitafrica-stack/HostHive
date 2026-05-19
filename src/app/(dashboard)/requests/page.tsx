@@ -6,7 +6,7 @@ import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, Message
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
   check_in: string; check_out: string; nights: number; num_adults: number; num_children: number;
-  room_details: { property_name: string; qty: number; nightly_rate: number; subtotal: number }[];
+  room_details: { property_id?: string; property_name: string; qty: number; nightly_rate: number; subtotal: number }[];
   total_amount: number; special_requests: string; status: string;
 };
 
@@ -69,6 +69,7 @@ export default function RequestsPage() {
         booking_request_id: req.id,
         guest_name:   req.guest_name,
         guest_phone:  req.guest_phone,
+        property_id:  rooms[0]?.property_id ?? null,
         property_name: rooms[0]?.property_name ?? 'Kogelo Property',
         stay_dates:   `${req.check_in} – ${req.check_out}`,
       }),
