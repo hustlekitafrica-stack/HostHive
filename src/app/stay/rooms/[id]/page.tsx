@@ -422,14 +422,12 @@ function getAmenityIcon(name: string): React.ReactNode {
   );
 }
 
-function MobileBookingCalendar({
-  checkIn, checkOut, setCheckIn, setCheckOut, adults, setAdults, rate, nights, total, city, cancellationPolicy, onReserve,
+function MobileCalendar({
+  checkIn, checkOut, setCheckIn, setCheckOut, city,
 }: {
   checkIn: string; checkOut: string;
   setCheckIn: (d: string) => void; setCheckOut: (d: string) => void;
-  adults: number; setAdults: (n: number) => void;
-  rate: number; nights: number; total: number;
-  city?: string; cancellationPolicy?: string; onReserve: () => void;
+  city?: string;
 }) {
   const todayStr = new Date().toISOString().split('T')[0];
   const initD = checkIn && checkIn >= todayStr ? new Date(checkIn + 'T00:00:00') : new Date();
@@ -437,6 +435,15 @@ function MobileBookingCalendar({
   const [selecting, setSelecting] = useState<'in'|'out'>(checkOut ? 'in' : 'out');
 
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  const nights = checkIn && checkOut && checkOut > checkIn
+    ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000)
+    : 0;
+
+  function fmtDisplay(d: string) {
+    if (!d) return '';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  }
 
   function handleDayClick(ds: string) {
     if (ds < todayStr) return;
@@ -453,59 +460,58 @@ function MobileBookingCalendar({
   const now = new Date();
   const isPrevDisabled = month.year === now.getFullYear() && month.month === now.getMonth();
 
-  function fmtLong(d: string) {
-    if (!d) return '';
-    return new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-  }
-
   function isInRange(ds: string) {
     return !!(checkIn && checkOut && ds > checkIn && ds < checkOut);
   }
 
   return (
-    <div className="lg:hidden bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+    <div className="lg:hidden bg-white rounded-2xl border border-gray-100 p-5">
 
-      {/* Heading */}
-      <div className="mb-6">
+      {/* ── Heading ── */}
+      <div className="mb-6 pb-5 border-b border-gray-100">
         {nights > 0 ? (
           <>
             <h3 className="text-2xl font-bold text-gray-900">
               {nights} night{nights !== 1 ? 's' : ''}{city ? ` in ${city}` : ''}
             </h3>
-            <p className="text-sm text-gray-500 mt-0.5">{fmtLong(checkIn)} – {fmtLong(checkOut)}</p>
+            <p className="text-sm text-gray-500 mt-1">{fmtDisplay(checkIn)} – {fmtDisplay(checkOut)}</p>
+          </>
+        ) : checkIn && !checkOut ? (
+          <>
+            <h3 className="text-2xl font-bold text-gray-900">Select check-out date</h3>
+            <p className="text-sm text-gray-500 mt-1">{fmtDisplay(checkIn)} –</p>
           </>
         ) : (
-          <>
-            <h3 className="text-2xl font-bold text-gray-900">Select dates</h3>
-            <p className="text-sm text-gray-500 mt-0.5">Add dates to see the total price</p>
-          </>
+          <h3 className="text-2xl font-bold text-gray-900">Select check-in date</h3>
         )}
       </div>
 
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-4">
+      {/* ── Month navigation ── */}
+      <div className="flex items-center justify-between mb-5">
         <button
           onClick={() => setMonth(m => { const d = new Date(m.year, m.month - 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
           disabled={isPrevDisabled}
-          className="p-2 rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors">
-          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/></svg>
+          aria-label="Previous month"
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 disabled:opacity-30 transition-colors">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <span className="font-bold text-base text-gray-900">{MONTH_NAMES[month.month]} {month.year}</span>
+        <span className="text-base font-bold text-gray-900">{MONTH_NAMES[month.month]} {month.year}</span>
         <button
           onClick={() => setMonth(m => { const d = new Date(m.year, m.month + 1, 1); return { year: d.getFullYear(), month: d.getMonth() }; })}
-          className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-          <svg className="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/></svg>
+          aria-label="Next month"
+          className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/></svg>
         </button>
       </div>
 
-      {/* Day headers */}
+      {/* ── Day-of-week headers ── */}
       <div className="grid grid-cols-7 mb-1">
         {['S','M','T','W','T','F','S'].map((d, i) => (
-          <p key={i} className="text-center text-xs font-semibold text-gray-400 py-1">{d}</p>
+          <div key={i} className="text-center text-xs font-semibold text-gray-400 py-1 tracking-wide">{d}</div>
         ))}
       </div>
 
-      {/* Calendar grid */}
+      {/* ── Calendar grid ── */}
       <div className="grid grid-cols-7">
         {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
         {Array.from({ length: daysCount }).map((_, i) => {
@@ -518,19 +524,22 @@ function MobileBookingCalendar({
           const rangeHL = inRange || (isStart && !!checkOut) || (isEnd && !!checkIn);
           return (
             <div key={day}
-              className={`aspect-square flex items-center justify-center
-                ${rangeHL ? 'bg-gray-100' : ''}
-                ${isStart && checkOut ? 'rounded-l-full' : ''}
-                ${isEnd ? 'rounded-r-full' : ''}
-              `}>
+              className={[
+                'aspect-square flex items-center justify-center',
+                rangeHL ? 'bg-[#16a34a]/10' : '',
+                isStart && checkOut ? 'rounded-l-full' : '',
+                isEnd ? 'rounded-r-full' : '',
+              ].join(' ')}>
               <button
                 disabled={isPast}
                 onClick={() => handleDayClick(ds)}
-                className={`w-full h-full flex items-center justify-center text-xs rounded-full transition-colors
-                  ${isPast ? 'text-gray-300 line-through cursor-not-allowed' : ''}
-                  ${(isStart || isEnd) ? 'bg-gray-900 !text-white font-bold' : ''}
-                  ${!isStart && !isEnd && !isPast ? 'text-gray-900 hover:bg-gray-200 font-medium' : ''}
-                `}>
+                style={(isStart || isEnd) ? { background: '#16a34a' } : {}}
+                className={[
+                  'w-full h-full flex items-center justify-center text-sm rounded-full transition-colors',
+                  isPast ? 'text-gray-300 line-through cursor-not-allowed' : '',
+                  isStart || isEnd ? 'text-white font-bold' : '',
+                  !isStart && !isEnd && !isPast ? 'text-gray-900 font-medium hover:bg-gray-100' : '',
+                ].join(' ')}>
                 {day}
               </button>
             </div>
@@ -538,68 +547,16 @@ function MobileBookingCalendar({
         })}
       </div>
 
-      {/* Clear dates */}
+      {/* ── Clear dates ── */}
       {(checkIn || checkOut) && (
         <div className="mt-5 pt-4 border-t border-gray-100 text-center">
           <button
             onClick={() => { setCheckIn(''); setCheckOut(''); setSelecting('in'); }}
-            className="text-sm font-semibold underline text-gray-700 hover:text-gray-900">
+            className="text-sm font-semibold text-gray-700 underline hover:text-gray-900 transition-colors">
             Clear dates
           </button>
         </div>
       )}
-
-      {/* Guests stepper */}
-      <div className="mt-5 pt-4 border-t border-gray-100 flex items-center justify-between">
-        <div>
-          <p className="text-sm font-bold text-gray-900">Guests</p>
-          <p className="text-xs text-gray-400">{adults} guest{adults !== 1 ? 's' : ''}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setAdults(Math.max(1, adults - 1))}
-            disabled={adults <= 1}
-            className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold text-gray-700 disabled:opacity-30 hover:border-gray-500 transition-colors">
-            −
-          </button>
-          <span className="w-5 text-center text-sm font-semibold text-gray-900">{adults}</span>
-          <button
-            onClick={() => setAdults(Math.min(20, adults + 1))}
-            className="w-9 h-9 rounded-full border border-gray-300 flex items-center justify-center text-lg font-bold text-gray-700 hover:border-gray-500 transition-colors">
-            +
-          </button>
-        </div>
-      </div>
-
-      {/* Divider + price + CTA */}
-      <div className="mt-5 pt-4 border-t border-gray-100">
-        {nights > 0 ? (
-          <div className="space-y-2 mb-5">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>KSh {rate.toLocaleString()} × {nights} night{nights !== 1 ? 's' : ''}</span>
-              <span>KSh {total.toLocaleString()}</span>
-            </div>
-            <div className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-100">
-              <span>Total</span>
-              <span>KSh {total.toLocaleString()}</span>
-            </div>
-            {cancellationPolicy === 'flexible' && (
-              <div className="flex items-center gap-1.5 pt-1">
-                <svg className="w-4 h-4 flex-shrink-0 text-gray-700" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg>
-                <span className="text-sm text-gray-600">Free cancellation</span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 mb-5">Select check-in &amp; check-out dates to see total price</p>
-        )}
-        <button onClick={onReserve}
-          className="w-full py-4 rounded-full text-base font-bold text-white transition-all hover:opacity-90 active:scale-95"
-          style={{ background: '#16a34a' }}>
-          {nights > 0 ? 'Reserve' : 'Check availability'}
-        </button>
-        <p className="text-xs text-center text-gray-400 mt-3">No payment now — we'll confirm within 2 hours.</p>
-      </div>
     </div>
   );
 }
@@ -945,6 +902,15 @@ function RoomDetailContent({ id }: { id: string }) {
                 </p>
               </div>
             )}
+
+            {/* ── Mobile Date Calendar (mobile only) ── */}
+            <MobileCalendar
+              checkIn={checkIn}
+              checkOut={checkOut}
+              setCheckIn={setCheckIn}
+              setCheckOut={setCheckOut}
+              city={property.city}
+            />
 
           </div>
 
