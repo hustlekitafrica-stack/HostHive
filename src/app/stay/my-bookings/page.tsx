@@ -176,12 +176,6 @@ function MyBookingsContent() {
           </div>
         )}
 
-        {/* CTA */}
-        <div className="text-center pt-4">
-          <Link href="/stay/rooms" className="inline-flex items-center gap-2 text-sm font-bold hover:underline" style={{ color: '#16a34a' }}>
-            Browse more rooms <ChevronRight className="w-4 h-4" />
-          </Link>
-        </div>
       </div>
     </div>
   );
