@@ -136,21 +136,9 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
 
-          {/* Auth buttons / user avatar */}
+          {/* Auth buttons (desktop, logged out only) + hamburger (mobile always) */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {loggedIn && userMeta ? (
-              <Link href="/stay/profile"
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
-                {userMeta.avatar ? (
-                  <img src={userMeta.avatar} alt={userMeta.name} className="w-6 h-6 rounded-full object-cover" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white" style={{ background: '#16a34a' }}>
-                    {userMeta.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-white max-w-[120px] truncate">{userMeta.name}</span>
-              </Link>
-            ) : (
+            {!loggedIn && (
               <>
                 <Link href="/stay/auth"
                   className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-white border border-white/40 hover:bg-white/10 transition-colors">
@@ -162,15 +150,13 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               </>
             )}
-            {!loggedIn && (
-              <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  {menuOpen
-                    ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
-                </svg>
-              </button>
-            )}
+            <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                {menuOpen
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
+              </svg>
+            </button>
           </div>
         </div>
 
