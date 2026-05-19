@@ -309,13 +309,17 @@ function ReviewsSection({ propertyId, propertyName }: { propertyId?: string; pro
 
       {/* ── Mobile: Carousel ── */}
       <div className="md:hidden">
-        <div className="relative overflow-hidden rounded-2xl">
+        <div className="overflow-hidden rounded-2xl w-full">
           <div
-            className="flex transition-transform duration-300 ease-in-out"
-            style={{ transform: `translateX(-${clampedSlide * 100}%)` }}
+            style={{
+              display: 'grid',
+              gridTemplateColumns: `repeat(${reviews.length}, 100%)`,
+              transform: `translateX(-${reviews.length > 0 ? (clampedSlide / reviews.length) * 100 : 0}%)`,
+              transition: 'transform 300ms ease-in-out',
+            }}
           >
             {reviews.map((r, i) => (
-              <div key={i} className="w-full flex-shrink-0 px-0.5">
+              <div key={i} className="min-w-0">
                 <ReviewCard r={r} />
               </div>
             ))}
@@ -507,15 +511,16 @@ function MobileBookingCalendar({
           const rangeHL = inRange || (isStart && !!checkOut) || (isEnd && !!checkIn);
           return (
             <div key={day}
-              className={`flex items-center justify-center h-11
+              className={`flex items-center justify-center
                 ${rangeHL ? 'bg-gray-100' : ''}
                 ${isStart && checkOut ? 'rounded-l-full' : ''}
                 ${isEnd ? 'rounded-r-full' : ''}
-              `}>
+              `}
+              style={{ height: 'calc((100vw - 4rem) / 7)' }}>
               <button
                 disabled={isPast}
                 onClick={() => handleDayClick(ds)}
-                className={`w-10 h-10 flex items-center justify-center text-sm rounded-full transition-colors
+                className={`w-full h-full flex items-center justify-center text-xs rounded-full transition-colors
                   ${isPast ? 'text-gray-300 line-through cursor-not-allowed' : ''}
                   ${(isStart || isEnd) ? 'bg-gray-900 !text-white font-bold' : ''}
                   ${!isStart && !isEnd && !isPast ? 'text-gray-900 hover:bg-gray-200 font-medium' : ''}
