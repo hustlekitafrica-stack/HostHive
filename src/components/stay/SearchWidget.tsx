@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -602,23 +603,21 @@ export default function SearchWidget() {
       </div>
 
       {/* Mobile modals */}
-      {showDate && (
-        <div className="lg:hidden">
-          <DatePickerModal
-            checkIn={checkIn} checkOut={checkOut}
-            onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDate(false); }}
-            onClose={() => setShowDate(false)}
-          />
-        </div>
+      {showDate && typeof document !== 'undefined' && createPortal(
+        <DatePickerModal
+          checkIn={checkIn} checkOut={checkOut}
+          onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDate(false); }}
+          onClose={() => setShowDate(false)}
+        />,
+        document.body
       )}
-      {showGuests && (
-        <div className="lg:hidden">
-          <GuestsModal
-            adults={adults} children={children} rooms={rooms}
-            onConfirm={(a, c, r, p) => { setAdults(a); setChildren(c); setRooms(r); setPets(p); setShowGuests(false); }}
-            onClose={() => setShowGuests(false)}
-          />
-        </div>
+      {showGuests && typeof document !== 'undefined' && createPortal(
+        <GuestsModal
+          adults={adults} children={children} rooms={rooms}
+          onConfirm={(a, c, r, p) => { setAdults(a); setChildren(c); setRooms(r); setPets(p); setShowGuests(false); }}
+          onClose={() => setShowGuests(false)}
+        />,
+        document.body
       )}
     </>
   );
