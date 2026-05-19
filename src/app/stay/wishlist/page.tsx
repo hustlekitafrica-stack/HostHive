@@ -15,16 +15,32 @@ export default function WishlistPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!session?.user) {
         router.replace('/stay/auth?redirect=/stay/wishlist');
         return;
       }
       setAuthed(true);
-      fetch('/api/stay/wishlist', { method: 'PUT' })
-        .then(r => r.json())
-        .then(d => setProperties(d.properties ?? []))
-        .finally(() => setLoading(false));
+
+      // Fetch wishlist IDs client-side (avoids server-side session cookie issues)
+      const { data: wishlistRows } = await supabase
+        .from('guest_wishlists')
+        .select('property_id')
+        .eq('user_id', session.user.id);
+
+      const ids = (wishlistRows ?? []).map((r: any) => r.property_id);
+
+      if (ids.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Fetch all properties and filter to wishlisted ones
+      const res = await fetch('/api/stay/properties');
+      const d = await res.json();
+      const all = d.properties ?? [];
+      setProperties(all.filter((p: any) => ids.includes(p.id)));
+      setLoading(false);
     });
   }, [router]);
 
