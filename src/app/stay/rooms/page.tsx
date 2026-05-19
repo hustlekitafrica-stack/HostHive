@@ -45,11 +45,17 @@ function RoomsContent() {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) { router.push(`/stay/auth?redirect=/stay/rooms`); return; }
     if (wishPending.has(propertyId)) return;
+    const wasInSet = wishlistIds.has(propertyId);
     setWishPending(prev => new Set(prev).add(propertyId));
     setWishlistIds(prev => { const s = new Set(prev); s.has(propertyId) ? s.delete(propertyId) : s.add(propertyId); return s; });
-    await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyId }) });
+    const res = await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyId }) });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(`Error: ${data.error || 'Failed to update wishlist'}`);
+      setWishlistIds(prev => { const s = new Set(prev); wasInSet ? s.add(propertyId) : s.delete(propertyId); return s; });
+    }
     setWishPending(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
-  }, [router, wishPending]);
+  }, [router, wishPending, wishlistIds]);
 
   function fmt(d: string) {
     if (!d) return '';
