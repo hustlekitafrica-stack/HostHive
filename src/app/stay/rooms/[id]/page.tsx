@@ -17,6 +17,16 @@ function fmtShort(d: string) {
   const dt = new Date(d + 'T00:00:00');
   return `${dt.getMonth() + 1}/${dt.getDate()}/${dt.getFullYear()}`;
 }
+const SHORT_MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDateRange(ci: string, co: string) {
+  if (!ci || !co) return '';
+  const a = new Date(ci + 'T00:00:00');
+  const b = new Date(co + 'T00:00:00');
+  if (a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear()) {
+    return `${SHORT_MON[a.getMonth()]} ${a.getDate()}–${b.getDate()}`;
+  }
+  return `${SHORT_MON[a.getMonth()]} ${a.getDate()} – ${SHORT_MON[b.getMonth()]} ${b.getDate()}`;
+}
 
 // ── InlinePicker ──────────────────────────────────────────────────────────────
 function fmtLong(d: string) {
@@ -1079,17 +1089,23 @@ function RoomDetailContent({ id }: { id: string }) {
       >
         <div className="flex items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-black text-gray-900">KSh {rate.toLocaleString()}</span>
-              <span className="text-sm text-gray-500">/ night</span>
-            </div>
             {nights > 0 ? (
-              <p className="text-xs text-gray-500 truncate">
-                {fmtShort(checkIn)} – {fmtShort(checkOut)} · {nights} night{nights !== 1 ? 's' : ''}
-                {total > 0 && <> · <span className="font-semibold">KSh {total.toLocaleString()}</span> total</>}
-              </p>
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-black text-gray-900">KSh {total.toLocaleString()}</span>
+                </div>
+                <p className="text-xs text-gray-500 truncate">
+                  For {nights} night{nights !== 1 ? 's' : ''} · {fmtDateRange(checkIn, checkOut)}
+                </p>
+              </>
             ) : (
-              <p className="text-xs text-gray-400">Add dates for total price</p>
+              <>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-lg font-black text-gray-900">KSh {rate.toLocaleString()}</span>
+                  <span className="text-sm text-gray-500">/ night</span>
+                </div>
+                <p className="text-xs text-gray-400">Add dates for total price</p>
+              </>
             )}
           </div>
           <button
