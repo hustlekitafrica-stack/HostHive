@@ -43,26 +43,36 @@ export async function POST(request: NextRequest) {
     const userId = session.user.id;
 
     // Check if already wishlisted
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from('guest_wishlists')
       .select('id')
       .eq('user_id', userId)
       .eq('property_id', property_id)
       .maybeSingle();
 
+    if (selectError) {
+      console.error('[wishlist/POST] select error:', selectError.message);
+      return NextResponse.json({ error: selectError.message }, { status: 500 });
+    }
+
     if (existing) {
       // Remove
-      await supabase
+      const { error: deleteError } = await supabase
         .from('guest_wishlists')
         .delete()
         .eq('user_id', userId)
         .eq('property_id', property_id);
+      if (deleteError) return NextResponse.json({ error: deleteError.message }, { status: 500 });
       return NextResponse.json({ wishlisted: false });
     } else {
       // Add
-      await supabase
+      const { error: insertError } = await supabase
         .from('guest_wishlists')
         .insert({ user_id: userId, property_id });
+      if (insertError) {
+        console.error('[wishlist/POST] insert error:', insertError.message);
+        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      }
       return NextResponse.json({ wishlisted: true });
     }
   } catch (err) {
