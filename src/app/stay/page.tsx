@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import SearchWidget from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import {
   Waves, Utensils, Wifi, Car, Bell, Leaf, ShieldCheck, Sparkles,
   BedDouble, Droplets, Users, MapPin, ChefHat, Home as HomeIcon,
-  Search, Phone, TrendingUp, Star, type LucideIcon,
+  Search, Phone, TrendingUp, Star, Heart, type LucideIcon,
 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
 type Review = { id: string; guest_name: string; property_name: string; stay_dates: string; rating: number; comment: string; submitted_at: string };
 
@@ -32,7 +34,7 @@ const HIGHLIGHTS = [
 ];
 
 
-function RoomCard({ property }: { property: any }) {
+function RoomCard({ property, wishlisted, onToggle }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
   return (
     <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-72 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <div className="relative">
@@ -40,6 +42,12 @@ function RoomCard({ property }: { property: any }) {
         <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
           {property.type || 'Room'}
         </div>
+        <button
+          onClick={e => onToggle(e, property.id)}
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-all hover:scale-110"
+          title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}>
+          <Heart className="w-4 h-4 transition-colors" style={{ color: '#16a34a' }} fill={wishlisted ? '#16a34a' : 'none'} />
+        </button>
       </div>
       <div className="p-4">
         <h3 className="font-bold text-gray-900 text-sm mb-1 truncate">{property.name}</h3>
@@ -65,10 +73,13 @@ function RoomCard({ property }: { property: any }) {
 }
 
 export default function StayHomePage() {
+  const router = useRouter();
   const [properties, setProperties] = useState<any[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [revIdx, setRevIdx] = useState(0);
   const reviewScrollRef = useRef<HTMLDivElement>(null);
+  const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
+  const [wishPending, setWishPending] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -79,7 +90,31 @@ export default function StayHomePage() {
       .then(r => r.json())
       .then(d => setReviews(d.reviews ?? []))
       .catch(() => {});
+    fetch('/api/stay/wishlist')
+      .then(r => r.json())
+      .then(d => setWishlistIds(new Set(d.property_ids ?? [])))
+      .catch(() => {});
   }, []);
+
+  const toggleWishlist = useCallback(async (e: React.MouseEvent, propertyId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) { router.push('/stay/auth?redirect=/stay'); return; }
+    if (wishPending.has(propertyId)) return;
+    setWishPending(prev => new Set(prev).add(propertyId));
+    setWishlistIds(prev => { const s = new Set(prev); s.has(propertyId) ? s.delete(propertyId) : s.add(propertyId); return s; });
+    const res = await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyId }) });
+    const data = await res.json();
+    if (!res.ok) {
+      alert(`Error: ${data.error || 'Failed to update wishlist'}`);
+      setWishlistIds(prev => { const s = new Set(prev); s.has(propertyId) ? s.delete(propertyId) : s.add(propertyId); return s; });
+    } else {
+      alert(data.wishlisted ? 'Room saved to your wishlist' : 'Room removed from your wishlist');
+    }
+    setWishPending(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
+  }, [router, wishPending]);
 
   return (
     <div className="bg-[#f8fafc]">
@@ -135,7 +170,7 @@ export default function StayHomePage() {
 
           {properties.length > 0 ? (
             <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-              {properties.slice(0, 8).map(p => <RoomCard key={p.id} property={p} />)}
+              {properties.slice(0, 8).map(p => <RoomCard key={p.id} property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />)}
             </div>
           ) : (
             <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
