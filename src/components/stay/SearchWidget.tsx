@@ -68,7 +68,7 @@ export function DatePickerModal({ checkIn, checkOut, onConfirm, onClose }: DateP
       setStart(dateStr); setEnd(''); setSelecting('out');
     } else {
       if (dateStr <= start) { setStart(dateStr); setEnd(''); setSelecting('out'); }
-      else { setEnd(dateStr); setSelecting('in'); }
+      else { setEnd(dateStr); setSelecting('in'); onConfirm(start, dateStr); }
     }
   }
 
@@ -192,7 +192,7 @@ export function DatePickerModal({ checkIn, checkOut, onConfirm, onClose }: DateP
       </div>
 
       {/* Footer */}
-      <div className="px-5 py-4 border-t border-gray-200 bg-white">
+      <div className="px-5 py-4 border-t border-gray-200 bg-white" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
         {tab === 'calendar' && (
           <p className="text-sm text-gray-500 text-center mb-3">
             {start && end ? `${fmt(start)} – ${fmt(end)} (${n} night${n !== 1 ? 's' : ''})` : 'Select check-in and check-out dates'}
@@ -270,7 +270,7 @@ export function GuestsModal({ adults: ia, children: ic, rooms: ir, onConfirm, on
         </div>
       </div>
 
-      <div className="px-5 py-4 border-t border-gray-200">
+      <div className="px-5 py-4 border-t border-gray-200" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
         <button onClick={() => onConfirm(adults, children, rooms, pets)}
           className="w-full py-4 rounded-xl text-base font-bold text-white"
           style={{ background: '#16a34a' }}>
@@ -503,8 +503,8 @@ export default function SearchWidget() {
   const router   = useRouter();
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [checkIn,    setCheckIn]    = useState(today);
-  const [checkOut,   setCheckOut]   = useState(tomorrow);
+  const [checkIn,    setCheckIn]    = useState('');
+  const [checkOut,   setCheckOut]   = useState('');
   const [adults,     setAdults]     = useState(2);
   const [children,   setChildren]   = useState(0);
   const [rooms,      setRooms]      = useState(1);
