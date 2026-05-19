@@ -517,7 +517,10 @@ export default function SearchWidget() {
   const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
   const dateLabel  = checkIn && checkOut ? `${fmtDesktop(checkIn)} — ${fmtDesktop(checkOut)}` : 'Select dates';
 
+  const canSearch = !!(checkIn && checkOut);
+
   const handleSearch = () => {
+    if (!canSearch) return;
     router.push(`/stay/rooms?checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}&pets=${pets}`);
   };
 
@@ -596,9 +599,12 @@ export default function SearchWidget() {
           </div>
 
           {/* Search */}
-          <button onClick={handleSearch}
-            className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center flex-shrink-0 rounded-xl"
-            style={{ background: '#16a34a' }}>
+          <button onClick={handleSearch} disabled={!canSearch}
+            className={`px-8 py-4 text-base font-bold text-white transition-all flex items-center justify-center flex-shrink-0 rounded-xl ${
+              canSearch ? 'hover:opacity-90 active:scale-95 cursor-pointer' : 'opacity-40 cursor-not-allowed'
+            }`}
+            style={{ background: '#16a34a' }}
+            title={!canSearch ? 'Please select check-in and check-out dates' : ''}>
             Search
           </button>
         </div>
