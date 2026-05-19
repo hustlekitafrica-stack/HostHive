@@ -53,6 +53,8 @@ function RoomsContent() {
     if (!res.ok) {
       alert(`Error: ${data.error || 'Failed to update wishlist'}`);
       setWishlistIds(prev => { const s = new Set(prev); wasInSet ? s.add(propertyId) : s.delete(propertyId); return s; });
+    } else {
+      alert(data.wishlisted ? 'Room saved to your wishlist' : 'Room removed from your wishlist');
     }
     setWishPending(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
   }, [router, wishPending]);

@@ -616,7 +616,12 @@ function RoomDetailContent({ id }: { id: string }) {
     setWishLoading(true);
     const res = await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: id }) });
     const data = await res.json();
-    setWishlisted(data.wishlisted);
+    if (!res.ok) {
+      alert(`Error: ${data.error || 'Failed to update wishlist'}`);
+    } else {
+      setWishlisted(data.wishlisted);
+      alert(data.wishlisted ? 'Room saved to your wishlist' : 'Room removed from your wishlist');
+    }
     setWishLoading(false);
   };
 
