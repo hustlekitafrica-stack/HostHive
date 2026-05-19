@@ -36,36 +36,33 @@ const HIGHLIGHTS = [
 
 function RoomCard({ property, wishlisted, onToggle }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
   return (
-    <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-72 bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-      <div className="relative">
-        <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-48" />
-        <div className="absolute top-3 left-3 px-2.5 py-1.5 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
-          {property.type || 'Room'}
+    <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-64 sm:w-72">
+      {/* Image */}
+      <div className="relative rounded-2xl overflow-hidden mb-3">
+        <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-52" />
+        {/* Guest favourite badge */}
+        <div className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-sm">
+          <span className="text-xs font-bold text-gray-900">Guest favourite</span>
         </div>
+        {/* Heart */}
         <button
           onClick={e => onToggle(e, property.id)}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-md transition-all hover:scale-110"
+          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all hover:scale-110"
           title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}>
-          <Heart className="w-4 h-4 transition-colors" style={{ color: '#16a34a' }} fill={wishlisted ? '#16a34a' : 'none'} />
+          <Heart className="w-4 h-4 transition-colors" style={{ color: wishlisted ? '#16a34a' : '#374151' }} fill={wishlisted ? '#16a34a' : 'none'} />
         </button>
       </div>
-      <div className="p-4">
-        <h3 className="font-bold text-gray-900 text-sm mb-1 truncate">{property.name}</h3>
-        <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg>
-          {property.location || property.city || 'Kogelo'}
-        </p>
-        <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-          <span className="flex items-center gap-1"><BedDouble className="w-3 h-3" /> {property.bedrooms ?? 1} bed{property.bedrooms !== 1 ? 's' : ''}</span>
-          <span className="flex items-center gap-1"><Droplets className="w-3 h-3" /> {property.bathrooms ?? 1} bath</span>
-          <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {property.max_guests ?? 2}</span>
-        </div>
-        <div className="flex items-center justify-between">
-          <div>
-            <span className="font-black text-gray-900">KSh {Number(property.nightly_rate || 0).toLocaleString()}</span>
-            <span className="text-xs text-gray-400"> / night</span>
-          </div>
-          <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: '#16a34a' }}>View</span>
+      {/* Info */}
+      <div>
+        <h3 className="font-bold text-gray-900 text-sm leading-snug truncate">{property.type ? `${property.type} in` : 'Stay in'} {property.city || property.location || 'Kogelo'}</h3>
+        <p className="text-xs text-gray-500 mt-0.5 truncate">{property.name}</p>
+        <div className="flex items-center justify-between mt-1.5">
+          <p className="text-sm font-semibold" style={{ color: '#D97706' }}>
+            KSh {Number(property.nightly_rate || 0).toLocaleString()} <span className="font-normal text-gray-500">/ night</span>
+          </p>
+          <p className="text-xs text-gray-700 flex items-center gap-0.5 font-semibold">
+            <Star className="w-3 h-3 fill-gray-800 stroke-none" /> {property.rating ?? '5.0'}
+          </p>
         </div>
       </div>
     </Link>

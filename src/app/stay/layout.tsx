@@ -178,16 +178,28 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
           <div className="flex-1 overflow-y-auto px-6 py-8 space-y-8">
 
             {/* Auth */}
-            <div className="flex gap-3">
-              <button onClick={() => handleNavClick('/stay/auth')}
-                className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-white border border-white/30">
-                Register
-              </button>
-              <button onClick={() => handleNavClick('/stay/auth')}
-                className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-[#0f172a] bg-white">
-                Sign in
-              </button>
-            </div>
+            {!loggedIn ? (
+              <div className="flex gap-3">
+                <button onClick={() => handleNavClick('/stay/auth')}
+                  className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-white border border-white/30">
+                  Register
+                </button>
+                <button onClick={() => handleNavClick('/stay/auth')}
+                  className="flex-1 text-center py-3 rounded-xl text-sm font-bold text-[#0f172a] bg-white">
+                  Sign in
+                </button>
+              </div>
+            ) : userMeta && (
+              <div className="flex items-center gap-3 py-2">
+                <div className="w-10 h-10 rounded-full flex items-center justify-center text-base font-black text-white flex-shrink-0" style={{ background: '#16a34a' }}>
+                  {userMeta.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-xs text-white/50 font-semibold">Welcome back</p>
+                  <p className="text-white font-bold truncate max-w-[200px]">{userMeta.name}</p>
+                </div>
+              </div>
+            )}
 
             {/* Quick Links */}
             <div>
