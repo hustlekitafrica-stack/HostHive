@@ -55,7 +55,7 @@ function RoomsContent() {
       setWishlistIds(prev => { const s = new Set(prev); wasInSet ? s.add(propertyId) : s.delete(propertyId); return s; });
     }
     setWishPending(prev => { const s = new Set(prev); s.delete(propertyId); return s; });
-  }, [router, wishPending, wishlistIds]);
+  }, [router, wishPending]);
 
   function fmt(d: string) {
     if (!d) return '';
