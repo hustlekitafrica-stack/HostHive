@@ -40,14 +40,13 @@ export default function WishlistPage() {
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-20 pb-24">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-20 pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
 
         {/* Header */}
         <div className="mb-8">
-          <Link href="/stay/rooms" className="inline-flex items-center gap-1.5 text-sm font-semibold text-gray-400 hover:text-gray-700 transition-colors mb-4">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            Browse Rooms
+          <Link href="/stay/rooms" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors mb-4">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
           </Link>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: '#f0fdf4' }}>

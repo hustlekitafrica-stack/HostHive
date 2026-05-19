@@ -31,7 +31,7 @@ export default function GuestProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] pt-24 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-24 flex items-center justify-center">
         <div className="animate-spin w-10 h-10 border-2 rounded-full" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
       </div>
     );
@@ -39,7 +39,7 @@ export default function GuestProfilePage() {
 
   if (!email) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] pt-24 px-4 sm:px-6">
+      <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-24 px-4 sm:px-6">
         <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: '#f0fdf4' }}>
             <LogIn className="w-8 h-8" style={{ color: '#16a34a' }} />
@@ -55,7 +55,7 @@ export default function GuestProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-24 px-4 sm:px-6 pb-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-24 px-4 sm:px-6 pb-16">
       <div className="max-w-4xl mx-auto">
         <div className="rounded-3xl p-8 sm:p-10 text-white mb-8" style={{ background: 'linear-gradient(135deg, #1e293b, #0f172a)' }}>
           <div className="flex items-center gap-5">

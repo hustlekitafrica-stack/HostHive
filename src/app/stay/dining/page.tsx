@@ -189,7 +189,7 @@ export default function DiningPage() {
   // ── STEP 1: Choose Order Type ────────────────────────────────────────────
   if (step === 'type') return (
     <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: '#0f172a' }}>
-      <div className="pt-16 px-4 pb-4 max-w-lg mx-auto w-full">
+      <div className="pt-2 sm:pt-16 px-4 pb-4 max-w-lg mx-auto w-full">
         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
         <h1 className="text-2xl font-black text-white mb-1">How would you like to order?</h1>
         <p className="text-white/50 text-sm">Select an option to get started</p>

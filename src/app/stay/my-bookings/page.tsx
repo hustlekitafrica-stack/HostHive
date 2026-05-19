@@ -62,17 +62,19 @@ function MyBookingsContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16 pb-24">
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
+      <div className="px-4 sm:px-6 mb-6">
         <div className="max-w-3xl mx-auto">
-          <Link href="/stay" className="text-white/60 hover:text-white text-sm font-semibold mb-4 inline-block transition-colors">← Home</Link>
-          <h1 className="text-3xl font-black text-white">Trips</h1>
-          <p className="text-white/60 mt-1 text-sm">Track the status of your reservation requests.</p>
+          <Link href="/stay" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors mb-4">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+          </Link>
+          <h1 className="text-2xl font-black text-gray-900">Trips</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Track the status of your reservation requests.</p>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
 
         {/* Phone lookup (for guests not logged in) */}
         {!userId && (
