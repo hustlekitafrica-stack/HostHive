@@ -503,14 +503,16 @@ export default function SearchWidget() {
   const router   = useRouter();
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [checkIn,    setCheckIn]    = useState('');
-  const [checkOut,   setCheckOut]   = useState('');
-  const [adults,     setAdults]     = useState(2);
-  const [children,   setChildren]   = useState(0);
-  const [rooms,      setRooms]      = useState(1);
-  const [pets,       setPets]       = useState(false);
-  const [showDate,   setShowDate]   = useState(false);
-  const [showGuests, setShowGuests] = useState(false);
+  const [checkIn,          setCheckIn]          = useState('');
+  const [checkOut,         setCheckOut]         = useState('');
+  const [adults,           setAdults]           = useState(2);
+  const [children,         setChildren]         = useState(0);
+  const [rooms,            setRooms]            = useState(1);
+  const [pets,             setPets]             = useState(false);
+  const [showMobileDate,   setShowMobileDate]   = useState(false);
+  const [showDesktopDate,  setShowDesktopDate]  = useState(false);
+  const [showMobileGuests, setShowMobileGuests] = useState(false);
+  const [showDesktopGuests,setShowDesktopGuests]= useState(false);
 
   const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
   const dateLabel  = checkIn && checkOut ? `${fmtDesktop(checkIn)} — ${fmtDesktop(checkOut)}` : 'Select dates';
@@ -525,23 +527,23 @@ export default function SearchWidget() {
         <div className="flex flex-col lg:flex-row rounded-2xl overflow-visible w-full p-2 gap-2" style={{ border: '3px solid #d97706' }}>
 
           {/* ── Dates ── */}
-          {/* Mobile: two separate buttons */}
+          {/* Mobile: two separate buttons → full-screen modal */}
           <div className="flex flex-1 bg-white rounded-xl lg:hidden">
-            <button onClick={() => { setShowDate(true); setShowGuests(false); }}
+            <button onClick={() => { setShowMobileDate(true); setShowMobileGuests(false); }}
               className="flex-1 px-4 py-3 border-r border-gray-200 text-left">
               <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
               <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
             </button>
-            <button onClick={() => { setShowDate(true); setShowGuests(false); }}
+            <button onClick={() => { setShowMobileDate(true); setShowMobileGuests(false); }}
               className="flex-1 px-4 py-3 text-left">
               <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
               <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
             </button>
           </div>
 
-          {/* Desktop: single combined date button with dropdown */}
+          {/* Desktop: single combined date button → inline dropdown */}
           <div className="hidden lg:block relative flex-1 bg-white rounded-xl">
-            <button onClick={() => { setShowDate(v => !v); setShowGuests(false); }}
+            <button onClick={() => { setShowDesktopDate(v => !v); setShowDesktopGuests(false); }}
               className="w-full h-full px-5 py-3 text-left flex items-center gap-3">
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -551,11 +553,11 @@ export default function SearchWidget() {
                 <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{dateLabel}</p>
               </div>
             </button>
-            {showDate && (
+            {showDesktopDate && (
               <DesktopDateDropdown
                 checkIn={checkIn} checkOut={checkOut}
-                onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDate(false); }}
-                onClose={() => setShowDate(false)}
+                onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDesktopDate(false); }}
+                onClose={() => setShowDesktopDate(false)}
               />
             )}
           </div>
@@ -563,7 +565,7 @@ export default function SearchWidget() {
           {/* ── Guests ── */}
           {/* Mobile: opens full-screen modal */}
           <div className="flex items-center bg-white rounded-xl lg:hidden">
-            <button onClick={() => { setShowGuests(true); setShowDate(false); }} className="flex items-center justify-between gap-2 px-4 py-3 w-full text-left">
+            <button onClick={() => { setShowMobileGuests(true); setShowMobileDate(false); }} className="flex items-center justify-between gap-2 px-4 py-3 w-full text-left">
               <div>
                 <p className="text-xs text-gray-400 mb-0.5">Guests</p>
                 <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
@@ -574,7 +576,7 @@ export default function SearchWidget() {
 
           {/* Desktop: opens inline dropdown */}
           <div className="hidden lg:flex items-center bg-white rounded-xl relative flex-shrink-0">
-            <button onClick={() => { setShowGuests(v => !v); setShowDate(false); }} className="flex items-center gap-2 px-5 py-3 w-full text-left">
+            <button onClick={() => { setShowDesktopGuests(v => !v); setShowDesktopDate(false); }} className="flex items-center gap-2 px-5 py-3 w-full text-left">
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
               </svg>
@@ -584,11 +586,11 @@ export default function SearchWidget() {
               </div>
               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
             </button>
-            {showGuests && (
+            {showDesktopGuests && (
               <DesktopGuestsDropdown
                 adults={adults} children={children} rooms={rooms}
-                onConfirm={(a, c, r) => { setAdults(a); setChildren(c); setRooms(r); setShowGuests(false); }}
-                onClose={() => setShowGuests(false)}
+                onConfirm={(a, c, r) => { setAdults(a); setChildren(c); setRooms(r); setShowDesktopGuests(false); }}
+                onClose={() => setShowDesktopGuests(false)}
               />
             )}
           </div>
@@ -602,20 +604,20 @@ export default function SearchWidget() {
         </div>
       </div>
 
-      {/* Mobile modals */}
-      {showDate && typeof document !== 'undefined' && createPortal(
+      {/* Mobile-only portals (never rendered on desktop since only mobile buttons trigger these) */}
+      {showMobileDate && typeof document !== 'undefined' && createPortal(
         <DatePickerModal
           checkIn={checkIn} checkOut={checkOut}
-          onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowDate(false); }}
-          onClose={() => setShowDate(false)}
+          onConfirm={(ci, co) => { setCheckIn(ci); setCheckOut(co); setShowMobileDate(false); }}
+          onClose={() => setShowMobileDate(false)}
         />,
         document.body
       )}
-      {showGuests && typeof document !== 'undefined' && createPortal(
+      {showMobileGuests && typeof document !== 'undefined' && createPortal(
         <GuestsModal
           adults={adults} children={children} rooms={rooms}
-          onConfirm={(a, c, r, p) => { setAdults(a); setChildren(c); setRooms(r); setPets(p); setShowGuests(false); }}
-          onClose={() => setShowGuests(false)}
+          onConfirm={(a, c, r, p) => { setAdults(a); setChildren(c); setRooms(r); setPets(p); setShowMobileGuests(false); }}
+          onClose={() => setShowMobileGuests(false)}
         />,
         document.body
       )}
