@@ -946,19 +946,6 @@ function RoomDetailContent({ id }: { id: string }) {
               </div>
             )}
 
-            {/* Mobile Booking Calendar */}
-            <MobileBookingCalendar
-              checkIn={checkIn} checkOut={checkOut}
-              setCheckIn={setCheckIn} setCheckOut={setCheckOut}
-              adults={adults} setAdults={(n) => setAdults(n)}
-              rate={rate} nights={nights} total={total}
-              city={property.city}
-              cancellationPolicy={property.cancellation_policy}
-              onReserve={handleBook}
-            />
-
-            {/* Reviews */}
-            <ReviewsSection propertyId={id} propertyName={property.name} />
           </div>
 
           {/* Right — Airbnb-style booking widget (desktop only) */}
