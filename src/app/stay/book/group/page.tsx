@@ -12,7 +12,9 @@ function GroupBookingContent() {
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
 
-  const [step,       setStep]       = useState(1);
+  const fromCart = params.get('fromCart') === 'true';
+
+  const [step,       setStep]       = useState(fromCart ? 3 : 1);
   const [properties, setProperties] = useState<any[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [selected,   setSelected]   = useState<SelectedRoom[]>([]);
@@ -29,6 +31,12 @@ function GroupBookingContent() {
   const [error,      setError]      = useState('');
 
   useEffect(() => {
+    if (fromCart) {
+      try {
+        const c = sessionStorage.getItem('roomCart');
+        if (c) setSelected(JSON.parse(c));
+      } catch { /* ignore */ }
+    }
     fetch('/api/stay/properties')
       .then(r => r.json())
       .then(d => setProperties(d.properties ?? []))

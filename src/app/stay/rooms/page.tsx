@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight, Heart } from 'lucide-react';
+import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight, Heart, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import { createClient } from '@/lib/supabase/client';
@@ -20,7 +20,9 @@ function RoomsContent() {
   const [typeFilter, setTypeFilter] = useState('All');
   const [adults,    setAdults]    = useState(Number(params.get('guests') ?? 2));
   const [children,  setChildren]  = useState(0);
-  const [rooms,     setRooms]     = useState(1);
+  const [rooms,     setRooms]     = useState(Number(params.get('rooms') ?? 1));
+  const isMultiMode = rooms >= 2;
+  const [cart, setCart] = useState<{ property: any; qty: number }[]>([]);
   const guestFilter = adults + children;
   const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? '');
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? '');
@@ -251,9 +253,24 @@ function RoomsContent() {
                       <span className="font-black text-gray-900 text-base">KSh {Number(p.nightly_rate || 0).toLocaleString()}</span>
                       <span className="text-xs text-gray-400"> / night</span>
                     </div>
-                    <span className="text-xs font-bold text-white px-3 py-1.5 rounded-lg group-hover:opacity-90" style={{ background: '#16a34a' }}>
-                      View Room
-                    </span>
+                    {isMultiMode && (() => {
+                      const entry = cart.find(c => c.property.id === p.id);
+                      return entry ? (
+                        <div className="flex items-center gap-1.5" onClick={e => e.preventDefault()}>
+                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = prev.map(c => c.property.id === p.id ? { ...c, qty: c.qty - 1 } : c).filter(c => c.qty > 0); sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="w-6 h-6 rounded-full border flex items-center justify-center border-gray-300 text-gray-600 hover:border-gray-900">
+                            <Minus className="w-3 h-3" />
+                          </button>
+                          <span className="text-sm font-black text-gray-900 w-4 text-center">{entry.qty}</span>
+                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = prev.map(c => c.property.id === p.id ? { ...c, qty: c.qty + 1 } : c); sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: '#16a34a' }}>
+                            <Plus className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = [...prev, { property: p, qty: 1 }]; sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="flex items-center gap-1 text-xs font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: '#16a34a' }}>
+                          <Plus className="w-3 h-3" /> Add
+                        </button>
+                      );
+                    })()}
                   </div>
                 </div>
               </Link>
@@ -261,6 +278,35 @@ function RoomsContent() {
           </div>
         )}
       </div>
+
+      {/* Sticky cart bar — multi-room mode */}
+      {isMultiMode && cart.length > 0 && (() => {
+        const totalRooms = cart.reduce((s, c) => s + c.qty, 0);
+        const nights = checkIn && checkOut && checkOut > checkIn ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000) : 0;
+        const totalPrice = cart.reduce((s, c) => s + Number(c.property.nightly_rate || 0) * (nights || 1) * c.qty, 0);
+        return (
+          <div className="fixed bottom-20 md:bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+            <div className="pointer-events-auto flex items-center justify-between gap-4 bg-gray-900 text-white rounded-2xl shadow-2xl px-5 py-3.5 w-full max-w-md">
+              <div className="flex items-center gap-3">
+                <ShoppingCart className="w-5 h-5 text-green-400" />
+                <div>
+                  <p className="text-sm font-black">{totalRooms} room{totalRooms !== 1 ? 's' : ''} selected</p>
+                  {nights > 0 && <p className="text-xs text-white/60">KSh {totalPrice.toLocaleString()} · {nights} night{nights !== 1 ? 's' : ''}</p>}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  sessionStorage.setItem('roomCart', JSON.stringify(cart));
+                  sessionStorage.setItem('roomCartMeta', JSON.stringify({ checkIn, checkOut, guests: adults + children }));
+                  window.location.href = '/stay/book/cart';
+                }}
+                className="text-sm font-bold px-4 py-2 rounded-xl text-white flex-shrink-0" style={{ background: '#16a34a' }}>
+                View Cart →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {showDate && (
         <DatePickerModal
