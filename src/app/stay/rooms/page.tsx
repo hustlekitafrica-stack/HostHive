@@ -116,14 +116,9 @@ function RoomsContent() {
   return (
     <div className="min-h-screen bg-[#f8fafc]">
 
-      {/* Search header */}
-      <div className="px-4 sm:px-6" style={{ background: '#1e293b' }}>
-
-        {/* MOBILE: dark strip — nav clearance 64px + 17px visible = 81px (half the original strip) */}
-        <div className="md:hidden" style={{ height: '81px' }} />
-
-        {/* ── DESKTOP search: identical to home page SearchWidget ── */}
-        <div className="hidden md:block pt-16 pb-6 px-2 max-w-5xl mx-auto">
+      {/* Search header — DESKTOP only: dark background matching home page */}
+      <div className="hidden md:block px-4 sm:px-6" style={{ background: '#1e293b' }}>
+        <div className="pt-16 pb-6 px-2 max-w-5xl mx-auto">
           <SearchWidget
             initialCheckIn={checkIn}
             initialCheckOut={checkOut}
@@ -131,11 +126,10 @@ function RoomsContent() {
             initialRooms={rooms}
           />
         </div>
-
       </div>
 
-      {/* MOBILE search card — outside hero, 17px into dark area (matches visible strip) */}
-      <div className="md:hidden relative z-20 px-4 max-w-xl mx-auto" style={{ marginTop: '-17px' }}>
+      {/* MOBILE search card — white background, sits directly below fixed navbar */}
+      <div className="md:hidden bg-white px-4 pb-3" style={{ paddingTop: '68px' }}>
         {!searchExpanded ? (
           <button
             onClick={() => setSearchExpanded(true)}
@@ -195,7 +189,7 @@ function RoomsContent() {
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 md:pt-4 pb-28 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 md:pt-4 pb-28 md:pb-8">
 
         {/* Sort/Filter/Map row — mobile only (compact) */}
         <div className="md:hidden flex border-b border-gray-200 mb-3 -mx-4">
@@ -260,6 +254,19 @@ function RoomsContent() {
                     Clear filters
                   </button>
                 )}
+              </div>
+
+              {/* Map */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Location</p>
+                <a
+                  href="https://maps.google.com/maps?q=Kogelo+Suites,Kogelo,Siaya,Kenya"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                  <Map className="w-4 h-4 flex-shrink-0" />
+                  View on Map
+                </a>
               </div>
             </div>
           </aside>
