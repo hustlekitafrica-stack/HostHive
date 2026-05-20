@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BedDouble, Droplets, Users, Search, Heart, Plus, Check, ShoppingCart, ChevronDown, X } from 'lucide-react';
+import { BedDouble, Droplets, Users, Search, Heart, Plus, Check, ShoppingCart, ChevronDown, X, SlidersHorizontal, ArrowUpDown, Map } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import { createClient } from '@/lib/supabase/client';
@@ -27,9 +27,11 @@ function RoomsContent() {
   const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? '');
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? '');
   const [sortBy,   setSortBy]   = useState<'price_asc'|'price_desc'|'name'>('price_asc');
-  const [showDate,        setShowDate]        = useState(false);
-  const [showGuests,      setShowGuests]      = useState(false);
-  const [searchExpanded,  setSearchExpanded]  = useState(false);
+  const [showDate,         setShowDate]         = useState(false);
+  const [showGuests,       setShowGuests]       = useState(false);
+  const [searchExpanded,   setSearchExpanded]   = useState(false);
+  const [showSortMenu,     setShowSortMenu]     = useState(false);
+  const [showMobileFilter, setShowMobileFilter] = useState(false);
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -85,76 +87,112 @@ function RoomsContent() {
     <div className="min-h-screen bg-[#f8fafc]">
 
       {/* Search header */}
-      <div className="pt-16 pb-4 px-4 sm:px-6" style={{ background: '#1e293b' }}>
-        <div className="max-w-2xl mx-auto">
+      <div className="pt-16 px-4 sm:px-6" style={{ background: '#1e293b' }}>
 
-          {/* Compact summary bar */}
-          {!searchExpanded ? (
-            <button
-              onClick={() => setSearchExpanded(true)}
-              className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 text-left shadow-sm"
-              style={{ border: '2.5px solid #d97706' }}>
-              <Search className="w-5 h-5 flex-shrink-0 text-gray-400" />
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-gray-900 text-sm truncate">Kogelo Suites</p>
-                <p className="text-xs text-gray-500 truncate">
-                  {checkIn && checkOut
-                    ? `${fmt(checkIn)} – ${fmt(checkOut)}${nights > 0 ? ` (${nights} night${nights !== 1 ? 's' : ''})` : ''} · `
-                    : 'Any dates · '}
-                  {adults} adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}
-                </p>
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            </button>
-          ) : (
-            <div className="bg-white rounded-2xl shadow-lg overflow-hidden" style={{ border: '2.5px solid #d97706' }}>
-              {/* Expanded header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                <p className="font-bold text-gray-900 text-sm">Modify Search</p>
-                <button onClick={() => setSearchExpanded(false)} className="p-1 rounded-full hover:bg-gray-100">
-                  <X className="w-4 h-4 text-gray-500" />
-                </button>
-              </div>
-              {/* Location */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                <div>
-                  <p className="text-xs text-gray-400">Destination</p>
-                  <p className="text-sm font-semibold text-gray-900">Kogelo Suites, Kogelo</p>
-                </div>
-              </div>
-              {/* Dates */}
-              <button onClick={() => setShowDate(true)} className="w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 text-left hover:bg-gray-50">
-                <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <div className="flex-1">
-                  <p className="text-xs text-gray-400">Dates</p>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {checkIn && checkOut ? `${fmt(checkIn)} – ${fmt(checkOut)}` : 'Select dates'}
+        {/* ── MOBILE search: compact card overlapping hero/white boundary ── */}
+        <div className="md:hidden pb-12 max-w-xl mx-auto">
+          <div className="relative z-20" style={{ marginBottom: '-2.5rem' }}>
+            {!searchExpanded ? (
+              <button
+                onClick={() => setSearchExpanded(true)}
+                className="w-full flex items-center gap-3 bg-white rounded-2xl px-4 py-4 text-left shadow-lg"
+                style={{ border: '2.5px solid #d97706' }}>
+                <Search className="w-5 h-5 flex-shrink-0 text-gray-400" />
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-gray-900 text-sm truncate">Kogelo Suites</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {checkIn && checkOut
+                      ? `${fmt(checkIn)} – ${fmt(checkOut)}${nights > 0 ? ` (${nights} night${nights !== 1 ? 's' : ''})` : ''} · `
+                      : 'Any dates · '}
+                    {adults} adult{adults !== 1 ? 's' : ''}{children > 0 ? `, ${children} child${children !== 1 ? 'ren' : ''}` : ''}
                   </p>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
+                <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
               </button>
-              {/* Guests */}
-              <button onClick={() => setShowGuests(true)} className="w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 text-left hover:bg-gray-50">
-                <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-xs text-gray-400">Guests</p>
-                  <p className="text-sm font-semibold text-gray-900">{guestLabel}</p>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden" style={{ border: '2.5px solid #d97706' }}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+                  <p className="font-bold text-gray-900 text-sm">Modify Search</p>
+                  <button onClick={() => setSearchExpanded(false)} className="p-1 rounded-full hover:bg-gray-100">
+                    <X className="w-4 h-4 text-gray-500" />
+                  </button>
                 </div>
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              </button>
-              {/* Done */}
-              <div className="px-4 py-3">
-                <button onClick={() => setSearchExpanded(false)}
-                  className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
-                  style={{ background: '#16a34a' }}>
-                  <Search className="w-4 h-4" /> Done
+                <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <div>
+                    <p className="text-xs text-gray-400">Destination</p>
+                    <p className="text-sm font-semibold text-gray-900">Kogelo Suites, Kogelo</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowDate(true)} className="w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 text-left hover:bg-gray-50">
+                  <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-400">Dates</p>
+                    <p className="text-sm font-semibold text-gray-900">{checkIn && checkOut ? `${fmt(checkIn)} – ${fmt(checkOut)}` : 'Select dates'}</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
                 </button>
+                <button onClick={() => setShowGuests(true)} className="w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 text-left hover:bg-gray-50">
+                  <Users className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <p className="text-xs text-gray-400">Guests</p>
+                    <p className="text-sm font-semibold text-gray-900">{guestLabel}</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
+                </button>
+                <div className="px-4 py-3">
+                  <button onClick={() => setSearchExpanded(false)}
+                    className="w-full py-2.5 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+                    style={{ background: '#16a34a' }}>
+                    <Search className="w-4 h-4" /> Done
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── DESKTOP search: full multi-column bar ── */}
+        <div className="hidden md:block pb-6 max-w-5xl mx-auto">
+          <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706' }}>
+            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
+              <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <div className="flex-1">
+                <p className="text-xs text-gray-400 mb-0.5">Destination</p>
+                <p className="text-sm font-semibold text-gray-900">Kogelo Suites, Kogelo</p>
               </div>
             </div>
-          )}
-
-          <div className="mt-3 flex items-center justify-end">
+            <div className="flex flex-1 bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
+              <button onClick={() => setShowDate(true)} className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200 text-left">
+                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
+                  <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
+                </div>
+              </button>
+              <button onClick={() => setShowDate(true)} className="flex items-center gap-3 px-4 py-3 flex-1 text-left">
+                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
+                  <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
+                </div>
+              </button>
+            </div>
+            <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
+              <button onClick={() => setShowGuests(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
+                <Users className="w-5 h-5 flex-shrink-0 text-gray-400" />
+                <div>
+                  <p className="text-xs text-gray-400 mb-0.5">Guests</p>
+                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
+                </div>
+                <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+            <button className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0" style={{ background: '#16a34a' }}>
+              <Search className="w-4 h-4" /> Search
+            </button>
+          </div>
+          <div className="mt-4 flex items-center justify-end">
             <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
               className="bg-white/10 text-white text-xs font-semibold rounded-lg px-3 py-1.5 outline-none border border-white/20">
               <option value="price_asc" className="text-gray-900">Price: Low to High</option>
@@ -163,12 +201,45 @@ function RoomsContent() {
             </select>
           </div>
         </div>
+
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 md:pt-8 pb-28 md:pb-8">
 
-        {/* Type tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+        {/* Sort/Filter/Map row — mobile only */}
+        <div className="md:hidden flex border-b border-gray-200 mb-4 -mx-4">
+          {/* Sort */}
+          <div className="relative flex-1">
+            <button
+              onClick={() => setShowSortMenu(v => !v)}
+              className="w-full flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-gray-700">
+              <ArrowUpDown className="w-4 h-4" /> Sort
+            </button>
+            {showSortMenu && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg z-30">
+                {[['price_asc','Price: Low → High'],['price_desc','Price: High → Low'],['name','Name A–Z']].map(([v,l]) => (
+                  <button key={v} onClick={() => { setSortBy(v as any); setShowSortMenu(false); }}
+                    className={`w-full text-left px-4 py-2.5 text-sm ${ sortBy === v ? 'font-bold text-green-700' : 'text-gray-700' }`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Filter */}
+          <button
+            onClick={() => setShowMobileFilter(v => !v)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold border-x border-gray-200 ${ showMobileFilter ? 'text-green-700' : 'text-gray-700' }`}>
+            <SlidersHorizontal className="w-4 h-4" /> Filter
+          </button>
+          {/* Map placeholder */}
+          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-gray-700">
+            <Map className="w-4 h-4" /> Map
+          </button>
+        </div>
+
+        {/* Type tabs — always on desktop, toggleable on mobile */}
+        <div className={`${ showMobileFilter ? 'flex' : 'hidden md:flex' } gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide`}>
           {ROOM_TYPES.map(t => (
             <button key={t} onClick={() => setTypeFilter(t)}
               className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${

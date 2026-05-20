@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Minus, Trash2, ShoppingCart, Home as HomeIcon } from 'lucide-react';
+import { Trash2, ShoppingCart, Home as HomeIcon } from 'lucide-react';
 
 type CartItem = { property: any; qty: number };
 
@@ -123,28 +123,13 @@ export default function CartPage() {
                 </button>
               </div>
 
-              <div className="mt-3 flex items-center justify-between">
-                {/* Qty stepper */}
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setQty(p.id, qty - 1)} disabled={qty <= 1}
-                    className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-gray-600 disabled:opacity-30 border-gray-200 hover:border-gray-900">
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <span className="font-black text-gray-900 w-5 text-center text-sm">{qty}</span>
-                  <button onClick={() => setQty(p.id, qty + 1)}
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-white" style={{ background: '#16a34a' }}>
-                    <Plus className="w-3 h-3" />
-                  </button>
-                  <span className="text-xs text-gray-400 ml-1">room{qty !== 1 ? 's' : ''}</span>
-                </div>
-
-                {/* Subtotal */}
+              <div className="mt-3 flex items-center justify-end">
                 <div className="text-right">
                   <p className="font-black text-gray-900 text-sm">
-                    KSh {(Number(p.nightly_rate || 0) * (nights || 1) * qty).toLocaleString()}
+                    KSh {(Number(p.nightly_rate || 0) * (nights || 1)).toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-400">
-                    KSh {Number(p.nightly_rate || 0).toLocaleString()} × {nights || 1} night{(nights || 1) !== 1 ? 's' : ''}{qty > 1 ? ` × ${qty}` : ''}
+                    KSh {Number(p.nightly_rate || 0).toLocaleString()} / night{nights > 1 ? ` × ${nights} nights` : ''}
                   </p>
                 </div>
               </div>
@@ -155,11 +140,11 @@ export default function CartPage() {
         {/* Summary card */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
           <h3 className="font-black text-gray-900">Order Summary</h3>
-          {cart.map(({ property: p, qty }) => (
+          {cart.map(({ property: p }) => (
             <div key={p.id} className="flex justify-between text-sm text-gray-600">
-              <span className="truncate flex-1 mr-2">{p.name}{qty > 1 ? ` ×${qty}` : ''}</span>
+              <span className="truncate flex-1 mr-2">{p.name}</span>
               <span className="font-semibold text-gray-900 flex-shrink-0">
-                KSh {(Number(p.nightly_rate || 0) * (nights || 1) * qty).toLocaleString()}
+                KSh {(Number(p.nightly_rate || 0) * (nights || 1)).toLocaleString()}
               </span>
             </div>
           ))}
