@@ -1,15 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, CalendarDays, LogIn, ShieldCheck } from 'lucide-react';
+import { User, Mail, Phone, CalendarDays, LogIn, ShieldCheck, LogOut } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function GuestProfilePage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(true);
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.replace('/stay');
+  };
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -108,6 +118,13 @@ export default function GuestProfilePage() {
               <Link href="/stay/rooms" className="block text-center px-5 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
                 Book a Stay
               </Link>
+              <button
+                onClick={handleSignOut}
+                disabled={signingOut}
+                className="w-full flex items-center gap-3 p-4 rounded-2xl bg-red-50 hover:bg-red-100 transition-colors disabled:opacity-50">
+                <LogOut className="w-5 h-5 text-red-500" />
+                <span className="text-sm font-bold text-red-600">{signingOut ? 'Signing out…' : 'Sign Out'}</span>
+              </button>
             </div>
           </div>
         </div>
