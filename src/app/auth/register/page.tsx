@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/client';
 export default function RegisterPage() {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
+  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,7 +17,7 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!fullName || !businessName || !email || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -33,7 +34,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword, fullName }),
+        body: JSON.stringify({ email, password, confirmPassword, fullName, businessName }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -79,6 +80,10 @@ export default function RegisterPage() {
               <input type="text" value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Full Name"
+                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
+              <input type="text" value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                placeholder="Business / Property Name"
                 className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               <input type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
