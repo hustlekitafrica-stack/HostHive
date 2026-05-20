@@ -169,15 +169,19 @@ function RoomsContent() {
             {loading ? 'Loading…' : `${filtered.length} room${filtered.length !== 1 ? 's' : ''} available`}
             {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
           </p>
-          <button
-            onClick={() => { setIsMultiMode(v => !v); setCart([]); }}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-              isMultiMode ? 'text-white border-transparent' : 'text-gray-600 border-gray-200 bg-white hover:border-gray-400'
-            }`}
-            style={isMultiMode ? { background: '#16a34a' } : {}}>
-            <Users className="w-3.5 h-3.5" />
-            {isMultiMode ? 'Group Mode ON' : 'Group Booking'}
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-gray-500">Group Booking</span>
+            <button
+              onClick={() => { setIsMultiMode(v => !v); setCart([]); }}
+              aria-label="Toggle group booking"
+              className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                isMultiMode ? 'bg-green-500' : 'bg-gray-300'
+              }`}>
+              <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                isMultiMode ? 'translate-x-5' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
         </div>
 
         {/* Room grid */}
