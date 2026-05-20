@@ -8,14 +8,13 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!businessName || !email || !password) {
+    if (!email || !password) {
       toast.error('Please fill in all fields');
       return;
     }
@@ -28,7 +27,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, businessName }),
+        body: JSON.stringify({ email, password, businessName: 'Kogelo Suites' }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -71,10 +70,6 @@ export default function RegisterPage() {
           </div>
           <div className="px-6 sm:px-8 py-6 sm:py-8">
             <form onSubmit={handleRegister} className="space-y-4">
-              <input type="text" value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="Business / Property Name"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               <input type="email" value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ololo@gmail.com"
