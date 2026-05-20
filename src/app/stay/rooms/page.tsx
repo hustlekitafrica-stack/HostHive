@@ -54,6 +54,13 @@ function RoomsContent() {
     setRooms(Number(params.get('rooms') ?? 1));
   }, [params]);
 
+  // Lock body scroll whenever any mobile overlay is open
+  useEffect(() => {
+    const anyOpen = showSortSheet || showFilterSheet || showMapView || showDate || showGuests;
+    document.body.style.overflow = anyOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showSortSheet, showFilterSheet, showMapView, showDate, showGuests]);
+
   useEffect(() => {
     fetch('/api/stay/properties')
       .then(r => r.json())
@@ -487,7 +494,7 @@ function RoomsContent() {
                 className="text-sm text-gray-400 font-semibold">Clear</button>
             </div>
             {/* Scrollable body */}
-            <div className="overflow-y-auto flex-1 px-5 py-4">
+            <div className="overflow-y-auto flex-1 px-5 py-4" style={{ overscrollBehavior: 'contain' }}>
               {/* Budget */}
               <div className="mb-6">
                 <h4 className="text-base font-black text-gray-900 mb-1">Your budget (per night)</h4>
@@ -549,7 +556,7 @@ function RoomsContent() {
             </div>
           </div>
           {/* Map iframe */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative" style={{ overscrollBehavior: 'contain' }}>
             <iframe
               src="https://maps.google.com/maps?q=Kogelo,Siaya,Kenya&t=&z=13&ie=UTF8&iwloc=&output=embed"
               className="w-full h-full border-0"

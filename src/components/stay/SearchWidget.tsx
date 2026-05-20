@@ -526,6 +526,12 @@ export default function SearchWidget({
   const [showMobileGuests, setShowMobileGuests] = useState(false);
   const [showDesktopGuests,setShowDesktopGuests]= useState(false);
 
+  // Lock body scroll when any mobile overlay is open
+  useEffect(() => {
+    document.body.style.overflow = (showMobileDate || showMobileGuests) ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showMobileDate, showMobileGuests]);
+
   const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
   const dateLabel  = checkIn && checkOut ? `${fmtDesktop(checkIn)} — ${fmtDesktop(checkOut)}` : 'Select dates';
 
