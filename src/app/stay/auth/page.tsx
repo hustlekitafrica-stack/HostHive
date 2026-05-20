@@ -11,10 +11,8 @@ function StayAuthContent() {
   const params      = useSearchParams();
   const redirect    = params.get('redirect') ?? '/stay';
   const [tab, setTab]               = useState<'login' | 'register'>('login');
-  const [fullName, setFullName]     = useState('');
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
-  const [confirm, setConfirm]       = useState('');
   const [showPw, setShowPw]         = useState(false);
   const [loading, setLoading]       = useState(false);
   const [error, setError]           = useState('');
@@ -33,14 +31,9 @@ function StayAuthContent() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!fullName.trim()) { setError('Please enter your name.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
-    if (password !== confirm) { setError('Passwords do not match.'); return; }
     setLoading(true);
-    const { error: err } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { full_name: fullName.trim() } },
-    });
+    const { error: err } = await supabase.auth.signUp({ email, password });
     setLoading(false);
     if (err) { setError(err.message); return; }
     const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
@@ -121,12 +114,6 @@ function StayAuthContent() {
           ) : (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Full Name</label>
-                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} required
-                  placeholder="Jane Doe"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 outline-none focus:border-red-800 transition-colors" />
-              </div>
-              <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Email</label>
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} required
                   placeholder="you@email.com"
@@ -142,12 +129,6 @@ function StayAuthContent() {
                     {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Confirm Password</label>
-                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} required
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm font-semibold text-gray-900 outline-none focus:border-red-800 transition-colors" />
               </div>
               <button type="submit" disabled={loading}
                 className="w-full py-3.5 rounded-2xl text-sm font-black text-white disabled:opacity-50 transition-all hover:opacity-90"
