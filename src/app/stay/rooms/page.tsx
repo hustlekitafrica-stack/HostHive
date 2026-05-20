@@ -5,10 +5,21 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { BedDouble, Droplets, Users, Search, Heart, Plus, Check, ShoppingCart, ChevronDown, X, SlidersHorizontal, ArrowUpDown, Map } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
+import SearchWidget from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import { createClient } from '@/lib/supabase/client';
 
-const ROOM_TYPES = ['All', 'Studio', 'Apartment', 'Suite', 'Villa', 'Cottage', 'Loft', 'Penthouse'];
+const ROOM_TYPES = ['All', 'Studio', 'Bedsitter', 'One Bedroom', 'Two Bedroom'];
+
+function normalizeType(t: string): string {
+  const m: Record<string, string> = {
+    'studio': 'Studio', 'bedsitter': 'Bedsitter',
+    '1br': 'One Bedroom', 'one-bedroom': 'One Bedroom', 'one bedroom': 'One Bedroom',
+    '2br': 'Two Bedroom', 'two-bedroom': 'Two Bedroom', 'two bedroom': 'Two Bedroom',
+  };
+  const key = (t || '').toLowerCase();
+  return m[key] || (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Room');
+}
 
 function RoomsContent() {
   const params  = useSearchParams();
@@ -30,8 +41,18 @@ function RoomsContent() {
   const [showDate,         setShowDate]         = useState(false);
   const [showGuests,       setShowGuests]       = useState(false);
   const [searchExpanded,   setSearchExpanded]   = useState(false);
-  const [showSortMenu,     setShowSortMenu]     = useState(false);
-  const [showMobileFilter, setShowMobileFilter] = useState(false);
+  const [showSortSheet,   setShowSortSheet]   = useState(false);
+  const [showFilterSheet, setShowFilterSheet] = useState(false);
+  const [showMapView,     setShowMapView]     = useState(false);
+  const [priceMin,         setPriceMin]         = useState<number | ''>('');
+  const [priceMax,         setPriceMax]         = useState<number | ''>('');
+
+  useEffect(() => {
+    setCheckIn(params.get('checkIn') ?? '');
+    setCheckOut(params.get('checkOut') ?? '');
+    setAdults(Number(params.get('guests') ?? 2));
+    setRooms(Number(params.get('rooms') ?? 1));
+  }, [params]);
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -72,8 +93,10 @@ function RoomsContent() {
   const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;
 
   const filtered = properties
-    .filter(p => typeFilter === 'All' || (p.type || '').toLowerCase() === typeFilter.toLowerCase())
+    .filter(p => typeFilter === 'All' || normalizeType(p.type || '') === typeFilter)
     .filter(p => (p.max_guests ?? 2) >= guestFilter)
+    .filter(p => priceMin === '' || Number(p.nightly_rate || 0) >= priceMin)
+    .filter(p => priceMax === '' || Number(p.nightly_rate || 0) <= priceMax)
     .sort((a, b) => {
       if (sortBy === 'price_asc') return (a.nightly_rate || 0) - (b.nightly_rate || 0);
       if (sortBy === 'price_desc') return (b.nightly_rate || 0) - (a.nightly_rate || 0);
@@ -89,64 +112,23 @@ function RoomsContent() {
       {/* Search header */}
       <div className="px-4 sm:px-6" style={{ background: '#1e293b' }}>
 
-        {/* MOBILE: just a fixed-height dark strip (nav clearance 64px + 33px visible = 97px, ~15px less than before) */}
-        <div className="md:hidden" style={{ height: '97px' }} />
+        {/* MOBILE: dark strip — nav clearance 64px + 17px visible = 81px (half the original strip) */}
+        <div className="md:hidden" style={{ height: '81px' }} />
 
-        {/* ── DESKTOP search: full multi-column bar ── */}
-        <div className="hidden md:block pt-16 pb-6 max-w-5xl mx-auto">
-          <div className="flex flex-col lg:flex-row rounded-lg overflow-visible" style={{ border: '3px solid #d97706' }}>
-            <div className="flex-1 flex items-center gap-3 bg-white px-4 py-3 border-b lg:border-b-0 lg:border-r border-gray-200">
-              <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-              <div className="flex-1">
-                <p className="text-xs text-gray-400 mb-0.5">Destination</p>
-                <p className="text-sm font-semibold text-gray-900">Kogelo Suites, Kogelo</p>
-              </div>
-            </div>
-            <div className="flex flex-1 bg-white border-b lg:border-b-0 lg:border-r border-gray-200">
-              <button onClick={() => setShowDate(true)} className="flex items-center gap-3 px-4 py-3 flex-1 border-r border-gray-200 text-left">
-                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Check-in</p>
-                  <p className="text-sm font-semibold text-gray-900">{fmt(checkIn) || 'Add date'}</p>
-                </div>
-              </button>
-              <button onClick={() => setShowDate(true)} className="flex items-center gap-3 px-4 py-3 flex-1 text-left">
-                <svg className="w-5 h-5 flex-shrink-0 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Check-out</p>
-                  <p className="text-sm font-semibold text-gray-900">{fmt(checkOut) || 'Add date'}</p>
-                </div>
-              </button>
-            </div>
-            <div className="flex items-center bg-white border-b lg:border-b-0 lg:border-r border-gray-200 flex-shrink-0">
-              <button onClick={() => setShowGuests(true)} className="flex items-center gap-3 px-4 py-3 w-full text-left">
-                <Users className="w-5 h-5 flex-shrink-0 text-gray-400" />
-                <div>
-                  <p className="text-xs text-gray-400 mb-0.5">Guests</p>
-                  <p className="text-sm font-semibold text-gray-900 whitespace-nowrap">{guestLabel}</p>
-                </div>
-                <svg className="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
-              </button>
-            </div>
-            <button className="px-8 py-4 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 flex items-center justify-center gap-2 flex-shrink-0" style={{ background: '#16a34a' }}>
-              <Search className="w-4 h-4" /> Search
-            </button>
-          </div>
-          <div className="mt-4 flex items-center justify-end">
-            <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
-              className="bg-white/10 text-white text-xs font-semibold rounded-lg px-3 py-1.5 outline-none border border-white/20">
-              <option value="price_asc" className="text-gray-900">Price: Low to High</option>
-              <option value="price_desc" className="text-gray-900">Price: High to Low</option>
-              <option value="name" className="text-gray-900">Name A–Z</option>
-            </select>
-          </div>
+        {/* ── DESKTOP search: identical to home page SearchWidget ── */}
+        <div className="hidden md:block pt-16 pb-6 px-2 max-w-5xl mx-auto">
+          <SearchWidget
+            initialCheckIn={checkIn}
+            initialCheckOut={checkOut}
+            initialAdults={adults}
+            initialRooms={rooms}
+          />
         </div>
 
       </div>
 
-      {/* MOBILE search card — outside hero, centered on dark/white boundary */}
-      {/* Card height ~68px, so -34px pulls it up exactly halfway into dark area */}
-      <div className="md:hidden relative z-20 px-4 max-w-xl mx-auto" style={{ marginTop: '-34px' }}>
+      {/* MOBILE search card — outside hero, 17px into dark area (matches visible strip) */}
+      <div className="md:hidden relative z-20 px-4 max-w-xl mx-auto" style={{ marginTop: '-17px' }}>
         {!searchExpanded ? (
           <button
             onClick={() => setSearchExpanded(true)}
@@ -206,73 +188,98 @@ function RoomsContent() {
         )}
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-10 md:pt-8 pb-28 md:pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 md:pt-4 pb-28 md:pb-8">
 
-        {/* Sort/Filter/Map row — mobile only */}
-        <div className="md:hidden flex border-b border-gray-200 mb-4 -mx-4">
-          {/* Sort */}
-          <div className="relative flex-1">
-            <button
-              onClick={() => setShowSortMenu(v => !v)}
-              className="w-full flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-gray-700">
-              <ArrowUpDown className="w-4 h-4" /> Sort
-            </button>
-            {showSortMenu && (
-              <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-b-xl shadow-lg z-30">
+        {/* Sort/Filter/Map row — mobile only (compact) */}
+        <div className="md:hidden flex border-b border-gray-200 mb-3 -mx-4">
+          <button onClick={() => setShowSortSheet(true)}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold text-gray-700">
+            <ArrowUpDown className="w-3.5 h-3.5" /> Sort
+          </button>
+          <button onClick={() => setShowFilterSheet(true)}
+            className={`flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold border-x border-gray-200 ${ (typeFilter !== 'All' || priceMin !== '' || priceMax !== '') ? 'text-green-700' : 'text-gray-700' }`}>
+            <SlidersHorizontal className="w-3.5 h-3.5" /> Filter{(typeFilter !== 'All' || priceMin !== '' || priceMax !== '') ? ' •' : ''}
+          </button>
+          <button onClick={() => setShowMapView(true)}
+            className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-bold text-gray-700">
+            <Map className="w-3.5 h-3.5" /> Map
+          </button>
+        </div>
+
+        {/* Main layout: sidebar + grid */}
+        <div className="flex gap-6 items-start">
+
+          {/* ── LEFT SIDEBAR – desktop only ── */}
+          <aside className="hidden md:block w-56 flex-shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20">
+              <h3 className="font-black text-gray-900 mb-4 text-sm">Filters</h3>
+
+              {/* Sort */}
+              <div className="mb-5">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Sort by</p>
                 {[['price_asc','Price: Low → High'],['price_desc','Price: High → Low'],['name','Name A–Z']].map(([v,l]) => (
-                  <button key={v} onClick={() => { setSortBy(v as any); setShowSortMenu(false); }}
-                    className={`w-full text-left px-4 py-2.5 text-sm ${ sortBy === v ? 'font-bold text-green-700' : 'text-gray-700' }`}>
-                    {l}
-                  </button>
+                  <label key={v} className="flex items-center gap-2.5 py-1.5 cursor-pointer">
+                    <input type="radio" name="sort" checked={sortBy === v} onChange={() => setSortBy(v as any)} className="accent-green-600" />
+                    <span className="text-sm text-gray-700">{l}</span>
+                  </label>
                 ))}
               </div>
-            )}
-          </div>
-          {/* Filter */}
-          <button
-            onClick={() => setShowMobileFilter(v => !v)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold border-x border-gray-200 ${ showMobileFilter ? 'text-green-700' : 'text-gray-700' }`}>
-            <SlidersHorizontal className="w-4 h-4" /> Filter
-          </button>
-          {/* Map placeholder */}
-          <button className="flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-bold text-gray-700">
-            <Map className="w-4 h-4" /> Map
-          </button>
-        </div>
 
-        {/* Type tabs — always on desktop, toggleable on mobile */}
-        <div className={`${ showMobileFilter ? 'flex' : 'hidden md:flex' } gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide`}>
-          {ROOM_TYPES.map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                typeFilter === t ? 'text-white' : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-400'
-              }`}
-              style={typeFilter === t ? { background: '#16a34a' } : {}}>
-              {t}
-            </button>
-          ))}
-        </div>
+              {/* Room Type */}
+              <div className="border-t border-gray-100 pt-4 mb-5">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Room Type</p>
+                {ROOM_TYPES.map(t => (
+                  <label key={t} className="flex items-center gap-2.5 py-1.5 cursor-pointer">
+                    <input type="radio" name="roomType" checked={typeFilter === t} onChange={() => setTypeFilter(t)} className="accent-green-600" />
+                    <span className="text-sm text-gray-700">{t}</span>
+                  </label>
+                ))}
+              </div>
 
-        {/* Results count + group booking toggle */}
-        <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-gray-600">
-            {loading ? 'Loading…' : `${filtered.length} room${filtered.length !== 1 ? 's' : ''} available`}
-            {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
-          </p>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-gray-500">Group Booking</span>
-            <button
-              onClick={() => { setIsMultiMode(v => !v); setCart([]); }}
-              aria-label="Toggle group booking"
-              className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                isMultiMode ? 'bg-green-500' : 'bg-gray-300'
-              }`}>
-              <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
-                isMultiMode ? 'translate-x-5' : 'translate-x-0'
-              }`} />
-            </button>
-          </div>
-        </div>
+              {/* Price range */}
+              <div className="border-t border-gray-100 pt-4">
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Price / night (KSh)</p>
+                <div className="flex gap-2">
+                  <input type="number" placeholder="Min" value={priceMin}
+                    onChange={e => setPriceMin(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-green-500" />
+                  <input type="number" placeholder="Max" value={priceMax}
+                    onChange={e => setPriceMax(e.target.value === '' ? '' : Number(e.target.value))}
+                    className="w-full border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-green-500" />
+                </div>
+                {(priceMin !== '' || priceMax !== '' || typeFilter !== 'All') && (
+                  <button onClick={() => { setPriceMin(''); setPriceMax(''); setTypeFilter('All'); }}
+                    className="mt-3 text-xs font-bold underline" style={{ color: '#16a34a' }}>
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            </div>
+          </aside>
+
+          {/* ── MAIN CONTENT ── */}
+          <div className="flex-1 min-w-0">
+
+            {/* Results count + group booking toggle */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-gray-600">
+                {loading ? 'Loading…' : `${filtered.length} room${filtered.length !== 1 ? 's' : ''} available`}
+                {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
+              </p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-500">Group Booking</span>
+                <button
+                  onClick={() => { setIsMultiMode(v => !v); setCart([]); }}
+                  aria-label="Toggle group booking"
+                  className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+                    isMultiMode ? 'bg-green-500' : 'bg-gray-300'
+                  }`}>
+                  <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-200 ${
+                    isMultiMode ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </div>
 
         {/* Room grid */}
         {loading ? (
@@ -309,7 +316,7 @@ function RoomsContent() {
                 <div className="relative">
                   <CardImageCarousel photos={p.photos ?? []} alt={p.name} height="h-52" />
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
-                    {p.type || 'Room'}
+                    {normalizeType(p.type || '')}
                   </div>
                   {/* Heart / wishlist button */}
                   <button
@@ -371,7 +378,9 @@ function RoomsContent() {
             ))}
           </div>
         )}
-      </div>
+          </div>{/* end flex-1 MAIN CONTENT */}
+        </div>{/* end flex gap-6 sidebar+grid */}
+      </div>{/* end max-w-7xl */}
 
       {/* Mobile floating cart FAB */}
       {isMultiMode && cart.length > 0 && (() => {
@@ -434,6 +443,127 @@ function RoomsContent() {
           onConfirm={(a, c, r) => { setAdults(a); setChildren(c); setRooms(r); setShowGuests(false); }}
           onClose={() => setShowGuests(false)}
         />
+      )}
+
+      {/* ── MOBILE SORT BOTTOM SHEET ── */}
+      {showSortSheet && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden" onClick={() => setShowSortSheet(false)}>
+          <div className="bg-black/40 absolute inset-0" />
+          <div className="relative bg-white rounded-t-2xl shadow-2xl pb-8" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-5 pt-5 pb-3">
+              <h3 className="text-base font-black text-gray-900">Sort by</h3>
+              <button onClick={() => setShowSortSheet(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+            {([
+              ['price_asc',  'Price (lowest first)'],
+              ['price_desc', 'Price (highest first)'],
+              ['name',       'Name A–Z'],
+            ] as [string, string][]).map(([v, l]) => (
+              <label key={v} className="flex items-center gap-4 px-5 py-3.5 border-b border-gray-100 cursor-pointer">
+                <input type="radio" name="sort_sheet" checked={sortBy === v}
+                  onChange={() => { setSortBy(v as any); setShowSortSheet(false); }}
+                  className="w-5 h-5 accent-blue-600 flex-shrink-0" />
+                <span className={`text-sm ${sortBy === v ? 'font-bold text-gray-900' : 'text-gray-700'}`}>{l}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── MOBILE FILTER BOTTOM SHEET ── */}
+      {showFilterSheet && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden" onClick={() => setShowFilterSheet(false)}>
+          <div className="bg-black/40 absolute inset-0" />
+          <div className="relative bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
+              <button onClick={() => setShowFilterSheet(false)} className="text-blue-600 p-1">
+                <X className="w-5 h-5" />
+              </button>
+              <h3 className="text-base font-black text-gray-900">Filters</h3>
+              <button onClick={() => { setTypeFilter('All'); setPriceMin(''); setPriceMax(''); }}
+                className="text-sm text-gray-400 font-semibold">Clear</button>
+            </div>
+            {/* Scrollable body */}
+            <div className="overflow-y-auto flex-1 px-5 py-4">
+              {/* Budget */}
+              <div className="mb-6">
+                <h4 className="text-base font-black text-gray-900 mb-1">Your budget (per night)</h4>
+                <p className="text-sm text-gray-500 mb-3">
+                  KSh {priceMin !== '' ? Number(priceMin).toLocaleString() : '0'} — KSh {priceMax !== '' ? Number(priceMax).toLocaleString() : 'Any'}
+                </p>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1 block">Min (KSh)</label>
+                    <input type="number" placeholder="0" value={priceMin}
+                      onChange={e => setPriceMin(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400 mb-1 block">Max (KSh)</label>
+                    <input type="number" placeholder="Any" value={priceMax}
+                      onChange={e => setPriceMax(e.target.value === '' ? '' : Number(e.target.value))}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-500" />
+                  </div>
+                </div>
+              </div>
+              {/* Room type filters */}
+              <div>
+                <h4 className="text-base font-black text-gray-900 mb-3">Room type</h4>
+                {ROOM_TYPES.filter(t => t !== 'All').map(t => (
+                  <label key={t} className="flex items-center gap-4 py-3 border-b border-gray-100 cursor-pointer">
+                    <input type="checkbox" checked={typeFilter === t}
+                      onChange={() => setTypeFilter(typeFilter === t ? 'All' : t)}
+                      className="w-5 h-5 rounded accent-blue-600 flex-shrink-0" />
+                    <span className="text-sm text-gray-800">{t}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            {/* Show results button */}
+            <div className="px-5 py-4 border-t border-gray-100">
+              <button onClick={() => setShowFilterSheet(false)}
+                className="w-full py-3.5 rounded-xl text-base font-bold text-white"
+                style={{ background: '#16a34a' }}>
+                Show {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MOBILE MAP OVERLAY ── */}
+      {showMapView && (
+        <div className="fixed inset-0 z-50 flex flex-col md:hidden bg-white">
+          {/* Search bar row */}
+          <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-gray-100 shadow-sm">
+            <button onClick={() => setShowMapView(false)}
+              className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+              <X className="w-4 h-4 text-gray-700" />
+            </button>
+            <div className="flex-1 flex items-center bg-gray-100 rounded-full px-4 py-2 gap-2">
+              <Search className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              <span className="text-sm text-gray-500">Kogelo Suites, Kogelo</span>
+            </div>
+          </div>
+          {/* Map iframe */}
+          <div className="flex-1 relative">
+            <iframe
+              src="https://maps.google.com/maps?q=Kogelo,Siaya,Kenya&t=&z=13&ie=UTF8&iwloc=&output=embed"
+              className="w-full h-full border-0"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {/* Floating filter button */}
+            <button
+              onClick={() => { setShowMapView(false); setShowFilterSheet(true); }}
+              className="absolute top-3 left-3 flex items-center gap-1.5 bg-white rounded-xl shadow-md px-3 py-2 text-sm font-bold text-gray-700 border border-gray-200">
+              <SlidersHorizontal className="w-4 h-4" /> Filter
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

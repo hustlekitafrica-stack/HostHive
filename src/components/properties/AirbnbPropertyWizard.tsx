@@ -37,17 +37,10 @@ const INITIAL: WizardFormData = {
 };
 
 const PROPERTY_TYPES = [
-  { id: 'studio',    label: 'Studio',       desc: 'Open-plan bedroom + living' },
-  { id: 'bedsitter', label: 'Bedsitter',    desc: 'Single room with kitchenette' },
-  { id: '1br',       label: '1 Bedroom',   desc: 'Separate bedroom' },
-  { id: '2br',       label: '2 Bedroom',   desc: 'Two bedrooms' },
-  { id: '3br',       label: '3 Bedroom',   desc: 'Three bedrooms' },
-  { id: 'penthouse', label: 'Penthouse',   desc: 'Top floor luxury' },
-  { id: 'villa',     label: 'Villa',        desc: 'Standalone luxury home' },
-  { id: 'cottage',   label: 'Cottage',      desc: 'Cozy retreat' },
-  { id: 'private',   label: 'Private Room', desc: 'Room in shared home' },
-  { id: 'house',     label: 'Entire House', desc: 'Full house to yourself' },
-  { id: 'apartment', label: 'Apartment',   desc: 'Flat in a building' },
+  { id: 'studio',       label: 'Studio',       desc: 'Open-plan bedroom + living area' },
+  { id: 'bedsitter',    label: 'Bedsitter',    desc: 'Single room with kitchenette' },
+  { id: 'one-bedroom',  label: 'One Bedroom',  desc: 'Separate bedroom + living space' },
+  { id: 'two-bedroom',  label: 'Two Bedroom',  desc: 'Two separate bedrooms' },
 ];
 
 const STEP_NAMES = ['Property Type','Location','Basics','Amenities','Photos','Title & Description','Pricing','Rules & Check-in','Review & Publish'];
@@ -58,8 +51,8 @@ function PropIcon({ id }: { id: string }) {
   switch (id) {
     case 'studio':    return <svg {...s}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
     case 'bedsitter': return <svg {...s}><path d="M3 7v10M21 7v10M3 12h18M6 7V5a1 1 0 011-1h10a1 1 0 011 1v2"/></svg>;
-    case '1br':       return <svg {...s}><path d="M2 9h20v10H2zM2 9a5 5 0 015-5h10a5 5 0 015 5M7 14h10"/></svg>;
-    case '2br':       return <svg {...s}><rect x="2" y="6" width="20" height="15" rx="2"/><path d="M2 11h20M12 6v15"/></svg>;
+    case 'one-bedroom': return <svg {...s}><path d="M2 9h20v10H2zM2 9a5 5 0 015-5h10a5 5 0 015 5M7 14h10"/></svg>;
+    case 'two-bedroom': return <svg {...s}><rect x="2" y="6" width="20" height="15" rx="2"/><path d="M2 11h20M12 6v15"/></svg>;
     case '3br':       return <svg {...s}><rect x="2" y="5" width="20" height="16" rx="2"/><path d="M2 10h20M2 15h20M9 5v16M15 5v16"/></svg>;
     case 'penthouse': return <svg {...s}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
     case 'villa':     return <svg {...s}><path d="M3 12l9-9 9 9M5 10v9a1 1 0 001 1h4v-5h4v5h4a1 1 0 001-1v-9"/></svg>;
@@ -88,7 +81,7 @@ const AMENITY_CATEGORIES = [
   { cat: '⚡ Utilities', items: [{ id: 'generator', icon: '🔋', label: 'Generator / Inverter' }, { id: 'water', icon: '💧', label: 'Water Backup' }, { id: 'solar', icon: '☀️', label: 'Solar' }] },
   { cat: '🚗 Parking & Access', items: [{ id: 'parking', icon: '🚗', label: 'Free Parking' }, { id: 'elevator', icon: '🛗', label: 'Elevator' }, { id: 'gated', icon: '🚪', label: 'Gated Entry' }] },
   { cat: '🧺 Laundry & Bathroom', items: [{ id: 'washer', icon: '🫧', label: 'Washing Machine' }, { id: 'hotshower', icon: '🚿', label: 'Hot Shower' }, { id: 'bathtub', icon: '🛁', label: 'Bathtub' }, { id: 'hairdryer', icon: '🪒', label: 'Hair Dryer' }, { id: 'toiletries', icon: '🧴', label: 'Toiletries Provided' }] },
-  { cat: '🏊 Building Facilities', items: [{ id: 'pool', icon: '🏊', label: 'Swimming Pool' }, { id: 'gym', icon: '💪', label: 'Gym' }, { id: 'garden', icon: '🌳', label: 'Garden / Rooftop' }, { id: 'bbq', icon: '🍖', label: 'BBQ Area' }, { id: 'child', icon: '🧒', label: 'Child-Safe Building' }] },
+  { cat: '🏊 Building Facilities', items: [{ id: 'pool', icon: '🏊', label: 'Swimming Pool' }, { id: 'gym', icon: '💪', label: 'Gym' }, { id: 'garden', icon: '🌳', label: 'Garden / Rooftop' }, { id: 'poolside', icon: '🌊', label: 'Pool Side' }, { id: 'next-to-garden', icon: '🌿', label: 'Next to Garden' }, { id: 'bbq', icon: '🍖', label: 'BBQ Area' }, { id: 'child', icon: '🧒', label: 'Child-Safe Building' }] },
 ];
 
 // ─── Amenities Data & Icon ────────────────────────────────────────────────
@@ -109,9 +102,11 @@ const AMENITIES_FLAT = [
   { id: 'generator', label: 'Generator' },
   { id: 'solar',     label: 'Solar Power' },
   { id: 'cctv',      label: 'CCTV' },
-  { id: 'balcony',   label: 'Balcony' },
-  { id: 'garden',    label: 'Garden' },
-  { id: 'bbq',       label: 'BBQ Grill' },
+  { id: 'balcony',        label: 'Balcony' },
+  { id: 'garden',         label: 'Garden' },
+  { id: 'poolside',       label: 'Pool Side' },
+  { id: 'next-to-garden', label: 'Next to Garden' },
+  { id: 'bbq',            label: 'BBQ Grill' },
   { id: 'elevator',  label: 'Elevator' },
   { id: 'pets',      label: 'Pet Friendly' },
   { id: 'babycot',   label: 'Baby Cot' },
@@ -143,7 +138,9 @@ function AmenityIcon({ id }: { id: string }) {
     case 'solar':     return <svg {...s}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>;
     case 'cctv':      return <svg {...s}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>;
     case 'balcony':   return <svg {...s}><path d="M3 17h18M3 12h18M8 17V7M12 17V5M16 17V7M3 7h18"/></svg>;
-    case 'garden':    return <svg {...s}><path d="M12 22V12"/><path d="M12 12C12 12 9 9 6 10s-4 5-1 8c1.5 1.5 4 2 7 2"/><path d="M12 12c0 0 3-3 6-2s4 5 1 8c-1.5 1.5-4 2-7 2"/></svg>;
+    case 'garden':         return <svg {...s}><path d="M12 22V12"/><path d="M12 12C12 12 9 9 6 10s-4 5-1 8c1.5 1.5 4 2 7 2"/><path d="M12 12c0 0 3-3 6-2s4 5 1 8c-1.5 1.5-4 2-7 2"/></svg>;
+    case 'poolside':      return <svg {...s}><path d="M2 12c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/><path d="M2 17c2-2.5 4-2.5 6 0s4 2.5 6 0 4-2.5 6 0"/><circle cx="19" cy="6" r="2"/><path d="M19 8v4"/></svg>;
+    case 'next-to-garden': return <svg {...s}><path d="M12 22V14"/><path d="M12 14c0 0-4-3-6-1s-2 7 0 9c1 1 3 1 6 1"/><path d="M12 14c0 0 4-3 6-1s2 7 0 9c-1 1-3 1-6 1"/><path d="M9 4c0 0-2 2-2 5s2 4 5 4"/></svg>;
     case 'bbq':       return <svg {...s}><path d="M8.5 14.5A2.5 2.5 0 0011 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 11-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 002.5 2.5z"/></svg>;
     case 'elevator':  return <svg {...s}><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M9 9l3-3 3 3M9 15l3 3 3-3"/></svg>;
     case 'pets':      return <svg {...s}><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/><path d="M8 14v.5A3.5 3.5 0 0011.5 18h1a3.5 3.5 0 003.5-3.5V14a2 2 0 00-2-2h-4a2 2 0 00-2 2z"/></svg>;

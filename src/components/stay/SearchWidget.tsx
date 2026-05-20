@@ -499,15 +499,27 @@ function DesktopGuestsDropdown({ adults: ia, children: ic, rooms: ir, onConfirm,
 }
 
 // ── SearchWidget (default export) ────────────────────────────────────────────
-export default function SearchWidget() {
+export default function SearchWidget({
+  initialCheckIn  = '',
+  initialCheckOut = '',
+  initialAdults   = 2,
+  initialChildren = 0,
+  initialRooms    = 1,
+}: {
+  initialCheckIn?:  string;
+  initialCheckOut?: string;
+  initialAdults?:   number;
+  initialChildren?: number;
+  initialRooms?:    number;
+} = {}) {
   const router   = useRouter();
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [checkIn,          setCheckIn]          = useState('');
-  const [checkOut,         setCheckOut]         = useState('');
-  const [adults,           setAdults]           = useState(2);
-  const [children,         setChildren]         = useState(0);
-  const [rooms,            setRooms]            = useState(1);
+  const [checkIn,          setCheckIn]          = useState(initialCheckIn);
+  const [checkOut,         setCheckOut]         = useState(initialCheckOut);
+  const [adults,           setAdults]           = useState(initialAdults);
+  const [children,         setChildren]         = useState(initialChildren);
+  const [rooms,            setRooms]            = useState(initialRooms);
   const [pets,             setPets]             = useState(false);
   const [showMobileDate,   setShowMobileDate]   = useState(false);
   const [showDesktopDate,  setShowDesktopDate]  = useState(false);

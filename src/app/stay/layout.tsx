@@ -65,6 +65,7 @@ const NAV_LINKS = [
 export default function StayLayout({ children }: { children: React.ReactNode }) {
   const pathname  = usePathname();
   const isPropertyPage = /^\/stay\/rooms\/[^/]+/.test(pathname);
+  const isRoomsPage    = pathname === '/stay/rooms';
   const router    = useRouter();
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [loading,    setLoading]    = useState(false);
@@ -162,13 +163,22 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               </>
             )}
-            <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                {menuOpen
-                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
-              </svg>
-            </button>
+            {/* Mobile: back arrow on rooms page, hamburger everywhere else */}
+            {isRoomsPage ? (
+              <button className="md:hidden p-2 rounded-lg" onClick={() => router.back()} aria-label="Go back">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+            ) : (
+              <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  {menuOpen
+                    ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                    : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>}
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -287,7 +297,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Mobile sticky bottom nav ── */}
-      {!isPropertyPage && <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
+      {!isPropertyPage && !isRoomsPage && <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
         {NAV_LINKS.filter(l => {
           if (l.label === 'Rooms') return false;
           if (l.label === 'Trips' && !loggedIn) return false;
