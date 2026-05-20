@@ -120,38 +120,43 @@ function GroupBookingContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-20">
 
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
+      <div className="px-4 sm:px-6 pb-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-5">
-            <Link href="/stay/rooms" className="text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back</Link>
-            <span className="text-white/30">/</span>
-            <span className="text-white text-sm font-semibold">Group Booking</span>
+          <div className="flex items-center gap-3 mb-3">
+            <Link href="/stay/rooms" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            </Link>
+            <h1 className="text-xl font-black text-gray-900">Group Booking</h1>
           </div>
-          <h1 className="text-2xl font-black text-white mb-6">Group Booking</h1>
-          {/* Progress */}
-          <div className="flex items-center gap-0">
+          {/* Progress — stretches full width on mobile */}
+          <div className="flex items-center w-full">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black transition-all ${
-                    i + 1 < step  ? 'bg-white text-gray-900' :
-                    i + 1 === step ? 'text-white border-2 border-white' : 'bg-white/20 text-white/60'
-                  }`}>
+                    i + 1 < step  ? 'text-white' : i + 1 === step ? 'text-white border-2' : 'text-gray-400 border-2 border-gray-200'
+                  }`} style={i + 1 < step ? { background: '#16a34a' } : i + 1 === step ? { borderColor: '#16a34a', color: '#16a34a' } : {}}>
                     {i + 1 < step ? '✓' : i + 1}
                   </div>
-                  <span className={`text-xs mt-1 font-semibold ${i + 1 <= step ? 'text-white' : 'text-white/50'}`}>{label}</span>
+                  <span className={`text-xs mt-1 font-semibold ${
+                    i + 1 < step ? 'text-green-700' : i + 1 === step ? 'text-gray-900' : 'text-gray-400'
+                  }`}>{label}</span>
                 </div>
-                {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 mb-4 ${i + 1 < step ? 'bg-white' : 'bg-white/20'}`} />}
+                {i < STEPS.length - 1 && (
+                  <div className={`flex-1 h-0.5 mx-2 mb-4 ${
+                    i + 1 < step ? 'bg-green-600' : 'bg-gray-200'
+                  }`} />
+                )}
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         <div className="grid lg:grid-cols-3 gap-8">
 
           {/* Main */}
@@ -349,8 +354,8 @@ function GroupBookingContent() {
             )}
           </div>
 
-          {/* Sidebar summary */}
-          <div className="lg:col-span-1">
+          {/* Sidebar summary — hidden on mobile */}
+          <div className="hidden lg:block lg:col-span-1">
             <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
               <div className="p-5 border-b border-gray-100" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <h3 className="font-black text-white text-sm">Group Summary</h3>
