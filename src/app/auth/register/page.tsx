@@ -8,21 +8,15 @@ import { createClient } from '@/lib/supabase/client';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [fullName, setFullName] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName || !businessName || !email || !password || !confirmPassword) {
+    if (!businessName || !email || !password) {
       toast.error('Please fill in all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      toast.error('Passwords do not match');
       return;
     }
     if (password.length < 8) {
@@ -34,7 +28,7 @@ export default function RegisterPage() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, confirmPassword, fullName, businessName }),
+        body: JSON.stringify({ email, password, businessName }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -77,10 +71,6 @@ export default function RegisterPage() {
           </div>
           <div className="px-6 sm:px-8 py-6 sm:py-8">
             <form onSubmit={handleRegister} className="space-y-4">
-              <input type="text" value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Full Name"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               <input type="text" value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 placeholder="Business / Property Name"
@@ -92,10 +82,6 @@ export default function RegisterPage() {
               <input type="password" value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your Password"
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
-              <input type="password" value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm Password"
                 className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all" />
               <button type="submit" disabled={loading}
                 className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">

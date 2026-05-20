@@ -8,12 +8,9 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string(),
-  fullName: z.string().min(2, 'Full name is required'),
+  confirmPassword: z.string().optional(),
+  fullName: z.string().optional().default(''),
   businessName: z.string().min(2, 'Business name is required'),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
 });
 
 export const forgotPasswordSchema = z.object({
