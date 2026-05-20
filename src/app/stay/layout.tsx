@@ -124,7 +124,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
-            {NAV_LINKS.filter(l => !((l.label === 'Trips' || l.label === 'Profile') && !loggedIn)).map(l => (
+            {NAV_LINKS.filter(l => l.label !== 'Profile' && !((l.label === 'Trips') && !loggedIn)).map(l => (
               <button key={l.href} onClick={() => handleNavClick(l.href)}
                 className={`px-4 py-1.5 rounded-full text-sm font-semibold transition-colors border ${
                   pathname === l.href
@@ -136,9 +136,21 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
             ))}
           </nav>
 
-          {/* Auth buttons (desktop, logged out only) + hamburger (mobile always) */}
+          {/* Auth buttons / user avatar (desktop) + hamburger (mobile always) */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {!loggedIn && (
+            {loggedIn && userMeta ? (
+              <Link href="/stay/profile"
+                className="hidden md:flex items-center justify-center w-9 h-9 rounded-full overflow-hidden border-2 border-white/30 hover:border-white transition-all flex-shrink-0"
+                title={`${userMeta.name} — View Profile`}>
+                {userMeta.avatar ? (
+                  <img src={userMeta.avatar} alt={userMeta.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm font-black text-white" style={{ background: '#16a34a' }}>
+                    {userMeta.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </Link>
+            ) : (
               <>
                 <Link href="/stay/auth"
                   className="hidden md:inline-flex items-center px-4 py-1.5 rounded text-sm font-semibold text-white border border-white/40 hover:bg-white/10 transition-colors">
