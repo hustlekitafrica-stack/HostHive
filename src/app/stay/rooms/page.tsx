@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BedDouble, Droplets, Users, MapPin, Search, Heart, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { BedDouble, Droplets, Users, MapPin, Search, Heart, Plus, Check, ShoppingCart } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import { createClient } from '@/lib/supabase/client';
@@ -207,7 +207,11 @@ function RoomsContent() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {filtered.map(p => (
               <Link key={p.id} href={`/stay/rooms/${p.id}${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
-                className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+                className={`group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 ${
+                  isMultiMode && cart.some(c => c.property.id === p.id)
+                    ? 'border-green-500 bg-green-50'
+                    : 'border-gray-100 bg-white'
+                }`}>
                 <div className="relative">
                   <CardImageCarousel photos={p.photos ?? []} alt={p.name} height="h-52" />
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
@@ -250,19 +254,19 @@ function RoomsContent() {
                       <span className="text-xs text-gray-400"> / night</span>
                     </div>
                     {isMultiMode && (() => {
-                      const entry = cart.find(c => c.property.id === p.id);
-                      return entry ? (
-                        <div className="flex items-center gap-1.5" onClick={e => e.preventDefault()}>
-                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = prev.map(c => c.property.id === p.id ? { ...c, qty: c.qty - 1 } : c).filter(c => c.qty > 0); sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="w-6 h-6 rounded-full border flex items-center justify-center border-gray-300 text-gray-600 hover:border-gray-900">
-                            <Minus className="w-3 h-3" />
-                          </button>
-                          <span className="text-sm font-black text-gray-900 w-4 text-center">{entry.qty}</span>
-                          <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = prev.map(c => c.property.id === p.id ? { ...c, qty: c.qty + 1 } : c); sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="w-6 h-6 rounded-full flex items-center justify-center text-white" style={{ background: '#16a34a' }}>
-                            <Plus className="w-3 h-3" />
-                          </button>
-                        </div>
+                      const inCart = cart.some(c => c.property.id === p.id);
+                      return inCart ? (
+                        <button
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = prev.filter(c => c.property.id !== p.id); sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }}
+                          className="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg border-2 transition-all"
+                          style={{ color: '#16a34a', borderColor: '#16a34a', background: '#f0fdf4' }}>
+                          <Check className="w-3 h-3" /> Added
+                        </button>
                       ) : (
-                        <button onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = [...prev, { property: p, qty: 1 }]; sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }} className="flex items-center gap-1 text-xs font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: '#16a34a' }}>
+                        <button
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setCart(prev => { const n = [...prev, { property: p, qty: 1 }]; sessionStorage.setItem('roomCart', JSON.stringify(n)); return n; }); }}
+                          className="flex items-center gap-1 text-xs font-bold text-white px-3 py-1.5 rounded-lg"
+                          style={{ background: '#16a34a' }}>
                           <Plus className="w-3 h-3" /> Add
                         </button>
                       );
