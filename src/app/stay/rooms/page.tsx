@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { BedDouble, Droplets, Users, Home as HomeIcon, MapPin, Search, ArrowRight, Heart, Plus, Minus, ShoppingCart } from 'lucide-react';
+import { BedDouble, Droplets, Users, MapPin, Search, Heart, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { DatePickerModal, GuestsModal } from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import { createClient } from '@/lib/supabase/client';
@@ -20,9 +20,9 @@ function RoomsContent() {
   const [typeFilter, setTypeFilter] = useState('All');
   const [adults,    setAdults]    = useState(Number(params.get('guests') ?? 2));
   const [children,  setChildren]  = useState(0);
-  const [rooms,     setRooms]     = useState(Number(params.get('rooms') ?? 1));
-  const isMultiMode = rooms >= 2;
-  const [cart, setCart] = useState<{ property: any; qty: number }[]>([]);
+  const [rooms,        setRooms]        = useState(Number(params.get('rooms') ?? 1));
+  const [isMultiMode,  setIsMultiMode]  = useState(Number(params.get('rooms') ?? 1) >= 2);
+  const [cart,         setCart]         = useState<{ property: any; qty: number }[]>([]);
   const guestFilter = adults + children;
   const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? '');
   const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? '');
@@ -137,13 +137,7 @@ function RoomsContent() {
             </button>
           </div>
 
-          <div className="mt-6 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <div className="flex gap-3">
-              <Link href={`/stay/book/group${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-colors">
-                <Users className="w-4 h-4" /> Group Booking <ArrowRight className="w-3 h-3" />
-              </Link>
-            </div>
+          <div className="mt-6 flex items-center justify-end">
             <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
               className="bg-white text-gray-900 text-sm font-semibold rounded-lg px-4 py-2 outline-none">
               <option value="price_asc">Price: Low to High</option>
@@ -154,7 +148,7 @@ function RoomsContent() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 pb-28 md:pb-8">
 
         {/* Type tabs */}
         <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
@@ -169,19 +163,21 @@ function RoomsContent() {
           ))}
         </div>
 
-        {/* Results count */}
+        {/* Results count + group booking toggle */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-gray-600">
             {loading ? 'Loading…' : `${filtered.length} room${filtered.length !== 1 ? 's' : ''} available`}
             {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
           </p>
-          {(checkIn && checkOut) && (
-            <Link href={`/stay/book/group?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}`}
-              className="text-sm font-bold text-white px-4 py-2 rounded-lg transition-all hover:opacity-90"
-              style={{ background: '#16a34a' }}>
-              Book Multiple Rooms →
-            </Link>
-          )}
+          <button
+            onClick={() => { setIsMultiMode(v => !v); setCart([]); }}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              isMultiMode ? 'text-white border-transparent' : 'text-gray-600 border-gray-200 bg-white hover:border-gray-400'
+            }`}
+            style={isMultiMode ? { background: '#16a34a' } : {}}>
+            <Users className="w-3.5 h-3.5" />
+            {isMultiMode ? 'Group Mode ON' : 'Group Booking'}
+          </button>
         </div>
 
         {/* Room grid */}
@@ -279,13 +275,13 @@ function RoomsContent() {
         )}
       </div>
 
-      {/* Sticky cart bar — multi-room mode */}
+      {/* Sticky cart bar — multi-room mode, desktop only */}
       {isMultiMode && cart.length > 0 && (() => {
         const totalRooms = cart.reduce((s, c) => s + c.qty, 0);
         const nights = checkIn && checkOut && checkOut > checkIn ? Math.round((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86400000) : 0;
         const totalPrice = cart.reduce((s, c) => s + Number(c.property.nightly_rate || 0) * (nights || 1) * c.qty, 0);
         return (
-          <div className="fixed bottom-20 md:bottom-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+          <div className="hidden md:flex fixed bottom-6 left-0 right-0 z-50 justify-center px-4 pointer-events-none">
             <div className="pointer-events-auto flex items-center justify-between gap-4 bg-gray-900 text-white rounded-2xl shadow-2xl px-5 py-3.5 w-full max-w-md">
               <div className="flex items-center gap-3">
                 <ShoppingCart className="w-5 h-5 text-green-400" />
