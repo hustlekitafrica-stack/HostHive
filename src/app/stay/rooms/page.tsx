@@ -139,8 +139,11 @@ function RoomsContent() {
         </div>
       </div>
 
-      {/* MOBILE search card — white background, sits directly below fixed navbar */}
-      <div className="md:hidden bg-white px-4 pb-3" style={{ paddingTop: '68px' }}>
+      {/* MOBILE: small dark strip — visual continuity with nav */}
+      <div className="md:hidden" style={{ background: '#1e293b', height: '14px' }} />
+
+      {/* MOBILE search card — sits right below dark strip */}
+      <div className="md:hidden px-4 pb-3 pt-2">
         {!searchExpanded ? (
           <button
             onClick={() => setSearchExpanded(true)}
