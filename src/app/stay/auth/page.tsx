@@ -49,19 +49,6 @@ function StayAuthContent() {
     <div className="min-h-full flex flex-col items-center px-4 pt-[60px] pb-6"
       style={{ background: 'linear-gradient(160deg, #0f172a 0%, #0f172a 50%, #f8fafc 100%)' }}>
 
-      {/* Logo */}
-      <div className="text-center mb-8">
-        <Link href="/stay">
-          <div className="inline-flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-lg" style={{ background: '#16a34a' }}>K</div>
-            <span className="font-black text-2xl text-white tracking-tight">KOGELO SUITES</span>
-          </div>
-        </Link>
-        <p className="text-white/60 text-sm mt-1">
-          {tab === 'login' ? 'Welcome back! Sign in to continue.' : 'Create your account to book with us.'}
-        </p>
-      </div>
-
       {/* Card */}
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden">
 
