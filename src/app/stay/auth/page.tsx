@@ -46,7 +46,7 @@ function StayAuthContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-12 pt-20"
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 py-6"
       style={{ background: 'linear-gradient(160deg, #0f172a 0%, #0f172a 50%, #f8fafc 100%)' }}>
 
       {/* Logo */}
