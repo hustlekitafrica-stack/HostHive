@@ -218,8 +218,8 @@ function RoomsContent() {
         <div className="flex gap-6 items-start">
 
           {/* ── LEFT SIDEBAR – desktop only ── */}
-          <aside className="hidden md:block w-56 flex-shrink-0">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20">
+          <aside className="hidden md:block w-64 flex-shrink-0 sticky top-20 self-start">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="font-black text-gray-900 mb-4 text-sm">Filters</h3>
 
               {/* Sort */}
@@ -266,11 +266,21 @@ function RoomsContent() {
               {/* Map */}
               <div className="border-t border-gray-100 pt-4">
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Location</p>
+                <div className="rounded-xl overflow-hidden mb-3" style={{ height: '160px' }}>
+                  <iframe
+                    src="https://maps.google.com/maps?q=Kogelo,Siaya,Kenya&t=&z=14&ie=UTF8&iwloc=&output=embed"
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title="Kogelo Suites location"
+                  />
+                </div>
                 <a
                   href="https://maps.google.com/maps?q=Kogelo+Suites,Kogelo,Siaya,Kenya"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
+                  className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
+                  style={{ background: '#1e293b' }}>
                   <Map className="w-4 h-4 flex-shrink-0" />
                   View on Map
                 </a>
