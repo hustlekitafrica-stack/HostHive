@@ -526,10 +526,21 @@ export default function SearchWidget({
   const [showMobileGuests, setShowMobileGuests] = useState(false);
   const [showDesktopGuests,setShowDesktopGuests]= useState(false);
 
-  // Lock body scroll when any mobile overlay is open
+  // Lock body scroll (iOS-safe: position fixed technique)
   useEffect(() => {
-    document.body.style.overflow = (showMobileDate || showMobileGuests) ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (!showMobileDate && !showMobileGuests) return;
+    const y = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${y}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, y);
+    };
   }, [showMobileDate, showMobileGuests]);
 
   const guestLabel = `${adults} adult${adults !== 1 ? 's' : ''} · ${children} child${children !== 1 ? 'ren' : ''} · ${rooms} room${rooms !== 1 ? 's' : ''}`;

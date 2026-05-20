@@ -54,11 +54,22 @@ function RoomsContent() {
     setRooms(Number(params.get('rooms') ?? 1));
   }, [params]);
 
-  // Lock body scroll whenever any mobile overlay is open
+  // Lock body scroll (iOS-safe: position fixed technique)
   useEffect(() => {
     const anyOpen = showSortSheet || showFilterSheet || showMapView || showDate || showGuests;
-    document.body.style.overflow = anyOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    if (!anyOpen) return;
+    const y = window.scrollY;
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${y}px`;
+    document.body.style.width = '100%';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, y);
+    };
   }, [showSortSheet, showFilterSheet, showMapView, showDate, showGuests]);
 
   useEffect(() => {
@@ -462,8 +473,8 @@ function RoomsContent() {
       {/* ── MOBILE SORT BOTTOM SHEET ── */}
       {showSortSheet && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden" onClick={() => setShowSortSheet(false)}>
-          <div className="bg-black/40 absolute inset-0" />
-          <div className="relative bg-white rounded-t-2xl shadow-2xl pb-8" onClick={e => e.stopPropagation()}>
+          <div className="bg-black/70 absolute inset-0" />
+          <div className="relative bg-white rounded-t-2xl shadow-2xl" style={{ paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))' }} onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
               <h3 className="text-base font-black text-gray-900">Sort by</h3>
               <button onClick={() => setShowSortSheet(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
@@ -489,7 +500,7 @@ function RoomsContent() {
       {/* ── MOBILE FILTER BOTTOM SHEET ── */}
       {showFilterSheet && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end md:hidden" onClick={() => setShowFilterSheet(false)}>
-          <div className="bg-black/40 absolute inset-0" />
+          <div className="bg-black/70 absolute inset-0" />
           <div className="relative bg-white rounded-t-2xl shadow-2xl flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-100">
@@ -537,7 +548,7 @@ function RoomsContent() {
               </div>
             </div>
             {/* Show results button */}
-            <div className="px-5 py-4 border-t border-gray-100">
+            <div className="px-5 pt-4 border-t border-gray-100" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
               <button onClick={() => setShowFilterSheet(false)}
                 className="w-full py-3.5 rounded-xl text-base font-bold text-white"
                 style={{ background: '#16a34a' }}>
