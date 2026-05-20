@@ -34,15 +34,10 @@ function StayAuthContent() {
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     const { error: err } = await supabase.auth.signUp({ email, password });
+    if (err) { setLoading(false); setError(err.message); return; }
+    await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (err) { setError(err.message); return; }
-    const { error: loginErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (loginErr) {
-      setError('Account created! Please sign in.');
-      setTab('login');
-      return;
-    }
-    router.replace(redirect);
+    router.replace('/stay');
   };
 
   return (
