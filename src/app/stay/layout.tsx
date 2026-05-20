@@ -118,10 +118,19 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       {!isPropertyPage && <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
 
-          {/* Logo */}
-          <Link href="/stay" className="flex items-center gap-2 flex-shrink-0">
-            <span className="font-black text-lg tracking-tight text-white">Kogelo Suites</span>
-          </Link>
+          {/* LEFT: back button (mobile rooms) + logo */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isRoomsPage && (
+              <button className="md:hidden p-2 -ml-2 rounded-lg" onClick={() => router.back()} aria-label="Go back">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+                </svg>
+              </button>
+            )}
+            <Link href="/stay" className="flex items-center gap-2 flex-shrink-0">
+              <span className="font-black text-lg tracking-tight text-white">Kogelo Suites</span>
+            </Link>
+          </div>
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1 flex-1 justify-center">
@@ -163,14 +172,8 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 </Link>
               </>
             )}
-            {/* Mobile: back arrow on rooms page, hamburger everywhere else */}
-            {isRoomsPage ? (
-              <button className="md:hidden p-2 rounded-lg" onClick={() => router.back()} aria-label="Go back">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-                </svg>
-              </button>
-            ) : (
+            {/* Mobile hamburger — hidden on rooms page (back button moved to left) */}
+            {!isRoomsPage && (
               <button className="md:hidden p-2 rounded-lg" onClick={() => setMenuOpen(v => !v)} aria-label="Toggle menu">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   {menuOpen
