@@ -166,13 +166,13 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16 pb-28">
+    <div className="bg-[#f8fafc] h-[100dvh] overflow-hidden flex flex-col lg:h-auto lg:min-h-screen lg:overflow-visible lg:pt-16 lg:pb-28">
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
-        <div className="grid lg:grid-cols-5 gap-8">
+      <div className="flex-1 flex flex-col overflow-hidden max-w-4xl mx-auto w-full px-4 sm:px-6 lg:py-4">
+        <div className="flex-1 flex flex-col lg:grid lg:grid-cols-5 lg:gap-8 overflow-hidden">
 
           {/* ── Left: Guest form — always desktop, step 2 on mobile ── */}
-          <div className={`lg:col-span-3 space-y-5 ${step === 1 ? 'hidden lg:block' : ''}`}>
+          <div className={`lg:col-span-3 ${step === 1 ? 'hidden lg:block' : 'flex-1 flex flex-col justify-center overflow-y-auto pb-20 space-y-5'}`}>
 
             {/* Guest details form */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -211,8 +211,8 @@ function CheckoutContent() {
           </div>
 
           {/* ── Right: Booking summary — always desktop, step 1 on mobile ── */}
-          <div className={`lg:col-span-2 ${step === 2 ? 'hidden lg:block' : ''}`}>
-            <div className="sticky top-24 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className={`lg:col-span-2 ${step === 2 ? 'hidden lg:block' : 'flex-1 flex items-center justify-center pb-20'}`}>
+            <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden lg:sticky lg:top-24">
               <div className="p-5" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <p className="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">Booking Summary</p>
                 <h3 className="font-black text-white text-base">{property?.name ?? '—'}</h3>
