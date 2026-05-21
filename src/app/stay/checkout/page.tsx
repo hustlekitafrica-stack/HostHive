@@ -40,6 +40,7 @@ function CheckoutContent() {
   const [error,      setError]      = useState('');
   const [success,    setSuccess]    = useState(false);
   const [bookingRef, setBookingRef] = useState('');
+  const [step,       setStep]       = useState<1 | 2>(1);
 
   useEffect(() => {
     const supabase = createClient();
@@ -161,27 +162,44 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16">
+    <div className="min-h-screen bg-[#f8fafc] pt-16 pb-28">
 
       {/* Header */}
-      <div className="py-10 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
+      <div className="py-6 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
         <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3 mb-2">
+            {step === 2 ? (
+              <button onClick={() => setStep(1)} className="lg:hidden text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back to summary</button>
+            ) : null}
             <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
-              className="text-white/60 hover:text-white text-sm font-semibold transition-colors">
+              className={`text-white/60 hover:text-white text-sm font-semibold transition-colors ${step === 2 ? 'hidden lg:inline' : ''}`}>
               ← Back to room
             </Link>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">Checkout</h1>
-          <p className="text-white/60 mt-1 text-sm">Review your booking and confirm your details below.</p>
+          <h1 className="text-2xl sm:text-3xl font-black text-white">{step === 1 ? 'Booking Summary' : 'Your Details'}</h1>
+          <p className="text-white/60 mt-1 text-sm">
+            {step === 1 ? 'Review your booking before entering your details.' : 'Fill in your details to confirm the reservation.'}
+          </p>
+          {/* Mobile step indicator */}
+          <div className="flex items-center gap-2 mt-3 lg:hidden">
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: step >= 1 ? '#16a34a' : '#e2e8f0', color: step >= 1 ? 'white' : '#94a3b8' }}>1</div>
+              <span className="text-xs font-semibold" style={{ color: step === 1 ? 'white' : 'rgba(255,255,255,0.5)' }}>Summary</span>
+            </div>
+            <div className="flex-1 h-px bg-white/20" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: step === 2 ? '#16a34a' : '#e2e8f0', color: step === 2 ? 'white' : '#94a3b8' }}>2</div>
+              <span className="text-xs font-semibold" style={{ color: step === 2 ? 'white' : 'rgba(255,255,255,0.5)' }}>Details</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <div className="grid lg:grid-cols-5 gap-8">
 
-          {/* ── Left: Guest form ── */}
-          <div className="lg:col-span-3 space-y-5">
+          {/* ── Left: Guest form — always desktop, step 2 on mobile ── */}
+          <div className={`lg:col-span-3 space-y-5 ${step === 1 ? 'hidden lg:block' : ''}`}>
 
             {/* Auth status banner */}
             {authUser ? (
@@ -238,20 +256,11 @@ function CheckoutContent() {
               </div>
             </div>
 
-            {/* Submit */}
             {error && <p className="text-sm text-red-600 font-semibold px-1">{error}</p>}
-            <button onClick={handleSubmit} disabled={submitting || !property}
-              className="w-full py-4 rounded-2xl text-base font-black text-white disabled:opacity-50 transition-all hover:opacity-90 active:scale-[0.98]"
-              style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
-              {submitting ? 'Sending Request…' : `Confirm Reservation Request · KSh ${total.toLocaleString()}`}
-            </button>
-            <p className="text-xs text-center text-gray-400">
-              No payment is collected now. Our team will call to confirm your reservation.
-            </p>
           </div>
 
-          {/* ── Right: Booking summary ── */}
-          <div className="lg:col-span-2">
+          {/* ── Right: Booking summary — always desktop, step 1 on mobile ── */}
+          <div className={`lg:col-span-2 ${step === 2 ? 'hidden lg:block' : ''}`}>
             <div className="sticky top-24 bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-5" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <p className="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">Booking Summary</p>
@@ -315,6 +324,37 @@ function CheckoutContent() {
 
         </div>
       </div>
+
+      {/* ── Sticky footer (matches room page style) ── */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white"
+        style={{ boxShadow: '0 -2px 16px rgba(0,0,0,0.10)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-black text-gray-900">KSh {total.toLocaleString()}</span>
+            </div>
+            <p className="text-xs text-gray-500 truncate">
+              {nights} night{nights !== 1 ? 's' : ''}{property ? ` · ${property.name}` : ''}
+            </p>
+          </div>
+          {/* Mobile step 1: go to details */}
+          <button
+            onClick={() => setStep(2)}
+            className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-bold text-white transition-all active:scale-95 lg:hidden ${step === 2 ? 'hidden' : ''}`}
+            style={{ background: '#16a34a' }}>
+            Enter Details →
+          </button>
+          {/* Mobile step 2 + desktop: confirm */}
+          <button
+            onClick={handleSubmit}
+            disabled={submitting || !property}
+            className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-bold text-white disabled:opacity-50 transition-all active:scale-95 ${step === 1 ? 'hidden lg:block' : ''}`}
+            style={{ background: '#16a34a' }}>
+            {submitting ? 'Sending…' : 'Confirm Reservation'}
+          </button>
+        </div>
+      </div>
+
     </div>
   );
 }
