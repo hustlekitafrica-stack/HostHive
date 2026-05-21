@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { AirbnbPropertyWizard, WizardFormData } from '@/components/properties/AirbnbPropertyWizard';
 import { createClient } from '@/lib/supabase/client';
 
-type PropStatus = 'active' | 'inactive' | 'maintenance' | 'draft';
+type PropStatus = 'active' | 'inactive' | 'maintenance' | 'draft' | 'blocked';
 
 interface Property {
   id: string;
@@ -94,6 +94,7 @@ const STATUS_DOT: Record<PropStatus, string> = {
   inactive: 'bg-gray-400',
   maintenance: 'bg-yellow-400',
   draft: 'bg-amber-400',
+  blocked: 'bg-orange-500',
 };
 
 const STEP_LABELS = ['','Property Type','Location','Basics','Amenities','Photos','Title & Description','Pricing','Rules & Check-in','Review & Publish'];
@@ -155,12 +156,19 @@ export default function PropertiesPage() {
   const loadProperties = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
-    const { data, error } = await supabase
-      .from('properties')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const today = new Date().toISOString().split('T')[0];
+    const [{ data, error }, { data: blockedData }] = await Promise.all([
+      supabase.from('properties').select('*').order('created_at', { ascending: false }),
+      supabase.from('bookings').select('property_id')
+        .eq('status', 'blocked').lte('check_in', today).gt('check_out', today),
+    ]);
     if (!error && data) {
-      setProperties(data.map(dbRowToProperty));
+      const blockedIds = new Set((blockedData ?? []).map((b: any) => b.property_id));
+      setProperties(data.map(row => {
+        const p = dbRowToProperty(row);
+        if (blockedIds.has(p.id)) p.status = 'blocked';
+        return p;
+      }));
     }
     setLoading(false);
   }, []);
@@ -287,8 +295,8 @@ export default function PropertiesPage() {
     loadProperties();
   };
 
-  const STATUS_LABEL: Record<PropStatus, string> = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance', draft: 'Incomplete' };
-  const STATUS_BG: Record<PropStatus, string> = { active: 'bg-green-100 text-green-700', inactive: 'bg-gray-100 text-gray-600', maintenance: 'bg-yellow-100 text-yellow-700', draft: 'bg-amber-100 text-amber-700' };
+  const STATUS_LABEL: Record<PropStatus, string> = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance', draft: 'Incomplete', blocked: 'Blocked' };
+  const STATUS_BG: Record<PropStatus, string> = { active: 'bg-green-100 text-green-700', inactive: 'bg-gray-100 text-gray-600', maintenance: 'bg-yellow-100 text-yellow-700', draft: 'bg-amber-100 text-amber-700', blocked: 'bg-orange-100 text-orange-700' };
 
   return (
     <>
@@ -678,8 +686,10 @@ export default function PropertiesPage() {
                     <span className="font-semibold text-gray-900 text-sm">{p.name}</span>
                     {p.status === 'draft' ? (
                       <span className="ml-auto text-xs text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">Setup Incomplete</span>
+                    ) : p.status === 'blocked' ? (
+                      <span className="ml-auto text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full border border-orange-200">Blocked</span>
                     ) : (
-                      <span className="ml-auto text-xs text-green-600 font-medium">{p.status}</span>
+                      <span className={`ml-auto text-xs font-medium ${p.status === 'active' ? 'text-green-600' : p.status === 'maintenance' ? 'text-yellow-600' : 'text-gray-500'}`}>{p.status}</span>
                     )}
                   </div>
 
@@ -747,6 +757,8 @@ export default function PropertiesPage() {
                       </div>
                       {p.status === 'draft' ? (
                         <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 whitespace-nowrap flex-shrink-0">Incomplete</span>
+                      ) : p.status === 'blocked' ? (
+                        <span className="text-xs font-semibold bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full border border-orange-200 whitespace-nowrap flex-shrink-0">Blocked</span>
                       ) : (
                         <span className={`text-xs font-medium whitespace-nowrap flex-shrink-0 ${p.status === 'active' ? 'text-green-600' : p.status === 'maintenance' ? 'text-yellow-600' : 'text-gray-500'}`}>{p.status}</span>
                       )}

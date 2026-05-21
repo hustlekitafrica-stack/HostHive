@@ -16,8 +16,23 @@ export async function GET() {
     const { data: properties, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+    // Exclude properties with an active block today
+    const today = new Date().toISOString().split('T')[0];
+    let blockedIds: Set<string> = new Set();
+    try {
+      let bq = publicSupabase
+        .from('bookings')
+        .select('property_id')
+        .eq('status', 'blocked')
+        .lte('check_in', today)
+        .gt('check_out', today);
+      if (hostId) bq = bq.eq('user_id', hostId);
+      const { data: bRows } = await bq;
+      blockedIds = new Set((bRows ?? []).map((b: any) => b.property_id));
+    } catch { /* if RLS blocks the query, show all active properties */ }
+
     const withPhotos = await Promise.all(
-      (properties ?? []).map(async (p: any) => {
+      (properties ?? []).filter((p: any) => !blockedIds.has(p.id)).map(async (p: any) => {
         const { data: photos } = await publicSupabase
           .from('property_photos')
           .select('url, sort_order')

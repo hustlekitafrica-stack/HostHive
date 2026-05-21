@@ -31,8 +31,9 @@ export async function GET(request: NextRequest) {
       .gte('check_in', from)
       .lte('check_in', to);
 
-    const confirmed = (bookings ?? []).filter(b => b.status !== 'cancelled');
+    const confirmed = (bookings ?? []).filter(b => b.status !== 'cancelled' && b.status !== 'blocked');
     const cancelled = (bookings ?? []).filter(b => b.status === 'cancelled');
+    const blockedBookings = (bookings ?? []).filter(b => b.status === 'blocked');
 
     // Today's check-ins / check-outs (always today, not period-filtered)
     const { data: todayCheckins } = await supabase
@@ -78,11 +79,23 @@ export async function GET(request: NextRequest) {
     const totalNightsBooked = confirmed.reduce((s, b) => s + Number(b.nights), 0);
     const occupancyRate = totalNightsAvail > 0 ? Math.round((totalNightsBooked / totalNightsAvail) * 100) : 0;
 
-    // Currently occupied (active booking today)
+    // Fetch ALL blocked bookings active today (regardless of period — long-term blocks may predate 'from')
+    const { data: blockedTodayRows } = await supabase
+      .from('bookings')
+      .select('property_id')
+      .eq('user_id', userId)
+      .eq('status', 'blocked')
+      .lte('check_in', today)
+      .gt('check_out', today);
+    const blockedTodayIds = new Set((blockedTodayRows ?? []).map((b: any) => b.property_id));
+
+    // Currently occupied (active confirmed booking today — excludes blocked)
     const occupiedNow = (properties ?? []).filter(p =>
+      !blockedTodayIds.has(p.id) &&
       confirmed.some(b => b.property_id === p.id && b.check_in <= today && b.check_out > today)
     ).length;
-    const blockedNow = 0; // blocked_dates table can be added later
+    // Currently blocked
+    const blockedNow = (properties ?? []).filter(p => blockedTodayIds.has(p.id)).length;
 
     // ADR / RevPAR
     const adr = totalNightsBooked > 0 ? Math.round(stayRevenue / totalNightsBooked) : 0;
@@ -146,10 +159,11 @@ export async function GET(request: NextRequest) {
       const propOccPct  = Math.min(100, Math.round((propNights / periodDays) * 100));
       const propAvgStay = pb.length > 0 ? Math.round((propNights / pb.length) * 10) / 10 : 0;
       const isOccupied  = pb.some(b => b.check_in <= today && b.check_out > today);
+      const isBlocked = blockedTodayIds.has(p.id);
       return {
         id: p.id,
         name: p.name,
-        status: isOccupied ? 'occupied' : 'available',
+        status: isBlocked ? 'blocked' : isOccupied ? 'occupied' : 'available',
         occupancyPct: propOccPct,
         revenue: propRevenue,
         avgStay: propAvgStay,
@@ -160,7 +174,7 @@ export async function GET(request: NextRequest) {
     const maxUnitRevenue = unitPerformance.reduce((m, u) => Math.max(m, u.revenue), 0);
 
     return NextResponse.json({
-      occupancy: { rate: occupancyRate, occupied: occupiedNow, available: totalProperties - occupiedNow, blocked: blockedNow },
+      occupancy: { rate: occupancyRate, occupied: occupiedNow, available: totalProperties - occupiedNow - blockedNow, blocked: blockedNow },
       properties: properties ?? [],
       unitPerformance,
       maxUnitRevenue,
