@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle } from 'lucide-react';
 
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
   check_in: string; check_out: string; nights: number; num_adults: number; num_children: number;
   room_details: { property_id?: string; property_name: string; qty: number; nightly_rate: number; subtotal: number }[];
-  total_amount: number; special_requests: string; status: string;
+  total_amount: number; special_requests: string; status: string; decline_reason?: string;
+  payment_status?: string;
 };
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; Icon: typeof Clock }> = {
@@ -18,23 +19,23 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; I
 };
 
 export default function RequestsPage() {
-  const [requests,   setRequests]   = useState<BookingRequest[]>([]);
-  const [loading,    setLoading]    = useState(true);
-  const [filter,     setFilter]     = useState('all');
-  const [updating,   setUpdating]   = useState<string | null>(null);
-  const [sendingWa,  setSendingWa]  = useState<string | null>(null);
-  const [waLinks,    setWaLinks]    = useState<Record<string, string>>({});
-  const [toast,      setToast]      = useState('');
+  const [requests,      setRequests]      = useState<BookingRequest[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [filter,        setFilter]        = useState('all');
+  const [updating,      setUpdating]      = useState<string | null>(null);
+  const [sendingWa,     setSendingWa]     = useState<string | null>(null);
+  const [sendingPayment,setSendingPayment] = useState<string | null>(null);
+  const [waLinks,       setWaLinks]       = useState<Record<string, string>>({});
+  const [toast,         setToast]         = useState('');
 
-  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3000); };
+  // Decline modal
+  const [declineTarget,  setDeclineTarget]  = useState<string | null>(null);
+  const [declineReason,  setDeclineReason]  = useState('');
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const load = () => {
     setLoading(true);
-    fetch('/api/stay/my-bookings?userId=host')
-      .then(() => {})
-      .catch(() => {});
-
-    // Host fetches ALL requests via a separate host endpoint
     fetch('/api/stay/requests')
       .then(r => r.json())
       .then(d => setRequests(d.requests ?? []))
@@ -43,20 +44,61 @@ export default function RequestsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const updateStatus = async (id: string, status: string) => {
+  const updateStatus = async (id: string, status: string, extraPayload?: Record<string, string>) => {
     setUpdating(id);
     const res  = await fetch(`/api/stay/booking/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extraPayload }),
     });
     const data = await res.json();
     if (data.error) showToast(`Error: ${data.error}`);
     else {
-      setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
-      showToast(status === 'confirmed' ? '✓ Booking confirmed' : '✕ Booking declined');
+      setRequests(prev => prev.map(r => r.id === id
+        ? { ...r, status, ...(extraPayload?.decline_reason ? { decline_reason: extraPayload.decline_reason } : {}) }
+        : r));
+      showToast(status === 'confirmed' ? '✓ Accepted — SMS sent to guest' : status === 'declined' ? '✕ Declined — SMS sent to guest' : '✓ Updated');
     }
     setUpdating(null);
+  };
+
+  const handleDeclineSubmit = async () => {
+    if (!declineTarget) return;
+    await updateStatus(declineTarget, 'declined', declineReason.trim() ? { decline_reason: declineReason.trim() } : {});
+    setDeclineTarget(null);
+    setDeclineReason('');
+  };
+
+  const sendPaymentLink = async (req: BookingRequest) => {
+    setSendingPayment(req.id);
+    try {
+      const res  = await fetch('/api/stay/pesapal/order', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          booking_request_id: req.id,
+          amount:       req.total_amount,
+          guest_name:   req.guest_name,
+          guest_email:  req.guest_email,
+          guest_phone:  req.guest_phone,
+        }),
+      });
+      const data = await res.json();
+      if (data.redirect_url) {
+        // Also SMS the link to the guest via the booking PATCH endpoint
+        await fetch(`/api/stay/booking/${req.id}`, {
+          method:  'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ status: 'confirmed', payment_link: data.redirect_url }),
+        });
+        showToast('✓ Payment link SMSed to guest');
+      } else {
+        showToast(`Error: ${data.error ?? 'Could not generate payment link'}`);
+      }
+    } catch {
+      showToast('Error generating payment link');
+    }
+    setSendingPayment(null);
   };
 
   const sendReviewLink = async (req: BookingRequest) => {
@@ -95,6 +137,34 @@ export default function RequestsPage() {
       {toast && (
         <div className="fixed top-4 right-4 z-50 bg-gray-900 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-xl">
           {toast}
+        </div>
+      )}
+
+      {/* Decline reason modal */}
+      {declineTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40" onClick={() => { setDeclineTarget(null); setDeclineReason(''); }} />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6">
+            <h3 className="text-base font-black text-gray-900 mb-1">Decline Request</h3>
+            <p className="text-sm text-gray-500 mb-4">Optionally give the guest a reason — it will be sent via SMS.</p>
+            <textarea
+              value={declineReason}
+              onChange={e => setDeclineReason(e.target.value)}
+              rows={3}
+              placeholder="e.g. Fully booked on those dates, please try other dates…"
+              className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 resize-none mb-4"
+            />
+            <div className="flex gap-3">
+              <button onClick={() => { setDeclineTarget(null); setDeclineReason(''); }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-600 hover:bg-gray-50">
+                Cancel
+              </button>
+              <button onClick={handleDeclineSubmit} disabled={!!updating}
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-700 disabled:opacity-50">
+                {updating ? '…' : 'Confirm Decline'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -192,6 +262,7 @@ export default function RequestsPage() {
                 </div>
 
                 <div className="space-y-2">
+                  {/* Pending: Accept / Decline */}
                   {req.status === 'pending' && (
                     <div className="grid grid-cols-2 gap-2">
                       <button onClick={() => updateStatus(req.id, 'confirmed')} disabled={isUpdating}
@@ -199,20 +270,39 @@ export default function RequestsPage() {
                         style={{ background: '#15803d' }}>
                         <CheckCircle2 className="w-4 h-4" />{isUpdating ? '…' : 'Accept'}
                       </button>
-                      <button onClick={() => updateStatus(req.id, 'declined')} disabled={isUpdating}
+                      <button onClick={() => { setDeclineTarget(req.id); setDeclineReason(''); }} disabled={isUpdating}
                         className="flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 bg-red-700 transition-opacity">
-                        <XCircle className="w-4 h-4" />{isUpdating ? '…' : 'Decline'}
+                        <XCircle className="w-4 h-4" />Decline
                       </button>
                     </div>
                   )}
 
+                  {/* Confirmed: Send Payment Link + prompt SMS */}
                   {req.status === 'confirmed' && (
-                    <button onClick={() => sendReviewLink(req)} disabled={isSending}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
-                      style={{ background: '#9B1C1C' }}>
-                      {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                      {isSending ? 'Opening WhatsApp…' : 'Send Review Link'}
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => sendPaymentLink(req)}
+                        disabled={sendingPayment === req.id}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
+                        style={{ background: '#15803d' }}>
+                        {sendingPayment === req.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
+                        {sendingPayment === req.id ? 'Generating…' : 'Send Payment Link'}
+                      </button>
+                      <button onClick={() => sendReviewLink(req)} disabled={isSending}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
+                        style={{ background: '#9B1C1C' }}>
+                        {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                        {isSending ? 'Opening WhatsApp…' : 'Send Review Link'}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Declined: show reason */}
+                  {req.status === 'declined' && req.decline_reason && (
+                    <div className="flex items-start gap-2 bg-red-50 rounded-xl p-3">
+                      <AlertCircle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-xs text-red-700">{req.decline_reason}</p>
+                    </div>
                   )}
 
                   <a href={`https://wa.me/${req.guest_phone.replace(/\D/g,'')}`} target="_blank" rel="noopener noreferrer"

@@ -373,9 +373,12 @@ function RoomsContent() {
                     <span className="flex items-center gap-1"><Droplets className="w-3 h-3" /> {p.bathrooms ?? 1}</span>
                     <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {p.max_guests ?? 2}</span>
                   </div>
-                  {p.amenities?.length > 0 && (
+                  {(p.amenities?.length > 0 || Number(p.breakfast_rate) > 0) && (
                     <div className="flex flex-wrap gap-1 mb-3">
-                      {p.amenities.slice(0, 3).map((a: string) => (
+                      {Number(p.breakfast_rate) > 0 && (
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🍳 B&amp;B Available</span>
+                      )}
+                      {p.amenities?.slice(0, Number(p.breakfast_rate) > 0 ? 2 : 3).map((a: string) => (
                         <span key={a} className="px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600">{a}</span>
                       ))}
                     </div>

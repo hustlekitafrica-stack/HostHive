@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicSupabase } from '@/lib/supabase/public';
+import { sendSmsBulk, buildGuestRequestSms, buildAdminRequestSms } from '@/lib/sms';
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,6 +41,38 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // ── Automated SMS (non-blocking) ────────────────────────────────────────
+    const firstRoom = Array.isArray(room_details) && room_details.length > 0 ? room_details[0] : null;
+    const propertyName = firstRoom?.property_name ?? 'Kogelo Suites';
+    const adminPhone   = process.env.ADMIN_PHONE ?? '';
+
+    sendSmsBulk([
+      {
+        to:      guest_phone.trim(),
+        message: buildGuestRequestSms({
+          guestName:    guest_name.trim(),
+          propertyName,
+          checkIn:      check_in,
+          checkOut:     check_out,
+          nights:       Number(nights),
+          ref:          data.id,
+        }),
+      },
+      ...(adminPhone ? [{
+        to:      adminPhone,
+        message: buildAdminRequestSms({
+          guestName:    guest_name.trim(),
+          guestPhone:   guest_phone.trim(),
+          propertyName,
+          checkIn:      check_in,
+          checkOut:     check_out,
+          nights:       Number(nights),
+          total:        Number(total_amount),
+        }),
+      }] : []),
+    ]).catch(err => console.error('[SMS booking]', err));
+    // ────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({ success: true, id: data.id });
   } catch (err) {

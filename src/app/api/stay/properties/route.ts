@@ -7,7 +7,7 @@ export async function GET() {
 
     let query = publicSupabase
       .from('properties')
-      .select('id, name, type, description, location, address, city, county, bedrooms, bathrooms, max_guests, nightly_rate, weekend_rate, cover_photo, status, latitude, longitude, check_in_time, check_out_time')
+      .select('id, name, type, description, location, address, city, county, bedrooms, bathrooms, max_guests, nightly_rate, weekend_rate, breakfast_rate, cover_photo, status, latitude, longitude, check_in_time, check_out_time')
       .eq('status', 'active')
       .order('name');
 

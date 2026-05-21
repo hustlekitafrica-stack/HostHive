@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, BedDouble, Droplets, Users, Calendar, Moon, ChevronLeft } from 'lucide-react';
+import { CheckCircle2, BedDouble, Droplets, Users, Calendar, Moon } from 'lucide-react';
 
 type Property = {
   id: string; name: string; type: string; nightly_rate: number;
+  breakfast_rate: number;
   bedrooms: number; bathrooms: number; max_guests: number;
   photos: string[]; location: string;
 };
@@ -41,6 +42,7 @@ function CheckoutContent() {
   const [success,    setSuccess]    = useState(false);
   const [bookingRef, setBookingRef] = useState('');
   const [step,       setStep]       = useState<1 | 2>(1);
+  const [addBreakfast,setAddBreakfast] = useState(false);
 
   useEffect(() => {
     const supabase = createClient();
@@ -70,7 +72,9 @@ function CheckoutContent() {
       .finally(() => setPropLoading(false));
   }, [propertyId]);
 
-  const total = property ? property.nightly_rate * nights * rooms : 0;
+  const stayTotal      = property ? property.nightly_rate * nights * rooms : 0;
+  const breakfastTotal  = addBreakfast && property?.breakfast_rate ? property.breakfast_rate * guests * nights : 0;
+  const total           = stayTotal + breakfastTotal;
 
   const handleSubmit = async () => {
     setError('');
@@ -164,53 +168,6 @@ function CheckoutContent() {
   return (
     <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16 pb-28">
 
-      {/* ── Sticky sub-header: back icon + step counter ── */}
-      <div className="sticky top-16 z-30 bg-white border-b border-gray-100" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-        <div className="max-w-4xl mx-auto flex items-center px-4 sm:px-6 py-3">
-          {/* Back icon */}
-          {step === 2 ? (
-            <>
-              <button onClick={() => setStep(1)} className="lg:hidden p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
-                className="hidden lg:flex p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors items-center">
-                <ChevronLeft className="w-5 h-5" />
-              </Link>
-            </>
-          ) : (
-            <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
-              className="flex p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors items-center">
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-          )}
-          {/* Step counter — centred */}
-          <div className="flex items-center gap-2 mx-auto">
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: '#16a34a', color: 'white' }}>1</div>
-              <span className="text-xs font-semibold text-gray-700">Summary</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300 mx-1" />
-            <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: step === 2 ? '#16a34a' : '#e2e8f0', color: step === 2 ? 'white' : '#94a3b8' }}>2</div>
-              <span className="text-xs font-semibold" style={{ color: step === 2 ? '#111827' : '#94a3b8' }}>Details</span>
-            </div>
-          </div>
-          {/* spacer to keep steps centred */}
-          <div className="w-8" />
-        </div>
-      </div>
-
-      {/* ── Page title ── */}
-      <div className="px-4 sm:px-6 pt-6 pb-2">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-black text-gray-900">{step === 1 ? 'Booking Summary' : 'Your Details'}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {step === 1 ? 'Review your booking before entering your details.' : 'Fill in your details to confirm the reservation.'}
-          </p>
-        </div>
-      </div>
-
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
         <div className="grid lg:grid-cols-5 gap-8">
 
@@ -296,11 +253,35 @@ function CheckoutContent() {
                     )}
                   </div>
 
+                  {/* B&B add-on toggle */}
+                  {property.breakfast_rate > 0 && (
+                    <div className="border-t border-gray-100 pt-4">
+                      <label className="flex items-center justify-between cursor-pointer gap-3">
+                        <div>
+                          <p className="text-sm font-bold text-gray-900">🍳 Add Breakfast</p>
+                          <p className="text-xs text-gray-500">KSh {property.breakfast_rate.toLocaleString()} / person / night</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAddBreakfast(v => !v)}
+                          className={`relative inline-flex h-6 w-11 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${addBreakfast ? 'bg-amber-500' : 'bg-gray-200'}`}>
+                          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-200 ${addBreakfast ? 'translate-x-5' : 'translate-x-0'}`} />
+                        </button>
+                      </label>
+                    </div>
+                  )}
+
                   <div className="border-t border-gray-100 pt-4 space-y-2 text-sm">
                     <div className="flex justify-between text-gray-500">
                       <span>KSh {property.nightly_rate.toLocaleString()} × {nights} night{nights !== 1 ? 's' : ''}{rooms > 1 ? ` × ${rooms}` : ''}</span>
-                      <span>KSh {total.toLocaleString()}</span>
+                      <span>KSh {stayTotal.toLocaleString()}</span>
                     </div>
+                    {addBreakfast && breakfastTotal > 0 && (
+                      <div className="flex justify-between text-gray-500">
+                        <span>Breakfast × {guests} guest{guests !== 1 ? 's' : ''} × {nights} night{nights !== 1 ? 's' : ''}</span>
+                        <span>KSh {breakfastTotal.toLocaleString()}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between font-black text-gray-900 text-base pt-1 border-t border-gray-100">
                       <span>Estimated Total</span>
                       <span>KSh {total.toLocaleString()}</span>
