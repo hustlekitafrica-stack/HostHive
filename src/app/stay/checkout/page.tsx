@@ -77,8 +77,9 @@ function CheckoutContent() {
       router.push(`/stay/auth?redirect=${encodeURIComponent('/stay/checkout?' + params.toString())}`);
       return;
     }
-    if (!name.trim())  { setError('Please enter your name.'); return; }
+    if (!name.trim())  { setError('Please enter your full name.'); return; }
     if (!phone.trim()) { setError('Please enter your phone number.'); return; }
+    if (!email.trim()) { setError('Please enter your email address.'); return; }
     if (!property)     { setError('Room information not found.'); return; }
     if (nights <= 0)   { setError('Invalid dates. Please go back and select valid dates.'); return; }
 
@@ -211,25 +212,25 @@ function CheckoutContent() {
               </h2>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Full Name *</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Full Name <span className="text-red-500">*</span></label>
                   <input value={name} onChange={e => setName(e.target.value)} placeholder="John Doe"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Phone Number *</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XX XXX XXX" type="tel"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                    Email Address {!authUser && <span className="normal-case font-normal text-gray-400">(optional)</span>}
+                    Email Address <span className="text-red-500">*</span>
                   </label>
                   <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" type="email"
                     readOnly={!!authUser}
                     className={`w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none transition-colors ${authUser ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-red-800'}`} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Special Requests</label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Special Requests <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
                   <textarea value={requests} onChange={e => setRequests(e.target.value)} rows={3}
                     placeholder="Early check-in, specific floor, dietary requirements, accessibility needs…"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors resize-none" />

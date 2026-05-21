@@ -37,7 +37,7 @@ function StayAuthContent() {
     if (err) { setLoading(false); setError(err.message); return; }
     await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    router.replace('/stay');
+    router.replace(redirect);
   };
 
   return (
