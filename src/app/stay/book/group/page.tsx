@@ -128,18 +128,11 @@ function GroupBookingContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-20">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16">
 
-      {/* Header */}
+      {/* Step progress */}
       <div className="px-4 sm:px-6 pb-4">
         <div className="max-w-3xl mx-auto">
-          <div className="flex items-center gap-3 mb-3">
-            <Link href="/stay/rooms" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-            </Link>
-            <h1 className="text-xl font-black text-gray-900">Group Booking</h1>
-          </div>
-          {/* Progress — stretches full width on mobile */}
           <div className="flex items-center w-full">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center flex-1">

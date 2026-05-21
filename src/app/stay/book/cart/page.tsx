@@ -74,26 +74,7 @@ export default function CartPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-20">
-
-      {/* Header */}
-      <div className="px-4 sm:px-6 pb-4 max-w-2xl mx-auto">
-        <div className="flex items-center gap-3 mb-1">
-          <Link href="/stay/rooms" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
-            </svg>
-          </Link>
-          <h1 className="text-xl font-black text-gray-900">Your Cart</h1>
-        </div>
-        {meta && (
-          <p className="text-sm text-gray-500 ml-9">
-            {fmt(meta.checkIn)} → {fmt(meta.checkOut)}
-            {nights > 0 && ` · ${nights} night${nights !== 1 ? 's' : ''}`}
-            {meta.guests > 0 && ` · ${meta.guests} guest${meta.guests !== 1 ? 's' : ''}`}
-          </p>
-        )}
-      </div>
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16">
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 pb-32 space-y-4">
 
