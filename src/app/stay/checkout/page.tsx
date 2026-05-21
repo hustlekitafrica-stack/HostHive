@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, LogIn, User, BedDouble, Droplets, Users, Calendar, Moon } from 'lucide-react';
+import { CheckCircle2, BedDouble, Droplets, Users, Calendar, Moon, ChevronLeft } from 'lucide-react';
 
 type Property = {
   id: string; name: string; type: string; nightly_rate: number;
@@ -162,66 +162,60 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pt-16 pb-28">
+    <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-16 pb-28">
 
-      {/* Header */}
-      <div className="py-6 px-4 sm:px-6" style={{ background: 'linear-gradient(160deg, #0f172a, #0f172a)' }}>
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-3 mb-2">
-            {step === 2 ? (
-              <button onClick={() => setStep(1)} className="lg:hidden text-white/60 hover:text-white text-sm font-semibold transition-colors">← Back to summary</button>
-            ) : null}
+      {/* ── Sticky sub-header: back icon + step counter ── */}
+      <div className="sticky top-16 z-30 bg-white border-b border-gray-100" style={{ boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        <div className="max-w-4xl mx-auto flex items-center px-4 sm:px-6 py-3">
+          {/* Back icon */}
+          {step === 2 ? (
+            <>
+              <button onClick={() => setStep(1)} className="lg:hidden p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
+                className="hidden lg:flex p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors items-center">
+                <ChevronLeft className="w-5 h-5" />
+              </Link>
+            </>
+          ) : (
             <Link href={property ? `/stay/rooms/${property.id}` : '/stay/rooms'}
-              className={`text-white/60 hover:text-white text-sm font-semibold transition-colors ${step === 2 ? 'hidden lg:inline' : ''}`}>
-              ← Back to room
+              className="flex p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors items-center">
+              <ChevronLeft className="w-5 h-5" />
             </Link>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">{step === 1 ? 'Booking Summary' : 'Your Details'}</h1>
-          <p className="text-white/60 mt-1 text-sm">
-            {step === 1 ? 'Review your booking before entering your details.' : 'Fill in your details to confirm the reservation.'}
-          </p>
-          {/* Mobile step indicator */}
-          <div className="flex items-center gap-2 mt-3 lg:hidden">
+          )}
+          {/* Step counter — centred */}
+          <div className="flex items-center gap-2 mx-auto">
             <div className="flex items-center gap-1.5">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: step >= 1 ? '#16a34a' : '#e2e8f0', color: step >= 1 ? 'white' : '#94a3b8' }}>1</div>
-              <span className="text-xs font-semibold" style={{ color: step === 1 ? 'white' : 'rgba(255,255,255,0.5)' }}>Summary</span>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: '#16a34a', color: 'white' }}>1</div>
+              <span className="text-xs font-semibold text-gray-700">Summary</span>
             </div>
-            <div className="flex-1 h-px bg-white/20" />
+            <div className="w-8 h-px bg-gray-300 mx-1" />
             <div className="flex items-center gap-1.5">
               <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: step === 2 ? '#16a34a' : '#e2e8f0', color: step === 2 ? 'white' : '#94a3b8' }}>2</div>
-              <span className="text-xs font-semibold" style={{ color: step === 2 ? 'white' : 'rgba(255,255,255,0.5)' }}>Details</span>
+              <span className="text-xs font-semibold" style={{ color: step === 2 ? '#111827' : '#94a3b8' }}>Details</span>
             </div>
           </div>
+          {/* spacer to keep steps centred */}
+          <div className="w-8" />
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      {/* ── Page title ── */}
+      <div className="px-4 sm:px-6 pt-6 pb-2">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-2xl font-black text-gray-900">{step === 1 ? 'Booking Summary' : 'Your Details'}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {step === 1 ? 'Review your booking before entering your details.' : 'Fill in your details to confirm the reservation.'}
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
         <div className="grid lg:grid-cols-5 gap-8">
 
           {/* ── Left: Guest form — always desktop, step 2 on mobile ── */}
           <div className={`lg:col-span-3 space-y-5 ${step === 1 ? 'hidden lg:block' : ''}`}>
-
-            {/* Auth status banner */}
-            {authUser ? (
-              <div className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-green-100 shadow-sm">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: '#f0fdf4' }}>
-                  <User className="w-5 h-5" style={{ color: '#16a34a' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-gray-900">Welcome back{authUser.name ? `, ${authUser.name.split(' ')[0]}` : ''}!</p>
-                  <p className="text-xs text-gray-500 truncate">{authUser.email}</p>
-                </div>
-                <span className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full text-white" style={{ background: '#16a34a' }}>Signed in</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-4 bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-                <LogIn className="w-5 h-5 flex-shrink-0 text-gray-400" />
-                <p className="text-sm text-gray-600 flex-1">
-                  <Link href={`/stay/auth?redirect=${encodeURIComponent('/stay/checkout?' + params.toString())}`} className="font-bold hover:underline" style={{ color: '#16a34a' }}>Sign in or create an account</Link>
-                  {' '}— required to complete your booking.
-                </p>
-              </div>
-            )}
 
             {/* Guest details form */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
