@@ -15,9 +15,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params;
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    // Single-tenant: STAY_HOST_USER_ID in env is sufficient; fall back to session
+    if (!process.env.STAY_HOST_USER_ID) {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
 
     const { status, notes, decline_reason, payment_link } = await req.json();
     if (!['confirmed', 'declined', 'cancelled', 'pending'].includes(status)) {
@@ -36,6 +39,49 @@ export async function PATCH(
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // ── Auto-create booking + guest when confirmed ────────────────────────────
+    if (status === 'confirmed') {
+      const hostId = process.env.STAY_HOST_USER_ID;
+      if (hostId) {
+        const req2 = data as any;
+        const rooms = Array.isArray(req2.room_details) ? req2.room_details : [];
+        // Upsert guest
+        let guestId: string | null = null;
+        const { data: existingGuest } = await publicSupabase
+          .from('guests').select('id').eq('user_id', hostId)
+          .ilike('name', (req2.guest_name ?? '').trim()).maybeSingle();
+        if (existingGuest) {
+          guestId = existingGuest.id;
+          await publicSupabase.from('guests').update({ phone: req2.guest_phone, email: req2.guest_email }).eq('id', guestId);
+        } else {
+          const { data: ng } = await publicSupabase.from('guests')
+            .insert({ user_id: hostId, name: (req2.guest_name ?? '').trim(), phone: req2.guest_phone ?? '', email: req2.guest_email ?? '' })
+            .select('id').single();
+          if (ng) guestId = ng.id;
+        }
+        // Create one booking per room line
+        for (const room of rooms) {
+          if (!room.property_id) continue;
+          const nights = req2.nights || Math.round((new Date(req2.check_out).getTime() - new Date(req2.check_in).getTime()) / 86400000);
+          const totalAmt = Number(room.subtotal) || 0;
+          const { data: bk } = await publicSupabase.from('bookings').insert({
+            user_id: hostId, property_id: room.property_id, guest_id: guestId,
+            check_in: req2.check_in, check_out: req2.check_out, nights,
+            nightly_rate: Number(room.nightly_rate) || 0, cleaning_fee: 0,
+            security_deposit: 0, total_amount: totalAmt, amount_paid: 0,
+            balance_due: totalAmt, payment_status: 'unpaid', status: 'confirmed',
+            booking_source: 'Online', notes: req2.special_requests || '',
+          }).select('id').single();
+          if (bk) {
+            const bdRow = { property_id: room.property_id, user_id: hostId, start_date: req2.check_in, end_date: req2.check_out, reason: 'Online Booking', booking_id: bk.id };
+            const { error: bdErr } = await publicSupabase.from('blocked_dates').insert(bdRow);
+            if (bdErr) await publicSupabase.from('blocked_dates').insert({ ...bdRow, booking_id: undefined });
+          }
+        }
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────────
 
     // ── Automated SMS ────────────────────────────────────────────────────────
     const req2       = data as any;

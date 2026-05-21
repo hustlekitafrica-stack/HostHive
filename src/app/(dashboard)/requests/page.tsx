@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu } from 'lucide-react';
 
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
@@ -19,14 +19,21 @@ const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; I
 };
 
 export default function RequestsPage() {
-  const [requests,      setRequests]      = useState<BookingRequest[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [filter,        setFilter]        = useState('all');
-  const [updating,      setUpdating]      = useState<string | null>(null);
-  const [sendingWa,     setSendingWa]     = useState<string | null>(null);
-  const [sendingPayment,setSendingPayment] = useState<string | null>(null);
-  const [waLinks,       setWaLinks]       = useState<Record<string, string>>({});
-  const [toast,         setToast]         = useState('');
+  const [requests,       setRequests]       = useState<BookingRequest[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [filter,         setFilter]         = useState('all');
+  const [updating,       setUpdating]       = useState<string | null>(null);
+  const [sendingWa,      setSendingWa]      = useState<string | null>(null);
+  const [sendingPayment, setSendingPayment] = useState<string | null>(null);
+  const [waLinks,        setWaLinks]        = useState<Record<string, string>>({});
+  const [toast,          setToast]          = useState('');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    const h = (e: CustomEvent) => setSidebarCollapsed(e.detail.collapsed);
+    window.addEventListener('sidebarToggle', h as EventListener);
+    return () => window.removeEventListener('sidebarToggle', h as EventListener);
+  }, []);
 
   // Decline modal
   const [declineTarget,  setDeclineTarget]  = useState<string | null>(null);
@@ -132,7 +139,27 @@ export default function RequestsPage() {
   requests.forEach(r => { if (r.status in counts) (counts as any)[r.status]++; });
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-30 bg-white border-b border-gray-200">
+        <div className={`flex items-center justify-between px-4 lg:px-8 h-[64px] transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[100px]' : 'lg:pl-[300px]'}`}>
+          <div className="flex items-center gap-3">
+            <button className="lg:hidden p-1.5 hover:bg-gray-100 rounded-lg text-gray-700"
+              onClick={() => window.dispatchEvent(new CustomEvent('openMobileMenu'))}>
+              <Menu className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">Booking Requests</h1>
+              <p className="text-xs text-gray-400 hidden sm:block">Guest reservation requests from the portal</p>
+            </div>
+          </div>
+          <button onClick={load} disabled={loading}
+            className="flex items-center gap-2 text-sm font-semibold border border-gray-200 rounded-xl px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50 transition-colors">
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />Refresh
+          </button>
+        </div>
+      </div>
+
       {/* Toast */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 bg-gray-900 text-white text-sm font-semibold px-4 py-3 rounded-xl shadow-xl">
@@ -140,6 +167,7 @@ export default function RequestsPage() {
         </div>
       )}
 
+    <div className={`px-4 py-5 sm:px-6 max-w-5xl transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[120px]' : 'lg:pl-[320px]'}`}>
       {/* Decline reason modal */}
       {declineTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -167,18 +195,6 @@ export default function RequestsPage() {
           </div>
         </div>
       )}
-
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-black text-gray-900">Booking Requests</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Guest reservation requests from the portal</p>
-        </div>
-        <button onClick={load} disabled={loading}
-          className="flex items-center gap-2 text-sm font-semibold border border-gray-200 rounded-xl px-4 py-2 hover:bg-gray-50 disabled:opacity-50 transition-colors">
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />Refresh
-        </button>
-      </div>
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
@@ -315,6 +331,7 @@ export default function RequestsPage() {
           </div>
         );
       })}
+    </div>
     </div>
   );
 }

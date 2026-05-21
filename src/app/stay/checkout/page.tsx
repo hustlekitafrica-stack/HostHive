@@ -46,7 +46,7 @@ function CheckoutContent() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (data.user) {
         const meta = data.user.user_metadata ?? {};
         const u: AuthUser = {
@@ -56,9 +56,21 @@ function CheckoutContent() {
           phone: meta.phone ?? '',
         };
         setAuthUser(u);
-        setName(u.name);
-        setPhone(u.phone);
         setEmail(u.email);
+        // Prefill name/phone from metadata; fall back to most recent booking
+        if (u.name) setName(u.name);
+        if (u.phone) setPhone(u.phone);
+        if (!u.name || !u.phone) {
+          try {
+            const res = await fetch(`/api/stay/my-bookings?userId=${u.id}`);
+            const d = await res.json();
+            const prev = d.bookings?.[0];
+            if (prev) {
+              if (!u.name && prev.guest_name)  setName(prev.guest_name);
+              if (!u.phone && prev.guest_phone) setPhone(prev.guest_phone);
+            }
+          } catch { /* ignore */ }
+        }
       }
       setAuthLoading(false);
     });

@@ -60,6 +60,18 @@ export default function SettingsPage() {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
+  // Profile details state
+  const [profName,    setProfName]    = useState('');
+  const [profPhone,   setProfPhone]   = useState('');
+  const [profEmail,   setProfEmail]   = useState('');
+  const [profSaving,  setProfSaving]  = useState(false);
+
+  // Change password state
+  const [newPw,       setNewPw]       = useState('');
+  const [confirmPw,   setConfirmPw]   = useState('');
+  const [pwSaving,    setPwSaving]    = useState(false);
+  const [showNewPw,   setShowNewPw]   = useState(false);
+
   useEffect(() => {
     fetch('/api/expense-categories')
       .then(r => r.json())
@@ -77,6 +89,46 @@ export default function SettingsPage() {
     const email = localStorage.getItem('user_email') || 'admin@kogelosuites.com';
     setUserEmail(email);
   }, []);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      const meta = data.user.user_metadata ?? {};
+      setProfName(meta.full_name ?? meta.name ?? '');
+      setProfPhone(meta.phone ?? '');
+      setProfEmail(data.user.email ?? '');
+    });
+  }, []);
+
+  const handleSaveProfile = async () => {
+    if (!profName.trim()) { toast.error('Name is required'); return; }
+    if (!profPhone.trim()) { toast.error('Phone is required'); return; }
+    setProfSaving(true);
+    try {
+      const supabase = createClient();
+      const updates: Record<string, unknown> = { data: { full_name: profName.trim(), phone: profPhone.trim() } };
+      if (profEmail.trim() && profEmail !== userEmail) (updates as any).email = profEmail.trim();
+      const { error } = await supabase.auth.updateUser(updates as any);
+      if (error) { toast.error(error.message); return; }
+      toast.success('Profile updated');
+    } catch { toast.error('Network error'); }
+    finally { setProfSaving(false); }
+  };
+
+  const handleChangePassword = async () => {
+    if (newPw.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    if (newPw !== confirmPw) { toast.error('Passwords do not match'); return; }
+    setPwSaving(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({ password: newPw });
+      if (error) { toast.error(error.message); return; }
+      setNewPw(''); setConfirmPw('');
+      toast.success('Password changed successfully');
+    } catch { toast.error('Network error'); }
+    finally { setPwSaving(false); }
+  };
 
   const handleAvatarUpload = async (file: File) => {
     if (file.size > 3 * 1024 * 1024) { toast.error('Photo must be under 3 MB'); return; }
@@ -466,6 +518,72 @@ export default function SettingsPage() {
         {/* ── ACCOUNT TAB ── */}
         {activeTab === 'account' && (
           <div className="space-y-6 max-w-3xl">
+
+          {/* Profile Details */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-1">Profile Details</h2>
+            <p className="text-sm text-gray-500 mb-5">Update your name, phone number, and email address.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <input type="text" value={profName} onChange={e => setProfName(e.target.value)}
+                  placeholder="Your name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="tel" value={profPhone} onChange={e => setProfPhone(e.target.value)}
+                  placeholder="+254 700 000 000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input type="email" value={profEmail} onChange={e => setProfEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                <p className="text-xs text-gray-400 mt-1">Changing email sends a confirmation to the new address.</p>
+              </div>
+            </div>
+            <button onClick={handleSaveProfile} disabled={profSaving}
+              className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+              {profSaving ? 'Saving…' : 'Save Profile'}
+            </button>
+          </div>
+
+          {/* Change Password */}
+          <div className="bg-white border border-gray-200 rounded-xl p-6">
+            <h2 className="text-base font-bold text-gray-900 mb-1">Change Password</h2>
+            <p className="text-sm text-gray-500 mb-5">Choose a strong password with at least 8 characters.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                <div className="relative">
+                  <input type={showNewPw ? 'text' : 'password'} value={newPw} onChange={e => setNewPw(e.target.value)}
+                    placeholder="Min. 8 characters"
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  <button type="button" onClick={() => setShowNewPw(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      {showNewPw
+                        ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                        : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                <input type={showNewPw ? 'text' : 'password'} value={confirmPw} onChange={e => setConfirmPw(e.target.value)}
+                  placeholder="Repeat password"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+              </div>
+            </div>
+            <button onClick={handleChangePassword} disabled={pwSaving || !newPw}
+              className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+              {pwSaving ? 'Updating…' : 'Update Password'}
+            </button>
+          </div>
+
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-base font-bold text-gray-900 mb-1">Profile Photo</h2>
             <p className="text-sm text-gray-500 mb-5">Shown on your profile. Max 3 MB — JPG, PNG, WebP.</p>
