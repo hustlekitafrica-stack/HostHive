@@ -35,7 +35,7 @@ export function MobileHeader({
   };
 
   // Hide header on pages that have their own sticky header
-  const pagesWithOwnHeader = ['/booking-calendar', '/alerts', '/guests', '/unit-performance', '/properties', '/expenses', '/reports', '/settings', '/help'];
+  const pagesWithOwnHeader = ['/booking-calendar', '/alerts', '/guests', '/unit-performance', '/properties', '/expenses', '/reports', '/settings', '/help', '/requests'];
   if (pagesWithOwnHeader.includes(pathname)) {
     return null;
   }

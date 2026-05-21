@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu, MessageSquare } from 'lucide-react';
 
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
@@ -124,12 +124,19 @@ export default function RequestsPage() {
       }),
     });
     const data = await res.json();
-    if (data.whatsapp_link) {
-      setWaLinks(prev => ({ ...prev, [req.id]: data.whatsapp_link }));
-      window.open(data.whatsapp_link, '_blank');
-      showToast('WhatsApp review link opened!');
+    if (data.error) {
+      showToast(`Error: ${data.error}`);
+    } else if (data.sms_sent) {
+      showToast('✓ Review link sent via SMS');
     } else {
-      showToast(`Error: ${data.error ?? 'Failed'}`);
+      // SMS not configured — fall back to WhatsApp
+      if (data.whatsapp_link) {
+        setWaLinks(prev => ({ ...prev, [req.id]: data.whatsapp_link }));
+        window.open(data.whatsapp_link, '_blank');
+        showToast('SMS not configured — opened WhatsApp instead');
+      } else {
+        showToast('Review link created but SMS not configured');
+      }
     }
     setSendingWa(null);
   };
@@ -307,8 +314,8 @@ export default function RequestsPage() {
                       <button onClick={() => sendReviewLink(req)} disabled={isSending}
                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
                         style={{ background: '#9B1C1C' }}>
-                        {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                        {isSending ? 'Opening WhatsApp…' : 'Send Review Link'}
+                        {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                        {isSending ? 'Sending…' : 'Send Review SMS'}
                       </button>
                     </div>
                   )}

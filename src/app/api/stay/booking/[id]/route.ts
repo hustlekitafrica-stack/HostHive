@@ -65,19 +65,14 @@ export async function PATCH(
           if (!room.property_id) continue;
           const nights = req2.nights || Math.round((new Date(req2.check_out).getTime() - new Date(req2.check_in).getTime()) / 86400000);
           const totalAmt = Number(room.subtotal) || 0;
-          const { data: bk } = await publicSupabase.from('bookings').insert({
+          await publicSupabase.from('bookings').insert({
             user_id: hostId, property_id: room.property_id, guest_id: guestId,
             check_in: req2.check_in, check_out: req2.check_out, nights,
             nightly_rate: Number(room.nightly_rate) || 0, cleaning_fee: 0,
             security_deposit: 0, total_amount: totalAmt, amount_paid: 0,
             balance_due: totalAmt, payment_status: 'unpaid', status: 'confirmed',
             booking_source: 'Online', notes: req2.special_requests || '',
-          }).select('id').single();
-          if (bk) {
-            const bdRow = { property_id: room.property_id, user_id: hostId, start_date: req2.check_in, end_date: req2.check_out, reason: 'Online Booking', booking_id: bk.id };
-            const { error: bdErr } = await publicSupabase.from('blocked_dates').insert(bdRow);
-            if (bdErr) await publicSupabase.from('blocked_dates').insert({ ...bdRow, booking_id: undefined });
-          }
+          });
         }
       }
     }
