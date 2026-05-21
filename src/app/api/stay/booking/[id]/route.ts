@@ -44,36 +44,49 @@ export async function PATCH(
     if (status === 'confirmed') {
       const hostId = process.env.STAY_HOST_USER_ID;
       if (hostId) {
-        const req2 = data as any;
-        const rooms = Array.isArray(req2.room_details) ? req2.room_details : [];
+        // Use the authenticated server client so RLS (auth.uid() = user_id) passes
+        const authDb = await createClient();
+        const bReq = data as any;
+        const bRooms = Array.isArray(bReq.room_details) ? bReq.room_details : [];
+
         // Upsert guest
         let guestId: string | null = null;
-        const { data: existingGuest } = await publicSupabase
+        const { data: existingGuest, error: egErr } = await authDb
           .from('guests').select('id').eq('user_id', hostId)
-          .ilike('name', (req2.guest_name ?? '').trim()).maybeSingle();
+          .ilike('name', (bReq.guest_name ?? '').trim()).maybeSingle();
+        if (egErr) console.error('[auto-booking] guest lookup:', egErr.message);
+
         if (existingGuest) {
           guestId = existingGuest.id;
-          await publicSupabase.from('guests').update({ phone: req2.guest_phone, email: req2.guest_email }).eq('id', guestId);
+          await authDb.from('guests').update({ phone: bReq.guest_phone, email: bReq.guest_email }).eq('id', guestId);
         } else {
-          const { data: ng } = await publicSupabase.from('guests')
-            .insert({ user_id: hostId, name: (req2.guest_name ?? '').trim(), phone: req2.guest_phone ?? '', email: req2.guest_email ?? '' })
+          const { data: ng, error: ngErr } = await authDb.from('guests')
+            .insert({ user_id: hostId, name: (bReq.guest_name ?? '').trim(), phone: bReq.guest_phone ?? '', email: bReq.guest_email ?? '' })
             .select('id').single();
+          if (ngErr) console.error('[auto-booking] guest insert:', ngErr.message);
           if (ng) guestId = ng.id;
         }
+
         // Create one booking per room line
-        for (const room of rooms) {
-          if (!room.property_id) continue;
-          const nights = req2.nights || Math.round((new Date(req2.check_out).getTime() - new Date(req2.check_in).getTime()) / 86400000);
+        for (const room of bRooms) {
+          if (!room.property_id || !guestId) {
+            console.error('[auto-booking] skipping room — no property_id or guestId', { property_id: room.property_id, guestId });
+            continue;
+          }
+          const bNights = bReq.nights || Math.round((new Date(bReq.check_out).getTime() - new Date(bReq.check_in).getTime()) / 86400000);
           const totalAmt = Number(room.subtotal) || 0;
-          await publicSupabase.from('bookings').insert({
+          const { error: bkErr } = await authDb.from('bookings').insert({
             user_id: hostId, property_id: room.property_id, guest_id: guestId,
-            check_in: req2.check_in, check_out: req2.check_out, nights,
+            check_in: bReq.check_in, check_out: bReq.check_out, nights: bNights,
             nightly_rate: Number(room.nightly_rate) || 0, cleaning_fee: 0,
             security_deposit: 0, total_amount: totalAmt, amount_paid: 0,
             balance_due: totalAmt, payment_status: 'unpaid', status: 'confirmed',
-            booking_source: 'Online', notes: req2.special_requests || '',
+            booking_source: 'Online', notes: bReq.special_requests || '',
           });
+          if (bkErr) console.error('[auto-booking] booking insert:', bkErr.message);
         }
+      } else {
+        console.warn('[auto-booking] STAY_HOST_USER_ID not set — skipping auto-booking');
       }
     }
     // ─────────────────────────────────────────────────────────────────────────

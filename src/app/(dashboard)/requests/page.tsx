@@ -79,7 +79,7 @@ export default function RequestsPage() {
   const sendPaymentLink = async (req: BookingRequest) => {
     setSendingPayment(req.id);
     try {
-      const res  = await fetch('/api/stay/pesapal/order', {
+      const res  = await fetch('/api/stay/pesapal/order', {        
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
@@ -110,33 +110,34 @@ export default function RequestsPage() {
 
   const sendReviewLink = async (req: BookingRequest) => {
     setSendingWa(req.id);
-    const rooms = Array.isArray(req.room_details) ? req.room_details : [];
-    const res  = await fetch('/api/stay/reviews', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        booking_request_id: req.id,
-        guest_name:   req.guest_name,
-        guest_phone:  req.guest_phone,
-        property_id:  rooms[0]?.property_id ?? null,
-        property_name: rooms[0]?.property_name ?? 'Kogelo Property',
-        stay_dates:   `${req.check_in} – ${req.check_out}`,
-      }),
-    });
-    const data = await res.json();
-    if (data.error) {
-      showToast(`Error: ${data.error}`);
-    } else if (data.sms_sent) {
-      showToast('✓ Review link sent via SMS');
-    } else {
-      // SMS not configured — fall back to WhatsApp
-      if (data.whatsapp_link) {
+    try {
+      const rooms = Array.isArray(req.room_details) ? req.room_details : [];
+      const res  = await fetch('/api/stay/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_request_id: req.id,
+          guest_name:   req.guest_name,
+          guest_phone:  req.guest_phone,
+          property_id:  rooms[0]?.property_id ?? null,
+          property_name: rooms[0]?.property_name ?? 'Kogelo Property',
+          stay_dates:   `${req.check_in} – ${req.check_out}`,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) {
+        showToast(`Error: ${data.error}`);
+      } else if (data.sms_sent) {
+        showToast('✓ Review SMS sent to guest');
+      } else if (data.whatsapp_link) {
         setWaLinks(prev => ({ ...prev, [req.id]: data.whatsapp_link }));
         window.open(data.whatsapp_link, '_blank');
         showToast('SMS not configured — opened WhatsApp instead');
       } else {
-        showToast('Review link created but SMS not configured');
+        showToast('Review link created (configure SMS to send automatically)');
       }
+    } catch {
+      showToast('Network error — could not send review link');
     }
     setSendingWa(null);
   };

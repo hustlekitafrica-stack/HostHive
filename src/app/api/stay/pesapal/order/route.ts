@@ -51,6 +51,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'booking_request_id and amount are required' }, { status: 400 });
     }
 
+    if (!process.env.PESAPAL_CONSUMER_KEY || !process.env.PESAPAL_CONSUMER_SECRET) {
+      return NextResponse.json({ error: 'Pesapal not configured — add PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET to .env.local' }, { status: 503 });
+    }
+
     // Get auth token
     const token = await getPesapalToken();
 
