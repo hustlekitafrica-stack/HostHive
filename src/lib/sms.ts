@@ -55,10 +55,12 @@ async function sendViaAfricasTalking(to: string, message: string): Promise<SmsRe
       headers: { apiKey, Accept: 'application/json', 'Content-Type': 'application/x-www-form-urlencoded' },
       body:    body.toString(),
     });
-    const data = await res.json();
+    const text = await res.text();
+    let data: any;
+    try { data = JSON.parse(text); } catch { return { ok: false, error: `AT returned non-JSON (${res.status}): ${text.slice(0, 120)}` }; }
     const recipient = data?.SMSMessageData?.Recipients?.[0];
     if (recipient?.status === 'Success') return { ok: true, messageId: recipient.messageId };
-    return { ok: false, error: recipient?.status ?? 'Unknown AT error' };
+    return { ok: false, error: recipient?.status ?? data?.error ?? 'Unknown AT error' };
   } catch (err: any) {
     return { ok: false, error: err.message };
   }
