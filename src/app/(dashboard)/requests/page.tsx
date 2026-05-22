@@ -64,7 +64,19 @@ export default function RequestsPage() {
       setRequests(prev => prev.map(r => r.id === id
         ? { ...r, status, ...(extraPayload?.decline_reason ? { decline_reason: extraPayload.decline_reason } : {}) }
         : r));
-      showToast(status === 'confirmed' ? '✓ Accepted — SMS sent to guest' : status === 'declined' ? '✕ Declined — SMS sent to guest' : '✓ Updated');
+      if (status === 'confirmed') {
+        if (data.autoError) {
+          showToast(`✓ Accepted — but: ${data.autoError}`);
+        } else if (data.guestCreated && data.bookingCreated) {
+          showToast('✓ Accepted — Guest & Booking added to calendar');
+        } else {
+          showToast('✓ Accepted — SMS sent to guest');
+        }
+      } else if (status === 'declined') {
+        showToast('✕ Declined — SMS sent to guest');
+      } else {
+        showToast('✓ Updated');
+      }
     }
     setUpdating(null);
   };
