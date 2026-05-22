@@ -47,12 +47,17 @@ export async function PATCH(
 
     if (status === 'confirmed') {
       const bReq = data as any;
-      // Use host_user_id from the booking record itself — more reliable than env var alone
-      const hostId = (bReq.host_user_id as string) || process.env.STAY_HOST_USER_ID || '';
+      // Resolve host ID: booking record → env var → session (in that order)
+      let hostId = (bReq.host_user_id as string) || process.env.STAY_HOST_USER_ID || '';
+      if (!hostId) {
+        const authClient = await createClient();
+        const { data: { session } } = await authClient.auth.getSession();
+        hostId = session?.user?.id ?? '';
+      }
       const bRooms = Array.isArray(bReq.room_details) ? bReq.room_details : [];
 
       if (!hostId) {
-        autoError = 'host_user_id missing — cannot create guest/booking';
+        autoError = 'Cannot determine host user ID — set STAY_HOST_USER_ID in .env.local';
         console.error('[auto-booking]', autoError);
       } else {
         // Upsert guest
