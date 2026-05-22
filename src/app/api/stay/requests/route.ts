@@ -14,10 +14,12 @@ export async function GET() {
       hostId = session.user.id;
     }
 
+    // Include both correctly-tagged requests AND untagged ones (host_user_id = '')
+    // The OR handles bookings created before STAY_HOST_USER_ID was configured
     const { data, error } = await publicSupabase
       .from('booking_requests')
       .select('*')
-      .eq('host_user_id', hostId)
+      .or(`host_user_id.eq.${hostId},host_user_id.eq.`)
       .order('created_at', { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
