@@ -143,12 +143,8 @@ export default function RequestsPage() {
         showToast('✓ Review SMS sent to guest');
       } else if (data.sms_error) {
         showToast(`SMS failed: ${data.sms_error}`);
-      } else if (data.whatsapp_link) {
-        setWaLinks(prev => ({ ...prev, [req.id]: data.whatsapp_link }));
-        window.open(data.whatsapp_link, '_blank');
-        showToast('SMS not configured — opened WhatsApp instead');
       } else {
-        showToast('Review link created (configure SMS to send automatically)');
+        showToast('SMS failed — check SMS_PROVIDER in .env.local');
       }
     } catch {
       showToast('Network error — could not send review link');
