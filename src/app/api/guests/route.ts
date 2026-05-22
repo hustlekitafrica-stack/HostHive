@@ -3,11 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const userId = session.user.id;
+    let userId = process.env.STAY_HOST_USER_ID ?? '';
+    if (!userId) {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      userId = session.user.id;
+    }
 
+    const supabase = await createClient();
     const { data: guests, error } = await supabase
       .from('guests')
       .select('id, name, phone, email, bookings(id, total_amount, check_in, status)')
@@ -41,10 +45,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    let userId = process.env.STAY_HOST_USER_ID ?? '';
+    if (!userId) {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      userId = session.user.id;
+    }
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const userId = session.user.id;
 
     const { name, phone, email = '' } = await request.json();
     if (!name?.trim()) return NextResponse.json({ error: 'Name is required' }, { status: 400 });

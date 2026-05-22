@@ -3,10 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(request: NextRequest) {
   try {
+    let userId = process.env.STAY_HOST_USER_ID ?? '';
+    if (!userId) {
+      const supabase = await createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      userId = session.user.id;
+    }
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const userId = session.user.id;
 
     const { searchParams } = new URL(request.url);
     const year = parseInt(searchParams.get('year') ?? String(new Date().getFullYear()));
