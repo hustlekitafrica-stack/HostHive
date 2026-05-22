@@ -141,6 +141,8 @@ export default function RequestsPage() {
         showToast(`Error: ${data.error}`);
       } else if (data.sms_sent) {
         showToast('✓ Review SMS sent to guest');
+      } else if (data.sms_error) {
+        showToast(`SMS failed: ${data.sms_error}`);
       } else if (data.whatsapp_link) {
         setWaLinks(prev => ({ ...prev, [req.id]: data.whatsapp_link }));
         window.open(data.whatsapp_link, '_blank');

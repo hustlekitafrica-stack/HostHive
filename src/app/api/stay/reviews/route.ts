@@ -66,7 +66,8 @@ export async function POST(req: NextRequest) {
     const waText = encodeURIComponent(`Hi ${guest_name}! 🙏 Thank you for staying with us at Kogelo.\n\nWe'd love to hear about your experience. Could you please leave us a quick review?\n👉 ${reviewUrl}\n\nIt takes less than a minute and means a lot to us!`);
     const waLink = `https://wa.me/${guest_phone.replace(/\D/g, '')}?text=${waText}`;
 
-    return NextResponse.json({ review_token: data.review_token, review_url: reviewUrl, whatsapp_link: waLink, sms_sent: smsResult.ok });
+    if (!smsResult.ok) console.error('[SMS review] AT error:', smsResult.error);
+    return NextResponse.json({ review_token: data.review_token, review_url: reviewUrl, whatsapp_link: waLink, sms_sent: smsResult.ok, sms_error: smsResult.error ?? null });
   } catch (err) {
     console.error('[POST /api/stay/reviews]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
