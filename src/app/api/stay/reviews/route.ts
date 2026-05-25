@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { publicSupabase } from '@/lib/supabase/public';
-import { sendSms } from '@/lib/sms';
+import { sendSms, normalizePhone } from '@/lib/sms';
 
 /** GET — public: fetch submitted reviews; optional ?property_id=X for property-specific */
 export async function GET(req: NextRequest) {
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
 
     // Send SMS with review link
     const smsMessage = `Hi ${firstName}! Thank you for staying with us. We'd love your feedback - please leave a quick review here: ${reviewUrl} - Kogelo Suites`;
-    const smsResult = await sendSms(guest_phone, smsMessage);
+    const smsResult = await sendSms(normalizePhone(guest_phone), smsMessage);
 
     // Also build WhatsApp link as fallback
     const waText = encodeURIComponent(`Hi ${guest_name}! 🙏 Thank you for staying with us at Kogelo.\n\nWe'd love to hear about your experience. Could you please leave us a quick review?\n👉 ${reviewUrl}\n\nIt takes less than a minute and means a lot to us!`);

@@ -6,6 +6,7 @@ import {
   buildGuestAcceptedSms,
   buildGuestDeclinedSms,
   buildAdminConfirmedSms,
+  normalizePhone,
 } from '@/lib/sms';
 
 /** PATCH /api/stay/booking/[id] — host accepts or declines a booking request */
@@ -115,12 +116,13 @@ export async function PATCH(
     const req2       = data as any;
     const rooms      = Array.isArray(req2.room_details) ? req2.room_details : [];
     const propName   = rooms[0]?.property_name ?? 'Kogelo Suites';
-    const adminPhone = process.env.ADMIN_PHONE ?? '';
+    const adminPhone = normalizePhone(process.env.ADMIN_PHONE ?? '');
+    const guestE164  = normalizePhone(req2.guest_phone ?? '');
 
     if (status === 'confirmed') {
       const messages = [
         {
-          to:      req2.guest_phone,
+          to:      guestE164,
           message: buildGuestAcceptedSms({
             guestName:    req2.guest_name,
             propertyName: propName,
@@ -148,7 +150,7 @@ export async function PATCH(
 
     if (status === 'declined') {
       sendSmsBulk([{
-        to:      req2.guest_phone,
+        to:      guestE164,
         message: buildGuestDeclinedSms({
           guestName:    req2.guest_name,
           propertyName: propName,
