@@ -77,18 +77,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create the handle_new_user trigger if it doesn't already exist
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_trigger
-    WHERE tgname = 'on_auth_user_created_profile'
-      AND tgrelid = 'auth.users'::regclass
-  ) THEN
-    EXECUTE '
-      CREATE TRIGGER on_auth_user_created_profile
-        AFTER INSERT ON auth.users
-        FOR EACH ROW EXECUTE FUNCTION handle_new_user()
-    ';
-  END IF;
-END $$;
+-- Drop the duplicate trigger created by a previous migration run (if it exists)
+-- on_auth_user_created already calls handle_new_user(), so the duplicate is not needed
+DROP TRIGGER IF EXISTS on_auth_user_created_profile ON auth.users;
