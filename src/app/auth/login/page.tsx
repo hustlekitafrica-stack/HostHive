@@ -71,7 +71,7 @@ export default function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col px-5 pt-8 pb-6 max-w-md w-full mx-auto">
+      <main className="flex-1 flex flex-col justify-center px-5 py-8 max-w-md w-full mx-auto">
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign in or create an account</h1>
         <p className="text-sm text-gray-500 mb-6">

@@ -10,22 +10,26 @@ import { sendSms } from '@/lib/sms';
  */
 
 export async function GET() {
-  const provider  = process.env.SMS_PROVIDER    ?? null;
-  const hasApiKey = !!(process.env.SMS_API_KEY);
-  const hasUser   = !!(process.env.SMS_USERNAME);
-  const adminPhone = process.env.ADMIN_PHONE    ?? null;
+  const provider   = process.env.SMS_PROVIDER               ?? null;
+  const hasApiKey  = !!(process.env.SMS_API_KEY);
+  const hasUser    = !!(process.env.SMS_USERNAME);
+  const hasMsgSvc  = !!(process.env.SMS_MESSAGING_SERVICE_SID);
+  const hasFrom    = !!(process.env.SMS_FROM);
+  const adminPhone = process.env.ADMIN_PHONE                ?? null;
 
   const configured = provider === 'africastalking' || provider === 'twilio';
 
   return NextResponse.json({
     configured,
-    provider:    provider  ?? '⚠️  NOT SET — SMS_PROVIDER missing',
-    hasApiKey:   hasApiKey  ? '✅ set' : '❌ missing SMS_API_KEY',
-    hasUsername: hasUser    ? '✅ set' : '❌ missing SMS_USERNAME',
-    adminPhone:  adminPhone ?? '⚠️  NOT SET — host will not receive notifications',
+    provider:            provider   ?? '❌ NOT SET — SMS_PROVIDER missing',
+    hasApiKey:           hasApiKey  ? '✅ set' : '❌ missing SMS_API_KEY',
+    hasAuthToken:        hasUser    ? '✅ set' : '❌ missing SMS_USERNAME',
+    messagingServiceSid: hasMsgSvc  ? '✅ set' : '⚠️  not set — SMS_MESSAGING_SERVICE_SID missing',
+    smsFrom:             hasFrom    ? '✅ set' : '⚠️  not set — SMS_FROM missing (ok if using Messaging Service)',
+    adminPhone:          adminPhone ?? '⚠️  NOT SET — host will not receive notifications',
     hint: configured
-      ? 'Config looks OK. POST to this endpoint with { "to": "+254..." } to send a real test.'
-      : 'Add SMS_PROVIDER, SMS_API_KEY, SMS_USERNAME to .env.local then restart the dev server.',
+      ? 'POST to this endpoint with { "to": "+254XXXXXXXXX" } to fire a real test SMS.'
+      : 'Set SMS_PROVIDER + credentials in Vercel env vars and redeploy.',
   });
 }
 
