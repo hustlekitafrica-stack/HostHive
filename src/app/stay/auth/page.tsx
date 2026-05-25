@@ -53,6 +53,17 @@ function StayAuthContent() {
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
   const supabase = createClient();
 
+  // Lock page scroll while auth overlay is visible
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+      document.documentElement.style.overflow = '';
+    };
+  }, []);
+
   useEffect(() => {
     if (countdown <= 0) return;
     const t = setTimeout(() => setCountdown(c => c - 1), 1000);
@@ -143,13 +154,13 @@ function StayAuthContent() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <main className="flex-1 flex flex-col px-5 pt-8 pb-6 max-w-md w-full mx-auto">
+    <div className="bg-white flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 3.5rem)' }}>
+      <main className="flex-1 flex flex-col px-5 pt-6 pb-4 max-w-md w-full mx-auto overflow-hidden">
 
         {step === 'phone' ? (
           <>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Sign in or create an account</h1>
-            <p className="text-sm text-gray-500 mb-6">
+            <h1 className="text-xl font-bold text-gray-900 mb-1">Sign in or create an account</h1>
+            <p className="text-sm text-gray-500 mb-4">
               Enter your phone number to continue. We&apos;ll send you a one-time verification code.
             </p>
 
@@ -189,8 +200,8 @@ function StayAuthContent() {
           </>
         ) : (
           <>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify your phone number</h1>
-            <p className="text-sm text-gray-500 mb-6">
+            <h1 className="text-xl font-bold text-gray-900 mb-2">Verify your phone number</h1>
+            <p className="text-sm text-gray-500 mb-4">
               We&apos;ve sent a verification code to{' '}
               <span className="font-semibold text-gray-800">{formattedPhone}</span>.
               {' '}Please enter this code to continue.
