@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 
 const OTP_LENGTH = 6;
@@ -27,11 +26,6 @@ function PageFooter() {
           {' '}and{' '}
           <button className="underline" style={{ color: '#16a34a' }}>Privacy statement</button>
         </p>
-      </div>
-      <div className="mt-4 text-center">
-        <Link href="/stay" className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-          ← Continue browsing without signing in
-        </Link>
       </div>
     </>
   );
