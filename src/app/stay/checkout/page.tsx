@@ -176,13 +176,13 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="bg-[#f8fafc] h-[100dvh] overflow-hidden flex flex-col lg:h-auto lg:min-h-screen lg:overflow-visible lg:pt-16 lg:pb-28">
+    <div className="bg-[#f8fafc] h-[100dvh] overflow-hidden flex flex-col lg:h-[100dvh] lg:overflow-hidden lg:pt-16 lg:pb-20">
 
       <div className="flex-1 flex flex-col overflow-hidden max-w-4xl mx-auto w-full px-4 sm:px-6 lg:py-4">
         <div className="flex-1 flex flex-col lg:grid lg:grid-cols-5 lg:gap-8 overflow-hidden">
 
           {/* ── Left: Guest form — always desktop, step 2 on mobile ── */}
-          <div className={`lg:col-span-3 ${step === 1 ? 'hidden lg:block' : 'flex-1 flex flex-col justify-center overflow-y-auto pb-20 space-y-5'}`}>
+          <div className={`lg:col-span-3 ${step === 1 ? 'hidden lg:block' : 'flex-1 flex flex-col justify-center overflow-hidden pb-20 space-y-5'}`}>
 
             {/* Guest details form */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
