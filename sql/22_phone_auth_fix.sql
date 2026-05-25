@@ -59,8 +59,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 3. If there is a separate handle_new_user trigger (e.g. created via Supabase dashboard),
---    drop and recreate it to be safe with NULL emails
+-- 3. Replace handle_new_user function (safe with NULL emails for phone-only users)
+--    This covers: (a) trigger already exists in Supabase dashboard — function body updated
+--                 (b) trigger doesn't exist — function + trigger both created below
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -75,3 +76,19 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create the handle_new_user trigger if it doesn't already exist
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'on_auth_user_created_profile'
+      AND tgrelid = 'auth.users'::regclass
+  ) THEN
+    EXECUTE '
+      CREATE TRIGGER on_auth_user_created_profile
+        AFTER INSERT ON auth.users
+        FOR EACH ROW EXECUTE FUNCTION handle_new_user()
+    ';
+  END IF;
+END $$;
