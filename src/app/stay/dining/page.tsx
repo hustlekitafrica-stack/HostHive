@@ -200,32 +200,32 @@ export default function DiningPage() {
 
   // ── STEP 1: Choose Order Type ────────────────────────────────────────────
   if (step === 'type') return (
-    <div className="overflow-hidden flex flex-col" style={{ background: '#0f172a', height: 'calc(100dvh - 3.5rem)' }}>
-      <div className="px-4 pt-6 pb-3 max-w-lg mx-auto w-full">
+    <div className="flex items-center justify-center px-4" style={{ background: '#0f172a', height: 'calc(100dvh - 3.5rem)' }}>
+      <div className="w-full max-w-lg">
         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
         <h1 className="text-2xl font-black text-white mb-1">How would you like to order?</h1>
-        <p className="text-white/50 text-sm">Select an option to get started</p>
-      </div>
-      <div className="flex-1 px-4 pb-4 space-y-3 max-w-lg mx-auto w-full overflow-hidden">
-        {ORDER_TYPES.map(t => (
-          <button key={t.id} onClick={() => { setOrderType(t.id); setStep('menu'); }}
-            className="w-full rounded-2xl p-5 text-left transition-all flex items-center gap-4 border border-white/10 active:scale-[0.98]"
-            style={{ background: 'rgba(255,255,255,0.07)' }}>
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
-              <t.Icon className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-black text-white text-base">{t.label}</p>
-              <p className="text-white/50 text-sm">{t.desc}</p>
-              {t.fee ? <p className="text-xs font-bold mt-0.5" style={{ color: '#D97706' }}>+KSh {t.fee} fee</p>
-                     : <p className="text-xs font-bold mt-0.5 text-green-400">No extra charge</p>}
-            </div>
-            <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
-          </button>
-        ))}
-        <a href={`tel:${ORDER_PHONE}`} className="flex items-center justify-center gap-2 text-white/30 text-xs pt-2 hover:text-white/60">
-          <Phone className="w-3.5 h-3.5" /> Call to order: {ORDER_PHONE}
-        </a>
+        <p className="text-white/50 text-sm mb-5">Select an option to get started</p>
+        <div className="space-y-3">
+          {ORDER_TYPES.map(t => (
+            <button key={t.id} onClick={() => { setOrderType(t.id); setStep('menu'); }}
+              className="w-full rounded-2xl p-5 text-left transition-all flex items-center gap-4 border border-white/10 active:scale-[0.98]"
+              style={{ background: 'rgba(255,255,255,0.07)' }}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
+                <t.Icon className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-black text-white text-base">{t.label}</p>
+                <p className="text-white/50 text-sm">{t.desc}</p>
+                {t.fee ? <p className="text-xs font-bold mt-0.5" style={{ color: '#D97706' }}>+KSh {t.fee} fee</p>
+                       : <p className="text-xs font-bold mt-0.5 text-green-400">No extra charge</p>}
+              </div>
+              <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
+            </button>
+          ))}
+          <a href={`tel:${ORDER_PHONE}`} className="flex items-center justify-center gap-2 text-white/30 text-xs pt-2 hover:text-white/60">
+            <Phone className="w-3.5 h-3.5" /> Call to order: {ORDER_PHONE}
+          </a>
+        </div>
       </div>
     </div>
   );
