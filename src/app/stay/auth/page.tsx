@@ -148,8 +148,9 @@ function StayAuthContent() {
   };
 
   return (
-    <div className="bg-white flex flex-col overflow-hidden" style={{ height: 'calc(100dvh - 3.5rem)' }}>
-      <main className="flex-1 flex flex-col px-5 pt-6 pb-4 max-w-md w-full mx-auto overflow-hidden">
+    <div className="bg-white flex flex-col" style={{ height: 'calc(100dvh - 3.5rem)' }}>
+      <main className="flex-1 flex flex-col items-center justify-center px-5 py-6">
+        <div className="w-full max-w-md">
 
         {step === 'phone' ? (
           <>
@@ -279,6 +280,7 @@ function StayAuthContent() {
             <PageFooter />
           </>
         )}
+        </div>
       </main>
     </div>
   );
