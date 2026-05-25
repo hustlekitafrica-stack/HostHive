@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     const propertyName = firstRoom?.property_name ?? 'Kogelo Suites';
     const adminPhone   = process.env.ADMIN_PHONE ?? '';
 
-    sendSmsBulk([
+    const smsResults = await sendSmsBulk([
       {
         to:      guest_phone.trim(),
         message: buildGuestRequestSms({
@@ -71,10 +71,13 @@ export async function POST(req: NextRequest) {
           total:        Number(total_amount),
         }),
       }] : []),
-    ]).catch(err => console.error('[SMS booking]', err));
+    ]).catch(err => { console.error('[SMS booking]', err); return []; });
     // ────────────────────────────────────────────────────────────────────────
 
-    return NextResponse.json({ success: true, id: data.id });
+    const smsErrors = smsResults.filter(r => !r.ok).map(r => r.error);
+    if (smsErrors.length) console.error('[SMS booking errors]', smsErrors);
+
+    return NextResponse.json({ success: true, id: data.id, sms: smsResults });
   } catch (err) {
     console.error('[stay/booking]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

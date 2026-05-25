@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -42,6 +42,27 @@ function CheckoutContent() {
   const [bookingRef, setBookingRef] = useState('');
   const [step,       setStep]       = useState<1 | 2>(1);
   const [addBreakfast,setAddBreakfast] = useState(false);
+  const [confetti,   setConfetti]   = useState(false);
+
+  const confettiPieces = useMemo(() => {
+    const colors = ['#22c55e','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#ec4899','#f97316','#06b6d4','#fbbf24','#10b981','#ff6b6b','#4ecdc4'];
+    const anims  = ['cf-a','cf-b','cf-c','cf-d','cf-e','cf-f'];
+    return Array.from({ length: 160 }, (_, i) => {
+      const isRibbon = i % 5 === 0;
+      const isCircle = i % 7 === 0;
+      return {
+        id: i,
+        left: Math.random() * 100,
+        delay: Math.random() * 3.5,
+        duration: 3 + Math.random() * 3,
+        w: isRibbon ? 4 : isCircle ? 9 : 7 + Math.random() * 7,
+        h: isRibbon ? 18 : isCircle ? 9 : 5 + Math.random() * 5,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        round: isCircle ? '50%' : isRibbon ? '1px' : '2px',
+        anim: anims[i % anims.length],
+      };
+    });
+  }, []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -129,6 +150,8 @@ function CheckoutContent() {
       if (data.error) { setError(data.error); return; }
       setBookingRef(data.id ?? '');
       setSuccess(true);
+      setConfetti(true);
+      setTimeout(() => setConfetti(false), 7000);
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -146,6 +169,26 @@ function CheckoutContent() {
   /* ── Success ── */
   if (success) return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] px-4 pt-16">
+      <style>{`
+        @keyframes cf-a{0%{transform:translate(0,-10px) rotate(0deg);opacity:1}30%{transform:translate(-28px,30vh) rotate(130deg)}65%{transform:translate(-10px,65vh) rotate(260deg);opacity:.9}100%{transform:translate(-25px,110vh) rotate(400deg);opacity:0}}
+        @keyframes cf-b{0%{transform:translate(0,-10px) rotate(0deg);opacity:1}30%{transform:translate(28px,30vh) rotate(-130deg)}65%{transform:translate(10px,65vh) rotate(-260deg);opacity:.9}100%{transform:translate(25px,110vh) rotate(-400deg);opacity:0}}
+        @keyframes cf-c{0%{transform:translate(0,-10px) rotate(0deg) scaleX(1);opacity:1}25%{transform:translate(18px,25vh) rotate(90deg) scaleX(-1)}50%{transform:translate(-18px,50vh) rotate(180deg) scaleX(1)}75%{transform:translate(22px,75vh) rotate(270deg) scaleX(-1);opacity:.85}100%{transform:translate(-12px,110vh) rotate(360deg) scaleX(1);opacity:0}}
+        @keyframes cf-d{0%{transform:translate(0,-10px) rotate(0deg) scaleX(1);opacity:1}25%{transform:translate(-18px,25vh) rotate(-90deg) scaleX(-1)}50%{transform:translate(18px,50vh) rotate(-180deg) scaleX(1)}75%{transform:translate(-22px,75vh) rotate(-270deg) scaleX(-1);opacity:.85}100%{transform:translate(12px,110vh) rotate(-360deg) scaleX(1);opacity:0}}
+        @keyframes cf-e{0%{transform:translate(0,-10px) rotate(0deg);opacity:1}20%{transform:translate(-10px,20vh) rotate(144deg)}40%{transform:translate(12px,40vh) rotate(288deg)}60%{transform:translate(-14px,60vh) rotate(432deg);opacity:.9}80%{transform:translate(8px,80vh) rotate(576deg)}100%{transform:translate(-6px,110vh) rotate(720deg);opacity:0}}
+        @keyframes cf-f{0%{transform:translate(0,-10px) rotate(0deg);opacity:1}20%{transform:translate(10px,20vh) rotate(-144deg)}40%{transform:translate(-12px,40vh) rotate(-288deg)}60%{transform:translate(14px,60vh) rotate(-432deg);opacity:.9}80%{transform:translate(-8px,80vh) rotate(-576vh)}100%{transform:translate(6px,110vh) rotate(-720deg);opacity:0}}
+      `}</style>
+      {confetti && (
+        <div className="fixed inset-0 z-50 pointer-events-none overflow-hidden">
+          {confettiPieces.map(p => (
+            <div key={p.id} style={{
+              position:'absolute', left:`${p.left}%`, top:0,
+              width:`${p.w}px`, height:`${p.h}px`,
+              backgroundColor:p.color, borderRadius:p.round,
+              animation:`${p.anim} ${p.duration}s ${p.delay}s cubic-bezier(.4,0,.6,1) both`,
+            }} />
+          ))}
+        </div>
+      )}
       <div className="bg-white rounded-3xl shadow-xl p-10 max-w-md w-full text-center">
         <div className="flex justify-center mb-5">
           <CheckCircle2 className="w-16 h-16" style={{ color: '#16a34a' }} />
@@ -165,12 +208,16 @@ function CheckoutContent() {
             <span>Estimated Total</span><span>KSh {total.toLocaleString()}</span>
           </div>
         </div>
-        <Link href="/stay/my-bookings" className="block w-full py-3 rounded-xl text-sm font-bold text-white text-center mb-3" style={{ background: '#16a34a' }}>
-          Track My Booking
-        </Link>
-        <Link href="/stay" className="block w-full py-3 rounded-xl text-sm font-bold text-center border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-          Back to Home
-        </Link>
+        <div className="flex gap-3">
+          <Link href="/stay/my-bookings" className="flex-1 py-3 rounded-xl text-sm font-bold text-white text-center" style={{ background: '#16a34a' }}>
+            <span className="sm:hidden">Track</span>
+            <span className="hidden sm:inline">Track My Booking</span>
+          </Link>
+          <Link href="/stay" className="flex-1 py-3 rounded-xl text-sm font-bold text-center border-2 border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
+            <span className="sm:hidden">Home</span>
+            <span className="hidden sm:inline">Back to Home</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
