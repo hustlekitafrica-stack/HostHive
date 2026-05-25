@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicSupabase } from '@/lib/supabase/public';
-import { sendSmsBulk, buildGuestRequestSms, buildAdminRequestSms } from '@/lib/sms';
+import { sendSmsBulk, buildGuestRequestSms, buildAdminRequestSms, normalizePhone } from '@/lib/sms';
 
 export async function POST(req: NextRequest) {
   try {
@@ -45,11 +45,12 @@ export async function POST(req: NextRequest) {
     // ── Automated SMS (non-blocking) ────────────────────────────────────────
     const firstRoom = Array.isArray(room_details) && room_details.length > 0 ? room_details[0] : null;
     const propertyName = firstRoom?.property_name ?? 'Kogelo Suites';
-    const adminPhone   = process.env.ADMIN_PHONE ?? '';
+    const adminPhone   = normalizePhone(process.env.ADMIN_PHONE ?? '');
+    const guestE164    = normalizePhone(guest_phone.trim());
 
     const smsResults = await sendSmsBulk([
       {
-        to:      guest_phone.trim(),
+        to:      guestE164,
         message: buildGuestRequestSms({
           guestName:    guest_name.trim(),
           propertyName,

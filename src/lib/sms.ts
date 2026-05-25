@@ -18,6 +18,15 @@
  *   ADMIN_PHONE               = <host/admin phone number e.g. +254700000000>
  */
 
+/** Normalise a Kenyan phone number to E.164 (+254XXXXXXXXX). Leaves other formats unchanged. */
+export function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '');
+  if (digits.startsWith('0') && digits.length === 10)  return '+254' + digits.slice(1);
+  if (digits.startsWith('254') && digits.length === 12) return '+' + digits;
+  if (raw.startsWith('+'))                              return raw.trim();
+  return raw.trim();
+}
+
 export interface SmsResult {
   ok: boolean;
   messageId?: string;
@@ -114,7 +123,7 @@ export function buildGuestRequestSms(opts: {
 }): string {
   const { guestName, propertyName, checkIn, checkOut, nights, ref } = opts;
   const first = guestName.split(' ')[0];
-  return `Hi ${first}! 🏨 Your booking request for ${propertyName} (${checkIn} – ${checkOut}, ${nights} night${nights !== 1 ? 's' : ''}) has been received. Ref: ${ref.slice(0,8).toUpperCase()}. Our team will confirm within 2 hours. – Kogelo Suites`;
+  return `Hi ${first}! 🏨 Your booking request for ${propertyName} (${checkIn} – ${checkOut}, ${nights} night${nights !== 1 ? 's' : ''}) has been received. Ref: ${ref.slice(0,8).toUpperCase()}. We will get back to you within 5 minutes. – Kogelo Suites`;
 }
 
 export function buildAdminRequestSms(opts: {
