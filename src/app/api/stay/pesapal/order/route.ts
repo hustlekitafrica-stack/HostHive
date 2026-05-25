@@ -44,6 +44,7 @@ async function registerIpn(token: string): Promise<string> {
     body: JSON.stringify({ url: ipnUrl, ipn_notification_type: 'POST' }),
   });
   const data = await res.json();
+  console.log('[pesapal/ipn-register] HTTP', res.status, JSON.stringify(data));
   return (data.ipn_id ?? '') as string;
 }
 
@@ -100,8 +101,10 @@ export async function POST(req: NextRequest) {
     });
     const orderData = await orderRes.json();
 
+    console.log('[pesapal/order] HTTP', orderRes.status, JSON.stringify(orderData));
     if (!orderData.redirect_url) {
-      return NextResponse.json({ error: orderData.message ?? 'Pesapal order failed' }, { status: 500 });
+      const detail = orderData.message ?? orderData.error?.message ?? JSON.stringify(orderData);
+      return NextResponse.json({ error: `Pesapal order failed: ${detail}` }, { status: 500 });
     }
 
     // Persist the order_tracking_id on the booking request
