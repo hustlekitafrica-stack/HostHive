@@ -65,7 +65,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, full_name, phone)
+  INSERT INTO public.profiles (id, email, full_name, phone)
   VALUES (
     NEW.id,
     NULLIF(NEW.email, ''),
@@ -75,7 +75,7 @@ BEGIN
   ON CONFLICT (id) DO NOTHING;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Drop the duplicate trigger created by a previous migration run (if it exists)
 -- on_auth_user_created already calls handle_new_user(), so the duplicate is not needed

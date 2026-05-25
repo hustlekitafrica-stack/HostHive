@@ -2,12 +2,20 @@
  * SMS utility — provider-agnostic stub.
  *
  * To activate real SMS delivery set these env vars:
- *   SMS_PROVIDER   = "africastalking" | "twilio"
- *   SMS_API_KEY    = <your api key>
- *   SMS_USERNAME   = <AT username>        (Africa's Talking only)
- *   SMS_SENDER_ID  = <sender name/number>
- *   SMS_FROM       = <twilio from number> (Twilio only)
- *   ADMIN_PHONE    = <host/admin phone number e.g. +254700000000>
+ *   SMS_PROVIDER              = "twilio" | "africastalking"
+ *
+ *   -- Twilio (primary) --
+ *   SMS_API_KEY               = <Twilio Account SID  (ACxxx...)>
+ *   SMS_USERNAME              = <Twilio Auth Token>
+ *   SMS_MESSAGING_SERVICE_SID = <Twilio Messaging Service SID (MGxxx...)>  ← preferred for Kenya alphanumeric sender
+ *   SMS_FROM                  = <Alphanumeric sender ID or Twilio phone number>  ← used only when no Messaging Service SID
+ *
+ *   -- Africa's Talking (legacy) --
+ *   SMS_API_KEY               = <AT API key>
+ *   SMS_USERNAME              = <AT username>
+ *   SMS_SENDER_ID             = <AT sender name/number>
+ *
+ *   ADMIN_PHONE               = <host/admin phone number e.g. +254700000000>
  */
 
 export interface SmsResult {
@@ -69,12 +77,20 @@ async function sendViaAfricasTalking(to: string, message: string): Promise<SmsRe
 // ── Twilio ──────────────────────────────────────────────────────────────────
 async function sendViaTwilio(to: string, message: string): Promise<SmsResult> {
   try {
-    const sid   = process.env.SMS_API_KEY ?? '';
-    const token = process.env.SMS_USERNAME ?? '';
-    const from  = process.env.SMS_FROM ?? '';
-    const url   = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
-    const body  = new URLSearchParams({ To: to, From: from, Body: message });
-    const res   = await fetch(url, {
+    const sid        = process.env.SMS_API_KEY ?? '';
+    const token      = process.env.SMS_USERNAME ?? '';
+    const msgSvcSid  = process.env.SMS_MESSAGING_SERVICE_SID ?? '';
+    const from       = process.env.SMS_FROM ?? '';
+    const url        = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+
+    const body = new URLSearchParams({ To: to, Body: message });
+    if (msgSvcSid) {
+      body.set('MessagingServiceSid', msgSvcSid);
+    } else {
+      body.set('From', from);
+    }
+
+    const res = await fetch(url, {
       method:  'POST',
       headers: {
         Authorization: `Basic ${Buffer.from(`${sid}:${token}`).toString('base64')}`,
