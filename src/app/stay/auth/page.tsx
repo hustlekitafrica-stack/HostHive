@@ -59,21 +59,6 @@ function StayAuthContent() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-4 py-3" style={{ backgroundColor: '#1e293b' }}>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm" style={{ backgroundColor: '#16a34a' }}>
-            KS
-          </div>
-          <span className="text-white font-bold text-base">Kogelo Suites</span>
-        </div>
-        <button className="text-slate-300 hover:text-white transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </header>
-
       {/* Main Content */}
       <main className="flex-1 flex flex-col px-5 pt-8 pb-6 max-w-md w-full mx-auto">
         {/* Title */}
