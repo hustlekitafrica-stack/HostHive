@@ -27,8 +27,12 @@ async function getPesapalToken(): Promise<string> {
       consumer_secret: process.env.PESAPAL_CONSUMER_SECRET ?? '',
     }),
   });
-  const data = await res.json();
-  if (!data.token) throw new Error(data.message ?? 'Failed to get Pesapal token');
+  const text = await res.text();
+  console.log('[pesapal/token] HTTP', res.status, text);
+  let data: any = {};
+  try { data = JSON.parse(text); } catch { throw new Error(`Pesapal returned non-JSON (HTTP ${res.status}): ${text.slice(0, 200)}`); }
+  const errMsg = data.message ?? (typeof data.error === 'string' ? data.error : data.error?.message ?? JSON.stringify(data.error));
+  if (!data.token) throw new Error(errMsg ?? `Failed to get Pesapal token (HTTP ${res.status})`);
   return data.token as string;
 }
 
@@ -51,8 +55,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'booking_request_id and amount are required' }, { status: 400 });
     }
 
-    if (!process.env.PESAPAL_CONSUMER_KEY || !process.env.PESAPAL_CONSUMER_SECRET) {
+    if (!process.env.PESAPAL_CONSUMER_KEY?.trim() || !process.env.PESAPAL_CONSUMER_SECRET?.trim()) {
       return NextResponse.json({ error: 'Pesapal not configured — add PESAPAL_CONSUMER_KEY and PESAPAL_CONSUMER_SECRET to .env.local' }, { status: 503 });
+    }
+
+    if (!process.env.PESAPAL_ENV || (process.env.PESAPAL_ENV !== 'live' && process.env.PESAPAL_ENV !== 'sandbox')) {
+      return NextResponse.json({
+        error: `PESAPAL_ENV is "${process.env.PESAPAL_ENV ?? '(not set)'}". It must be exactly "live" or "sandbox" in .env.local`,
+      }, { status: 503 });
     }
 
     // Get auth token
