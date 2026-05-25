@@ -223,13 +223,13 @@ function CheckoutContent() {
   );
 
   return (
-    <div className="bg-[#f8fafc] h-[100dvh] overflow-hidden flex flex-col lg:h-[100dvh] lg:overflow-hidden lg:pt-16 lg:pb-20">
+    <div className="bg-[#f8fafc] min-h-screen flex flex-col pt-14 pb-20">
 
-      <div className="flex-1 flex flex-col overflow-hidden max-w-4xl mx-auto w-full px-4 sm:px-6 lg:py-4">
-        <div className="flex-1 flex flex-col lg:grid lg:grid-cols-5 lg:gap-8 overflow-hidden">
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 md:py-8">
+        <div className="flex flex-col md:flex-row md:items-start md:gap-8">
 
           {/* ── Left: Guest form — always desktop, step 2 on mobile ── */}
-          <div className={`lg:col-span-3 ${step === 1 ? 'hidden lg:block' : 'flex-1 flex flex-col justify-center overflow-hidden pb-20 space-y-5'}`}>
+          <div className={`md:flex-1 ${step === 1 ? 'hidden md:block' : 'space-y-5 pb-4'}`}>
 
             {/* Guest details form */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
@@ -260,8 +260,8 @@ function CheckoutContent() {
           </div>
 
           {/* ── Right: Booking summary — always desktop, step 1 on mobile ── */}
-          <div className={`lg:col-span-2 ${step === 2 ? 'hidden lg:block' : 'flex-1 flex items-center justify-center pb-20'}`}>
-            <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden lg:sticky lg:top-24">
+          <div className={`md:w-80 md:flex-shrink-0 ${step === 2 ? 'hidden md:block' : 'pb-4'}`}>
+            <div className="w-full bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden md:sticky md:top-20">
               <div className="p-5" style={{ background: 'linear-gradient(135deg, #0f172a, #0f172a)' }}>
                 <p className="text-xs font-bold uppercase tracking-widest text-white/50 mb-1">Booking Summary</p>
                 <h3 className="font-black text-white text-base">{property?.name ?? '—'}</h3>
@@ -349,7 +349,7 @@ function CheckoutContent() {
         </div>
       </div>
 
-      {/* ── Sticky footer (matches room page style) ── */}
+      {/* ── Sticky footer ── */}
       <div className="fixed bottom-0 left-0 right-0 z-40 bg-white"
         style={{ boxShadow: '0 -2px 16px rgba(0,0,0,0.10)', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
@@ -364,7 +364,7 @@ function CheckoutContent() {
           {/* Mobile step 1: go to details */}
           <button
             onClick={() => setStep(2)}
-            className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-bold text-white transition-all active:scale-95 lg:hidden ${step === 2 ? 'hidden' : ''}`}
+            className={`flex-shrink-0 px-6 py-3 rounded-full text-sm font-bold text-white transition-all active:scale-95 md:hidden ${step === 2 ? 'hidden' : ''}`}
             style={{ background: '#16a34a' }}>
             Enter Details →
           </button>
@@ -372,7 +372,7 @@ function CheckoutContent() {
           <button
             onClick={handleSubmit}
             disabled={submitting || !property}
-            className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-bold text-white disabled:opacity-50 transition-all active:scale-95 ${step === 1 ? 'hidden lg:block' : ''}`}
+            className={`flex-shrink-0 px-5 py-3 rounded-full text-sm font-bold text-white disabled:opacity-50 transition-all active:scale-95 ${step === 1 ? 'hidden md:block' : ''}`}
             style={{ background: '#16a34a' }}>
             {submitting ? 'Sending…' : 'Confirm Reservation'}
           </button>

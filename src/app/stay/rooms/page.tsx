@@ -218,7 +218,7 @@ function RoomsContent() {
         <div className="flex gap-6 items-start">
 
           {/* ── LEFT SIDEBAR – desktop only ── */}
-          <aside className="hidden md:block w-64 flex-shrink-0 sticky top-20 self-start">
+          <aside className="hidden md:block w-64 flex-shrink-0 sticky top-20 self-start max-h-[calc(100vh-5.5rem)] overflow-y-auto rounded-2xl">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
               <h3 className="font-black text-gray-900 mb-4 text-sm">Filters</h3>
 

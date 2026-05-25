@@ -71,9 +71,10 @@ export default function LoginPage() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col justify-center px-5 py-8 max-w-md w-full mx-auto">
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign in or create an account</h1>
+      <main className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+        <div className="w-full max-w-md">
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Sign in or create an account</h1>
         <p className="text-sm text-gray-500 mb-6">
           Sign in using your Kogelo Suites account to access property management.
         </p>
@@ -238,6 +239,7 @@ export default function LoginPage() {
             {' '}and{' '}
             <button className="underline transition-colors" style={{ color: '#16a34a' }}>Privacy statement</button>
           </p>
+        </div>
         </div>
       </main>
     </div>
