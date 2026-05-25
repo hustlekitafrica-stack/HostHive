@@ -80,7 +80,19 @@ export default function DiningPage() {
   const [dynamicMenu,  setDynamicMenu]  = useState<MenuCategory[] | null>(null);
   const [properties,   setProperties]   = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [step]);
+  useEffect(() => {
+    if (step === 'type') {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [step]);
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -188,13 +200,13 @@ export default function DiningPage() {
 
   // ── STEP 1: Choose Order Type ────────────────────────────────────────────
   if (step === 'type') return (
-    <div className="min-h-screen overflow-x-hidden flex flex-col" style={{ background: '#0f172a' }}>
-      <div className="pt-2 sm:pt-16 px-4 pb-4 max-w-lg mx-auto w-full">
+    <div className="overflow-hidden flex flex-col" style={{ background: '#0f172a', height: 'calc(100dvh - 3.5rem)' }}>
+      <div className="px-4 pt-6 pb-3 max-w-lg mx-auto w-full">
         <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
         <h1 className="text-2xl font-black text-white mb-1">How would you like to order?</h1>
         <p className="text-white/50 text-sm">Select an option to get started</p>
       </div>
-      <div className="flex-1 px-4 pb-28 space-y-3 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-4 pb-4 space-y-3 max-w-lg mx-auto w-full overflow-hidden">
         {ORDER_TYPES.map(t => (
           <button key={t.id} onClick={() => { setOrderType(t.id); setStep('menu'); }}
             className="w-full rounded-2xl p-5 text-left transition-all flex items-center gap-4 border border-white/10 active:scale-[0.98]"
