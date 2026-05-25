@@ -35,7 +35,6 @@ function CheckoutContent() {
 
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
-  const [email,      setEmail]      = useState('');
   const [requests,   setRequests]   = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState('');
@@ -56,7 +55,6 @@ function CheckoutContent() {
           phone: meta.phone ?? '',
         };
         setAuthUser(u);
-        setEmail(u.email);
         // Prefill name/phone from metadata; fall back to most recent booking
         if (u.name) setName(u.name);
         if (u.phone) setPhone(u.phone);
@@ -96,7 +94,6 @@ function CheckoutContent() {
     }
     if (!name.trim())  { setError('Please enter your full name.'); return; }
     if (!phone.trim()) { setError('Please enter your phone number.'); return; }
-    if (!email.trim()) { setError('Please enter your email address.'); return; }
     if (!property)     { setError('Room information not found.'); return; }
     if (nights <= 0)   { setError('Invalid dates. Please go back and select valid dates.'); return; }
 
@@ -108,7 +105,8 @@ function CheckoutContent() {
         body: JSON.stringify({
           guest_name:       name.trim(),
           guest_phone:      phone.trim(),
-          guest_email:      email.trim(),
+          guest_email:      authUser?.email ?? '',
+
           check_in:         checkIn,
           check_out:        checkOut,
           nights,
@@ -201,14 +199,6 @@ function CheckoutContent() {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XX XXX XXX" type="tel"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-                    Email Address <span className="text-red-500">*</span>
-                  </label>
-                  <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@email.com" type="email"
-                    readOnly={!!authUser}
-                    className={`w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none transition-colors ${authUser ? 'bg-gray-50 text-gray-500 cursor-default' : 'focus:border-red-800'}`} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Special Requests <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
