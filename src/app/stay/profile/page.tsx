@@ -11,6 +11,7 @@ export default function GuestProfilePage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
@@ -28,9 +29,10 @@ export default function GuestProfilePage() {
       const user = data.user;
 
       if (user) {
+        setLoggedIn(true);
         setEmail(user.email ?? '');
         setName((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || 'Guest');
-        setPhone((user.user_metadata?.phone as string) || '');
+        setPhone((user.phone ?? (user.user_metadata?.phone as string)) || '');
       }
 
       setLoading(false);
@@ -47,7 +49,7 @@ export default function GuestProfilePage() {
     );
   }
 
-  if (!email) {
+  if (!loggedIn) {
     return (
       <div className="min-h-screen bg-[#f8fafc] pt-5 sm:pt-24 px-4 sm:px-6">
         <div className="max-w-xl mx-auto bg-white rounded-3xl border border-slate-200 shadow-sm p-8 text-center">
