@@ -11,20 +11,37 @@ interface CardImageCarouselProps {
 
 export default function CardImageCarousel({ photos, alt = 'Room', height = 'h-48' }: CardImageCarouselProps) {
   const [current, setCurrent] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-
-  const handleScroll = () => {
-    if (!ref.current) return;
-    const idx = Math.round(ref.current.scrollLeft / ref.current.offsetWidth);
-    setCurrent(idx);
-  };
+  const touchStartX = useRef<number>(0);
+  const swiping = useRef(false);
 
   const goTo = (idx: number, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!ref.current) return;
-    ref.current.scrollTo({ left: idx * ref.current.offsetWidth, behavior: 'smooth' });
-    setCurrent(idx);
+    setCurrent(Math.max(0, Math.min(photos.length - 1, idx)));
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    swiping.current = false;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    if (Math.abs(e.touches[0].clientX - touchStartX.current) > 5) {
+      swiping.current = true;
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (!swiping.current) return;
+    const dx = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 40) {
+      setCurrent(prev =>
+        dx > 0
+          ? Math.min(photos.length - 1, prev + 1)
+          : Math.max(0, prev - 1)
+      );
+    }
+    swiping.current = false;
   };
 
   if (!photos?.length) {
@@ -37,19 +54,23 @@ export default function CardImageCarousel({ photos, alt = 'Room', height = 'h-48
   }
 
   return (
-    <div className={`relative ${height} bg-gray-100`}>
-      <div
-        ref={ref}
-        onScroll={handleScroll}
-        className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide">
-        {photos.map((src, i) => (
-          <div key={i} className="flex-shrink-0 w-full h-full snap-center">
-            <img src={src} alt={`${alt} ${i + 1}`} className="w-full h-full object-cover" />
-          </div>
-        ))}
-      </div>
+    <div
+      className={`relative ${height} bg-gray-100 overflow-hidden touch-pan-y`}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {photos.map((src, i) => (
+        <div
+          key={i}
+          className="absolute inset-0 transition-transform duration-300 ease-in-out"
+          style={{ transform: `translateX(${(i - current) * 100}%)` }}
+        >
+          <img src={src} alt={`${alt} ${i + 1}`} className="w-full h-full object-cover" draggable={false} />
+        </div>
+      ))}
       {photos.length > 1 && (
-        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5">
+        <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-10">
           {photos.map((_, i) => (
             <button key={i} onClick={(e) => goTo(i, e)}
               className={`rounded-full transition-all duration-200 ${

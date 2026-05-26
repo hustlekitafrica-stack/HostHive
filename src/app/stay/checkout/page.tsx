@@ -35,6 +35,7 @@ function CheckoutContent() {
 
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
+  const [email,      setEmail]      = useState('');
   const [requests,   setRequests]   = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState('');
@@ -71,22 +72,24 @@ function CheckoutContent() {
         const meta = data.user.user_metadata ?? {};
         const u: AuthUser = {
           id:    data.user.id,
-          email: data.user.email ?? '',
+          email: data.user.email ?? meta.profile_email ?? '',
           name:  meta.full_name ?? meta.name ?? '',
-          phone: meta.phone ?? '',
+          phone: data.user.phone ?? meta.phone ?? '',
         };
         setAuthUser(u);
-        // Prefill name/phone from metadata; fall back to most recent booking
+        // Prefill name/phone/email from metadata; fall back to most recent booking
         if (u.name) setName(u.name);
         if (u.phone) setPhone(u.phone);
-        if (!u.name || !u.phone) {
+        if (u.email) setEmail(u.email);
+        if (!u.name || !u.phone || !u.email) {
           try {
             const res = await fetch(`/api/stay/my-bookings?userId=${u.id}`);
             const d = await res.json();
             const prev = d.bookings?.[0];
             if (prev) {
-              if (!u.name && prev.guest_name)  setName(prev.guest_name);
+              if (!u.name && prev.guest_name)   setName(prev.guest_name);
               if (!u.phone && prev.guest_phone) setPhone(prev.guest_phone);
+              if (!u.email && prev.guest_email) setEmail(prev.guest_email);
             }
           } catch { /* ignore */ }
         }
@@ -126,7 +129,7 @@ function CheckoutContent() {
         body: JSON.stringify({
           guest_name:       name.trim(),
           guest_phone:      phone.trim(),
-          guest_email:      authUser?.email ?? '',
+          guest_email:      email.trim() || authUser?.email || '',
 
           check_in:         checkIn,
           check_out:        checkOut,
@@ -245,6 +248,11 @@ function CheckoutContent() {
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Phone Number <span className="text-red-500">*</span></label>
                   <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XX XXX XXX" type="tel"
+                    className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Email <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+                  <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" type="email"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
                 </div>
                 <div>

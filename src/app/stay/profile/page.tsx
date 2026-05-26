@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { User, Mail, Phone, CalendarDays, LogIn, ShieldCheck, LogOut } from 'lucide-react';
+import { User, Mail, Phone, CalendarDays, LogIn, ShieldCheck, LogOut, Pencil, Check, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function GuestProfilePage() {
@@ -15,11 +15,52 @@ export default function GuestProfilePage() {
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState('');
+  const [saveMsgType, setSaveMsgType] = useState<'ok' | 'err'>('ok');
+
   const handleSignOut = async () => {
     setSigningOut(true);
     const supabase = createClient();
     await supabase.auth.signOut();
     router.replace('/stay');
+  };
+
+  const startEditing = () => {
+    setEditName(name === 'Guest' ? '' : name);
+    setEditEmail(email);
+    setSaveMsg('');
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setSaveMsg('');
+  };
+
+  const saveProfile = async () => {
+    setSaving(true);
+    setSaveMsg('');
+    const supabase = createClient();
+    const updates: Record<string, string> = {};
+    if (editName.trim()) updates.full_name = editName.trim();
+    updates.profile_email = editEmail.trim();
+    const { error } = await supabase.auth.updateUser({ data: updates });
+    if (error) {
+      setSaveMsgType('err');
+      setSaveMsg('Failed to save. Please try again.');
+    } else {
+      if (editName.trim()) setName(editName.trim());
+      setEmail(editEmail.trim());
+      setEditing(false);
+      setSaveMsgType('ok');
+      setSaveMsg('Profile updated successfully.');
+      setTimeout(() => setSaveMsg(''), 4000);
+    }
+    setSaving(false);
   };
 
   useEffect(() => {
@@ -30,9 +71,10 @@ export default function GuestProfilePage() {
 
       if (user) {
         setLoggedIn(true);
-        setEmail(user.email ?? '');
-        setName((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || 'Guest');
-        setPhone((user.phone ?? (user.user_metadata?.phone as string)) || '');
+        const meta = user.user_metadata ?? {};
+        setEmail(user.email || (meta.profile_email as string) || '');
+        setName((meta.full_name as string) || (meta.name as string) || 'Guest');
+        setPhone(user.phone || (meta.phone as string) || '');
       }
 
       setLoading(false);
@@ -82,32 +124,96 @@ export default function GuestProfilePage() {
           </div>
         </div>
 
+        {saveMsg && !editing && (
+          <div className={`mb-4 px-4 py-3 rounded-2xl text-sm font-semibold ${saveMsgType === 'ok' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'}`}>
+            {saveMsg}
+          </div>
+        )}
+
         <div className="grid md:grid-cols-3 gap-5">
           <div className="md:col-span-2 bg-white rounded-3xl border border-slate-200 shadow-sm p-6">
-            <h2 className="text-lg font-black text-slate-900 mb-5">Personal Details</h2>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
-                <Mail className="w-5 h-5 text-slate-400" />
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Email</p>
-                  <p className="text-sm font-semibold text-slate-900">{email}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
-                <Phone className="w-5 h-5 text-slate-400" />
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Phone</p>
-                  <p className="text-sm font-semibold text-slate-900">{phone || 'Not added yet'}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
-                <ShieldCheck className="w-5 h-5" style={{ color: '#16a34a' }} />
-                <div>
-                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Account Status</p>
-                  <p className="text-sm font-semibold text-slate-900">Active guest account</p>
-                </div>
-              </div>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-black text-slate-900">Personal Details</h2>
+              {!editing && (
+                <button onClick={startEditing} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-slate-800 transition-colors">
+                  <Pencil className="w-3.5 h-3.5" /> Edit
+                </button>
+              )}
             </div>
+
+            {editing ? (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Full Name</label>
+                  <input
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    placeholder="Your full name"
+                    className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-green-600 transition-colors"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">
+                    Email <span className="font-normal text-slate-400 normal-case">(optional — for booking confirmations)</span>
+                  </label>
+                  <input
+                    value={editEmail}
+                    onChange={e => setEditEmail(e.target.value)}
+                    type="email"
+                    placeholder="you@example.com"
+                    className="w-full text-sm border border-slate-200 rounded-xl px-4 py-2.5 outline-none focus:border-green-600 transition-colors"
+                  />
+                </div>
+                {saveMsg && (
+                  <p className={`text-sm font-semibold ${saveMsgType === 'err' ? 'text-red-600' : 'text-green-600'}`}>{saveMsg}</p>
+                )}
+                <div className="flex gap-2 pt-1">
+                  <button
+                    onClick={saveProfile}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-all"
+                    style={{ background: '#16a34a' }}>
+                    <Check className="w-4 h-4" />{saving ? 'Saving…' : 'Save'}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+                    <X className="w-4 h-4" />Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
+                  <User className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Full Name</p>
+                    <p className="text-sm font-semibold text-slate-900">{name === 'Guest' ? <span className="text-slate-400 italic">Not set — tap Edit to add</span> : name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
+                  <Mail className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Email</p>
+                    <p className="text-sm font-semibold text-slate-900">{email || <span className="text-slate-400 italic">Not added yet — tap Edit to add</span>}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
+                  <Phone className="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Phone</p>
+                    <p className="text-sm font-semibold text-slate-900">{phone || 'Not added yet'}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
+                  <ShieldCheck className="w-5 h-5" style={{ color: '#16a34a' }} />
+                  <div>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Account Status</p>
+                    <p className="text-sm font-semibold text-slate-900">Active guest account</p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6">

@@ -596,7 +596,7 @@ function RoomDetailContent({ id }: { id: string }) {
   const [wishLoading,    setWishLoading]    = useState(false);
   const [mobileSlide,    setMobileSlide]    = useState(0);
   const swipeStartX = useRef(0);
-  const photoScrollRef = useRef<HTMLDivElement>(null);
+  const swipeMoved = useRef(false);
   const guests = adults + children;
 
   useEffect(() => {
@@ -666,22 +666,28 @@ function RoomDetailContent({ id }: { id: string }) {
       {/* ── Mobile Gallery (full-width, sm:hidden) ── */}
       <div className="block sm:hidden relative">
         {photos.length > 0 ? (
-          <div className="relative w-full h-[340px] overflow-hidden bg-gray-900 select-none">
-            {/* Scroll-snap track */}
-            <div
-              ref={photoScrollRef}
-              className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
-              onScroll={e => {
-                const w = e.currentTarget.offsetWidth;
-                if (w) setMobileSlide(Math.round(e.currentTarget.scrollLeft / w));
-              }}
-            >
-              {photos.map((p, i) => (
-                <div key={i} className="min-w-full h-full flex-shrink-0 snap-start">
-                  <img src={p} alt={property.name} className="w-full h-full object-cover pointer-events-none" />
-                </div>
-              ))}
-            </div>
+          <div
+            className="relative w-full h-[340px] overflow-hidden bg-gray-900 select-none touch-pan-y"
+            onTouchStart={e => { swipeStartX.current = e.touches[0].clientX; swipeMoved.current = false; }}
+            onTouchMove={e => { if (Math.abs(e.touches[0].clientX - swipeStartX.current) > 5) swipeMoved.current = true; }}
+            onTouchEnd={e => {
+              if (!swipeMoved.current) return;
+              const dx = swipeStartX.current - e.changedTouches[0].clientX;
+              if (Math.abs(dx) > 40) {
+                setMobileSlide(prev => dx > 0 ? Math.min(photos.length - 1, prev + 1) : Math.max(0, prev - 1));
+              }
+              swipeMoved.current = false;
+            }}
+          >
+            {photos.map((p, i) => (
+              <div
+                key={i}
+                className="absolute inset-0 transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(${(i - mobileSlide) * 100}%)` }}
+              >
+                <img src={p} alt={property.name} className="w-full h-full object-cover pointer-events-none" draggable={false} />
+              </div>
+            ))}
             {/* Back */}
             <Link href="/stay/rooms" className="absolute top-16 left-4 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow z-20">
               <svg className="w-4 h-4 text-gray-800" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
@@ -701,7 +707,7 @@ function RoomDetailContent({ id }: { id: string }) {
                 photos.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => photoScrollRef.current?.scrollTo({ left: i * photoScrollRef.current.offsetWidth, behavior: 'smooth' })}
+                    onClick={() => setMobileSlide(i)}
                     className={`rounded-full transition-all duration-300 ease-in-out ${
                       i === mobileSlide
                         ? 'w-5 h-1.5 bg-white shadow'
