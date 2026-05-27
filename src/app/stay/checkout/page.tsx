@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, BedDouble, Droplets, Users, Calendar, Moon } from 'lucide-react';
+import { CheckCircle2, BedDouble, Droplets, Users, Calendar, Moon, Tag } from 'lucide-react';
 
 type Property = {
   id: string; name: string; type: string; nightly_rate: number;
@@ -15,6 +15,14 @@ type Property = {
 };
 
 type AuthUser = { id: string; email: string; name: string; phone: string };
+
+type AppliedDiscount = {
+  id: string;
+  name: string;
+  value_type: 'percentage' | 'fixed';
+  value: number;
+  saving: number;
+};
 
 function CheckoutContent() {
   const router      = useRouter();
@@ -44,6 +52,8 @@ function CheckoutContent() {
   const [step,       setStep]       = useState<1 | 2>(1);
   const [addBreakfast,setAddBreakfast] = useState(false);
   const [confetti,   setConfetti]   = useState(false);
+  const [appliedDiscounts, setAppliedDiscounts] = useState<AppliedDiscount[]>([]);
+  const [discountsLoading, setDiscountsLoading] = useState(false);
 
   const confettiPieces = useMemo(() => {
     const colors = ['#22c55e','#f59e0b','#3b82f6','#ef4444','#8b5cf6','#ec4899','#f97316','#06b6d4','#fbbf24','#10b981','#ff6b6b','#4ecdc4'];
@@ -106,9 +116,45 @@ function CheckoutContent() {
       .finally(() => setPropLoading(false));
   }, [propertyId]);
 
-  const stayTotal      = property ? property.nightly_rate * nights * rooms : 0;
+  // Fetch applicable discounts once we have property, dates, and auth user resolved
+  useEffect(() => {
+    if (!propertyId || !checkIn || authLoading) return;
+    setDiscountsLoading(true);
+    const qs = new URLSearchParams({ propertyId, checkIn });
+    if (authUser?.id) qs.set('userId', authUser.id);
+    fetch(`/api/stay/applicable-discounts?${qs}`)
+      .then(r => r.json())
+      .then(d => {
+        const raw = d.discounts ?? [];
+        // Compute saving per discount against stayTotal (computed inline since state not yet set)
+        const base = property
+          ? property.nightly_rate * nights * rooms
+          : 0;
+        const withSavings: AppliedDiscount[] = raw.map((disc: { id: string; name: string; value_type: 'percentage' | 'fixed'; value: number }) => ({
+          id:         disc.id,
+          name:       disc.name,
+          value_type: disc.value_type,
+          value:      disc.value,
+          saving:     disc.value_type === 'percentage'
+            ? Math.round(base * disc.value / 100)
+            : Number(disc.value),
+        }));
+        setAppliedDiscounts(withSavings);
+      })
+      .catch(() => {})
+      .finally(() => setDiscountsLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyId, checkIn, authUser, authLoading, property]);
+
+  const stayTotal       = property ? property.nightly_rate * nights * rooms : 0;
   const breakfastTotal  = addBreakfast && property?.breakfast_rate ? property.breakfast_rate * guests * nights : 0;
-  const total           = stayTotal + breakfastTotal;
+  const totalDiscount   = appliedDiscounts.reduce((sum, d) => {
+    const saving = d.value_type === 'percentage'
+      ? Math.round(stayTotal * d.value / 100)
+      : Number(d.value);
+    return sum + saving;
+  }, 0);
+  const total           = Math.max(0, stayTotal + breakfastTotal - totalDiscount);
 
   const handleSubmit = async () => {
     setError('');
@@ -145,6 +191,8 @@ function CheckoutContent() {
             subtotal:      total,
           }],
           total_amount:     total,
+          discount_total:   totalDiscount,
+          applied_discounts: appliedDiscounts.map(d => ({ id: d.id, name: d.name, saving: d.value_type === 'percentage' ? Math.round(stayTotal * d.value / 100) : d.value })),
           special_requests: requests.trim(),
           ...(authUser ? { user_id: authUser.id } : {}),
         }),
@@ -207,6 +255,11 @@ function CheckoutContent() {
           <div className="flex justify-between text-gray-600"><span>Check-in</span><span className="font-semibold text-gray-900">{checkIn}</span></div>
           <div className="flex justify-between text-gray-600"><span>Check-out</span><span className="font-semibold text-gray-900">{checkOut}</span></div>
           <div className="flex justify-between text-gray-600"><span>Nights</span><span className="font-semibold text-gray-900">{nights}</span></div>
+          {totalDiscount > 0 && (
+            <div className="flex justify-between text-green-700 font-semibold">
+              <span>Discounts applied</span><span>−KSh {totalDiscount.toLocaleString()}</span>
+            </div>
+          )}
           <div className="border-t border-gray-200 pt-2 flex justify-between font-black text-gray-900">
             <span>Estimated Total</span><span>KSh {total.toLocaleString()}</span>
           </div>
@@ -337,6 +390,32 @@ function CheckoutContent() {
                       <div className="flex justify-between text-gray-500">
                         <span>Breakfast × {guests} guest{guests !== 1 ? 's' : ''} × {nights} night{nights !== 1 ? 's' : ''}</span>
                         <span>KSh {breakfastTotal.toLocaleString()}</span>
+                      </div>
+                    )}
+                    {discountsLoading && (
+                      <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <div className="animate-spin w-3 h-3 rounded-full border border-gray-300 border-t-green-600" />
+                        Checking discounts…
+                      </div>
+                    )}
+                    {appliedDiscounts.map(d => {
+                      const saving = d.value_type === 'percentage'
+                        ? Math.round(stayTotal * d.value / 100)
+                        : d.value;
+                      return (
+                        <div key={d.id} className="flex justify-between text-green-700">
+                          <span className="flex items-center gap-1.5">
+                            <Tag className="w-3 h-3" />
+                            {d.name} ({d.value_type === 'percentage' ? `${d.value}%` : `KSh ${d.value.toLocaleString()}`} off)
+                          </span>
+                          <span className="font-semibold">−KSh {saving.toLocaleString()}</span>
+                        </div>
+                      );
+                    })}
+                    {totalDiscount > 0 && (
+                      <div className="flex justify-between text-green-800 font-bold text-xs bg-green-50 rounded-lg px-2 py-1.5">
+                        <span>Total Savings</span>
+                        <span>−KSh {totalDiscount.toLocaleString()}</span>
                       </div>
                     )}
                     <div className="flex justify-between font-black text-gray-900 text-base pt-1 border-t border-gray-100">

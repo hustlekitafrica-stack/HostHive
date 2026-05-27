@@ -11,6 +11,8 @@ export async function POST(req: NextRequest) {
       num_adults = 1, num_children = 0,
       room_details = [],
       total_amount = 0,
+      discount_total = 0,
+      applied_discounts = [],
       special_requests = '',
       user_id = null,
     } = body;
@@ -33,6 +35,8 @@ export async function POST(req: NextRequest) {
         num_children,
         room_details,
         total_amount,
+        discount_total: Number(discount_total) || 0,
+        applied_discounts,
         special_requests: special_requests.trim(),
         host_user_id: process.env.STAY_HOST_USER_ID ?? '',
         ...(user_id ? { guest_user_id: user_id } : {}),
