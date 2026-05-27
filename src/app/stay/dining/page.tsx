@@ -202,7 +202,6 @@ export default function DiningPage() {
   if (step === 'type') return (
     <div className="flex items-center justify-center px-4" style={{ background: '#0f172a', height: 'calc(100dvh - 3.5rem)' }}>
       <div className="w-full max-w-lg">
-        <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
         <h1 className="text-2xl font-black text-white mb-1">How would you like to order?</h1>
         <p className="text-white/50 text-sm mb-5">Select an option to get started</p>
         <div className="space-y-3">
@@ -222,9 +221,6 @@ export default function DiningPage() {
               <ChevronRight className="w-5 h-5 text-white/30 flex-shrink-0" />
             </button>
           ))}
-          <a href={`tel:${ORDER_PHONE}`} className="flex items-center justify-center gap-2 text-white/30 text-xs pt-2 hover:text-white/60">
-            <Phone className="w-3.5 h-3.5" /> Call to order: {ORDER_PHONE}
-          </a>
         </div>
       </div>
     </div>
@@ -233,19 +229,19 @@ export default function DiningPage() {
   // ── STEP 2: Menu ─────────────────────────────────────────────────────────
   if (step === 'menu') return (
     <div className="min-h-screen bg-[#f8fafc] overflow-x-hidden">
-      <div className="sticky top-0 z-30" style={{ background: '#0f172a' }}>
-        <div className="pt-14 px-4">
-          <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-white/50 text-xs py-2 hover:text-white">
+      <div className="sticky z-30 bg-white border-b border-gray-100" style={{ top: '3.5rem' }}>
+        <div className="pt-3 px-4">
+          <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-gray-400 text-xs py-1.5 hover:text-gray-700">
             <ArrowLeft className="w-3.5 h-3.5" /> Change order type
           </button>
           {selectedType && (
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
                 <selectedType.Icon className="w-4 h-4 text-white" />
               </div>
-              <span className="font-black text-white text-sm">{selectedType.label}</span>
-              {selectedType.fee ? <span className="text-xs text-white/40">+KSh {selectedType.fee}</span>
-                                : <span className="text-xs text-green-400">No extra charge</span>}
+              <span className="font-black text-gray-900 text-sm">{selectedType.label}</span>
+              {selectedType.fee ? <span className="text-xs text-gray-400">+KSh {selectedType.fee}</span>
+                                : <span className="text-xs text-green-600">No extra charge</span>}
             </div>
           )}
         </div>
@@ -253,8 +249,9 @@ export default function DiningPage() {
           {MENU_TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                activeTab === t.id ? 'bg-white text-gray-900' : 'text-white/70 border border-white/20'
-              }`}>
+                activeTab === t.id ? 'text-white' : 'text-gray-500 border border-gray-200 bg-white'
+              }`}
+              style={activeTab === t.id ? { background: '#16a34a' } : {}}>
               <span>{t.emoji}</span>{t.label}
             </button>
           ))}

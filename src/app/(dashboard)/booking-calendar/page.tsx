@@ -214,9 +214,11 @@ export default function BookingCalendarPage() {
 
   // Modal openers
   const openCreate = (date?: string) => {
-    const nextDay = date ? toDateStr(addDay(parseDate(date))) : '';
+    const defaultToday    = toDateStr(new Date());
+    const defaultTomorrow = toDateStr(addDay(new Date()));
+    const nextDay = date ? toDateStr(addDay(parseDate(date))) : defaultTomorrow;
     const defaultProp = properties[0];
-    setForm({ ...EMPTY_FORM, property_id: defaultProp?.id ?? '', check_in: date ?? '', check_out: nextDay,
+    setForm({ ...EMPTY_FORM, property_id: defaultProp?.id ?? '', check_in: date ?? defaultToday, check_out: nextDay,
       nightly_rate: defaultProp?.nightly_rate ? String(defaultProp.nightly_rate) : '',
       cleaning_fee: defaultProp?.cleaning_fee ? String(defaultProp.cleaning_fee) : '',
     });

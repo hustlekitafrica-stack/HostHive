@@ -515,8 +515,8 @@ export default function SearchWidget({
   const router   = useRouter();
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-  const [checkIn,          setCheckIn]          = useState(initialCheckIn);
-  const [checkOut,         setCheckOut]         = useState(initialCheckOut);
+  const [checkIn,          setCheckIn]          = useState(initialCheckIn || today);
+  const [checkOut,         setCheckOut]         = useState(initialCheckOut || tomorrow);
   const [adults,           setAdults]           = useState(initialAdults);
   const [children,         setChildren]         = useState(initialChildren);
   const [rooms,            setRooms]            = useState(initialRooms);

@@ -102,13 +102,15 @@ export default function BookingsEnhancedPage() {
     endDate: '2025-12-31',
   });
 
+  const _today    = new Date().toISOString().split('T')[0];
+  const _tomorrow  = new Date(Date.now() + 86400000).toISOString().split('T')[0];
   const [formData, setFormData] = useState({
     guestName: '',
     guestEmail: '',
     guestPhone: '',
     property: 'Property A',
-    checkIn: '',
-    checkOut: '',
+    checkIn: _today,
+    checkOut: _tomorrow,
     numAdults: '1',
     numChildren: '0',
     totalAmount: '',
@@ -177,8 +179,8 @@ export default function BookingsEnhancedPage() {
       guestEmail: '',
       guestPhone: '',
       property: 'Property A',
-      checkIn: '',
-      checkOut: '',
+      checkIn: new Date().toISOString().split('T')[0],
+      checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
       numAdults: '1',
       numChildren: '0',
       totalAmount: '',

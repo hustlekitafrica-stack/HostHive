@@ -35,8 +35,10 @@ function RoomsContent() {
   const [isMultiMode,  setIsMultiMode]  = useState(Number(params.get('rooms') ?? 1) >= 2);
   const [cart,         setCart]         = useState<{ property: any; qty: number }[]>([]);
   const guestFilter = adults + children;
-  const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? '');
-  const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? '');
+  const today    = new Date().toISOString().split('T')[0];
+  const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const [checkIn,  setCheckIn]  = useState(params.get('checkIn')  ?? today);
+  const [checkOut, setCheckOut] = useState(params.get('checkOut') ?? tomorrow);
   const [sortBy,   setSortBy]   = useState<'price_asc'|'price_desc'|'name'>('price_asc');
   const [showDate,         setShowDate]         = useState(false);
   const [showGuests,       setShowGuests]       = useState(false);
@@ -48,8 +50,8 @@ function RoomsContent() {
   const [priceMax,         setPriceMax]         = useState<number | ''>('');
 
   useEffect(() => {
-    setCheckIn(params.get('checkIn') ?? '');
-    setCheckOut(params.get('checkOut') ?? '');
+    setCheckIn(params.get('checkIn') ?? today);
+    setCheckOut(params.get('checkOut') ?? tomorrow);
     setAdults(Number(params.get('guests') ?? 2));
     setRooms(Number(params.get('rooms') ?? 1));
   }, [params]);
@@ -73,14 +75,18 @@ function RoomsContent() {
   }, [showSortSheet, showFilterSheet, showMapView, showDate, showGuests]);
 
   useEffect(() => {
-    fetch('/api/stay/properties')
+    setLoading(true);
+    const qs = new URLSearchParams();
+    if (checkIn)  qs.set('checkIn',  checkIn);
+    if (checkOut) qs.set('checkOut', checkOut);
+    fetch(`/api/stay/properties?${qs.toString()}`)
       .then(r => r.json())
       .then(d => setProperties(d.properties ?? []))
       .finally(() => setLoading(false));
     fetch('/api/stay/wishlist')
       .then(r => r.json())
       .then(d => setWishlistIds(new Set(d.property_ids ?? [])));
-  }, []);
+  }, [checkIn, checkOut]);
 
   const toggleWishlist = useCallback(async (e: React.MouseEvent, propertyId: string) => {
     e.preventDefault();

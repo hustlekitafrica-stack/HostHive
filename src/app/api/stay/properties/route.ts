@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { publicSupabase } from '@/lib/supabase/public';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const hostId = process.env.STAY_HOST_USER_ID;
+    const { searchParams } = new URL(req.url);
+    const checkIn  = searchParams.get('checkIn');
+    const checkOut = searchParams.get('checkOut');
 
     let query = publicSupabase
       .from('properties')
@@ -16,16 +19,18 @@ export async function GET() {
     const { data: properties, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Exclude properties with an active block today
+    // Exclude properties with overlapping active bookings for the requested dates
     const today = new Date().toISOString().split('T')[0];
+    const rangeStart = checkIn  || today;
+    const rangeEnd   = checkOut || today;
     let blockedIds: Set<string> = new Set();
     try {
       let bq = publicSupabase
         .from('bookings')
         .select('property_id')
-        .eq('status', 'blocked')
-        .lte('check_in', today)
-        .gt('check_out', today);
+        .in('status', ['confirmed', 'tentative', 'checked_in', 'blocked'])
+        .lt('check_in',  rangeEnd)
+        .gt('check_out', rangeStart);
       if (hostId) bq = bq.eq('user_id', hostId);
       const { data: bRows } = await bq;
       blockedIds = new Set((bRows ?? []).map((b: any) => b.property_id));
