@@ -23,7 +23,9 @@ export async function GET(req: Request) {
     const today = new Date().toISOString().split('T')[0];
     const rangeStart = checkIn  || today;
     const rangeEnd   = checkOut || today;
-    let blockedIds: Set<string> = new Set();
+    const blockedIds: Set<string> = new Set();
+
+    // 1) Check bookings table (dashboard-created or auto-created from accepted requests)
     try {
       let bq = publicSupabase
         .from('bookings')
@@ -33,8 +35,25 @@ export async function GET(req: Request) {
         .gt('check_out', rangeStart);
       if (hostId) bq = bq.eq('user_id', hostId);
       const { data: bRows } = await bq;
-      blockedIds = new Set((bRows ?? []).map((b: any) => b.property_id));
-    } catch { /* if RLS blocks the query, show all active properties */ }
+      (bRows ?? []).forEach((b: any) => { if (b.property_id) blockedIds.add(b.property_id); });
+    } catch { /* RLS or connection issue — continue to booking_requests check */ }
+
+    // 2) Also check booking_requests table — covers cases where the auto-booking
+    //    insert into bookings failed but the request is confirmed/pending
+    try {
+      let rq = publicSupabase
+        .from('booking_requests')
+        .select('room_details')
+        .in('status', ['confirmed', 'pending'])
+        .lt('check_in',  rangeEnd)
+        .gt('check_out', rangeStart);
+      if (hostId) rq = rq.eq('host_user_id', hostId);
+      const { data: rRows } = await rq;
+      (rRows ?? []).forEach((r: any) => {
+        const rooms = Array.isArray(r.room_details) ? r.room_details : [];
+        rooms.forEach((room: any) => { if (room.property_id) blockedIds.add(room.property_id); });
+      });
+    } catch { /* ignore */ }
 
     const withPhotos = await Promise.all(
       (properties ?? []).filter((p: any) => !blockedIds.has(p.id)).map(async (p: any) => {
