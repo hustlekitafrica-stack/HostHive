@@ -76,6 +76,7 @@ function WriteReviewContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!propertyId) { setError('Could not determine which property to review. Please go back and try again.'); return; }
     if (overall === 0) { setError('Please select an overall rating.'); return; }
     if (!comment.trim()) { setError('Please write a review.'); return; }
     setSubmitting(true);
@@ -102,6 +103,16 @@ function WriteReviewContent() {
   if (!ready) return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="animate-spin w-8 h-8 border-2 rounded-full border-t-transparent" style={{ borderColor: '#16a34a', borderTopColor: 'transparent' }} />
+    </div>
+  );
+
+  if (!propertyId) return (
+    <div className="min-h-screen flex items-center justify-center px-4">
+      <div className="text-center">
+        <p className="text-base font-semibold text-red-600 mb-4">No property selected.</p>
+        <p className="text-sm text-gray-500 mb-6">Please navigate to a property listing and use the &quot;Write a review&quot; link from there.</p>
+        <Link href="/stay/rooms" className="text-sm font-semibold underline text-gray-700">Browse properties</Link>
+      </div>
     </div>
   );
 

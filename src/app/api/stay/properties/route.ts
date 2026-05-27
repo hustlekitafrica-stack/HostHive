@@ -19,10 +19,18 @@ export async function GET(req: Request) {
     const { data: properties, error } = await query;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    // Exclude properties with overlapping active bookings for the requested dates
-    const today = new Date().toISOString().split('T')[0];
-    const rangeStart = checkIn  || today;
-    const rangeEnd   = checkOut || today;
+    // Exclude properties with overlapping active bookings for the requested dates.
+    // Checkout dates are FREE days — a room checking out on Day X can be rebooked from Day X.
+    // Overlap rule: existing booking conflicts if its first night <= user's last night
+    //               AND its last night >= user's first night.
+    // first night = check_in, last night = check_out - 1 day (checkout day is NOT booked).
+    const today    = new Date().toISOString().split('T')[0];
+    const addDays  = (d: string, n: number) => {
+      const dt = new Date(d); dt.setDate(dt.getDate() + n); return dt.toISOString().split('T')[0];
+    };
+    const rangeStart    = checkIn  || today;               // user's first night
+    const rangeEnd      = checkOut || addDays(today, 1);   // user's checkout day (exclusive)
+    const lastNight     = addDays(rangeEnd, -1);           // user's last booked night
     const blockedIds: Set<string> = new Set();
 
     // 1) Check bookings table (dashboard-created or auto-created from accepted requests)
@@ -31,8 +39,9 @@ export async function GET(req: Request) {
         .from('bookings')
         .select('property_id')
         .in('status', ['confirmed', 'tentative', 'checked_in', 'blocked'])
-        .lt('check_in',  rangeEnd)
-        .gt('check_out', rangeStart);
+        .lte('check_in',  lastNight)    // booking starts on or before user's last night
+        .gte('check_out', addDays(rangeStart, 1)); // booking's checkout is after user's first night
+                                                   // (checkout = rangeStart means departure that morning → free)
       if (hostId) bq = bq.eq('user_id', hostId);
       const { data: bRows } = await bq;
       (bRows ?? []).forEach((b: any) => { if (b.property_id) blockedIds.add(b.property_id); });
@@ -45,8 +54,8 @@ export async function GET(req: Request) {
         .from('booking_requests')
         .select('room_details')
         .in('status', ['confirmed', 'pending'])
-        .lt('check_in',  rangeEnd)
-        .gt('check_out', rangeStart);
+        .lte('check_in',  lastNight)
+        .gte('check_out', addDays(rangeStart, 1));
       if (hostId) rq = rq.eq('host_user_id', hostId);
       const { data: rRows } = await rq;
       (rRows ?? []).forEach((r: any) => {
