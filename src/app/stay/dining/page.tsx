@@ -229,23 +229,23 @@ export default function DiningPage() {
   // ── STEP 2: Menu ─────────────────────────────────────────────────────────
   if (step === 'menu') return (
     <div className="min-h-screen bg-[#f8fafc] overflow-x-hidden">
-      <div className="sticky z-30 bg-white border-b border-gray-100" style={{ top: '3.5rem' }}>
-        <div className="pt-3 px-4">
-          <button onClick={() => setStep('type')} className="flex items-center gap-1.5 text-gray-400 text-xs py-1.5 hover:text-gray-700">
-            <ArrowLeft className="w-3.5 h-3.5" /> Change order type
+      {/* Page header — same pattern as Trips page */}
+      <div className="px-4 sm:px-6 pt-5 sm:pt-16 mb-2">
+        <div className="max-w-2xl mx-auto">
+          <button onClick={() => setStep('type')} className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors mb-4">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/>
+            </svg>
           </button>
-          {selectedType && (
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: '#16a34a' }}>
-                <selectedType.Icon className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-black text-gray-900 text-sm">{selectedType.label}</span>
-              {selectedType.fee ? <span className="text-xs text-gray-400">+KSh {selectedType.fee}</span>
-                                : <span className="text-xs text-green-600">No extra charge</span>}
-            </div>
-          )}
+          <h1 className="text-2xl font-black text-gray-900">{selectedType?.label ?? 'Menu'}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {selectedType?.fee ? `+KSh ${selectedType.fee} service fee` : 'No extra charge'}
+          </p>
         </div>
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3">
+      </div>
+      {/* Sticky category tabs */}
+      <div className="sticky z-30 bg-white border-b border-gray-100" style={{ top: '3.5rem' }}>
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 py-3 max-w-2xl mx-auto">
           {MENU_TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all ${

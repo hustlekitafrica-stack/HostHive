@@ -66,9 +66,6 @@ function MyBookingsContent() {
       {/* Header */}
       <div className="px-4 sm:px-6 mb-6">
         <div className="max-w-3xl mx-auto">
-          <Link href="/stay" className="inline-flex items-center text-gray-400 hover:text-gray-700 transition-colors mb-4">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7"/></svg>
-          </Link>
           <h1 className="text-2xl font-black text-gray-900">Trips</h1>
           <p className="text-sm text-gray-500 mt-0.5">Track the status of your reservation requests.</p>
         </div>
