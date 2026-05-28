@@ -43,7 +43,7 @@ const TYPE_COLORS: Record<DiscountType, string> = {
   first_timer:    '#7C3AED',
   early_booking:  '#0369A1',
   online_booking: '#16A34A',
-  manual:         '#9B1C1C',
+  manual:         '#64748B',
 };
 
 const EMPTY_FORM = {
@@ -202,7 +202,7 @@ export default function DiscountsPage() {
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-5">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#9B1C1C' }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               <Tag className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -214,8 +214,8 @@ export default function DiscountsPage() {
           </div>
           <button onClick={openNew}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
-            style={{ background: '#9B1C1C' }}>
-            <Plus className="w-4 h-4" />Add Discount
+            style={{ background: 'var(--brand-primary, #1e293b)' }}>
+            <Plus className="w-4 h-4" />Add
           </button>
         </div>
       </div>
@@ -228,14 +228,14 @@ export default function DiscountsPage() {
 
         {loading ? (
           <div className="flex justify-center py-16">
-            <div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} />
+            <div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: 'var(--brand-primary, #1e293b)', borderTopColor: 'transparent' }} />
           </div>
         ) : discounts.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
             <Tag className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-semibold text-sm mb-1">No discounts created yet.</p>
             <p className="text-gray-400 text-xs mb-4">Create your first discount to start rewarding guests automatically.</p>
-            <button onClick={openNew} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+            <button onClick={openNew} className="px-5 py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               Create First Discount
             </button>
           </div>
@@ -315,7 +315,7 @@ export default function DiscountsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* Modal header */}
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0" style={{ background: '#9B1C1C' }}>
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between flex-shrink-0" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               <h2 className="text-base font-black text-white">{editing ? 'Edit Discount' : 'New Discount'}</h2>
               <button onClick={closeForm} className="text-white/70 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
@@ -331,7 +331,7 @@ export default function DiscountsPage() {
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. First-Timer Welcome Offer"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                 />
               </div>
 
@@ -342,7 +342,7 @@ export default function DiscountsPage() {
                   value={form.description}
                   onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   placeholder="e.g. Welcome offer for guests booking with us for the first time"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                 />
               </div>
 
@@ -373,7 +373,7 @@ export default function DiscountsPage() {
                       type="number" min={1}
                       value={form.early_booking_days}
                       onChange={e => setForm(f => ({ ...f, early_booking_days: Number(e.target.value) }))}
-                      className="w-28 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                      className="w-28 px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                     />
                     <span className="text-sm text-gray-500">days before check-in</span>
                   </div>
@@ -387,7 +387,7 @@ export default function DiscountsPage() {
                   <select
                     value={form.value_type}
                     onChange={e => setForm(f => ({ ...f, value_type: e.target.value as ValueType }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 bg-white">
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 bg-white">
                     <option value="percentage">Percentage (%)</option>
                     <option value="fixed">Fixed Amount (KSh)</option>
                   </select>
@@ -401,7 +401,7 @@ export default function DiscountsPage() {
                     value={form.value}
                     onChange={e => setForm(f => ({ ...f, value: Number(e.target.value) }))}
                     placeholder={form.value_type === 'percentage' ? '10' : '500'}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                   />
                 </div>
               </div>
@@ -416,7 +416,7 @@ export default function DiscountsPage() {
                     <button type="button"
                       onClick={() => setForm(f => ({ ...f, property_ids: [] }))}
                       className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold text-left border-2 transition-all ${form.property_ids.length === 0 ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'}`}
-                      style={form.property_ids.length === 0 ? { background: '#16A34A' } : {}}>
+                      style={form.property_ids.length === 0 ? { background: 'var(--brand-secondary, #16a34a)' } : {}}>
                       🏠 All Rooms
                     </button>
                     <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto">
@@ -426,7 +426,7 @@ export default function DiscountsPage() {
                           <button key={p.id} type="button"
                             onClick={() => toggleProperty(p.id)}
                             className={`px-4 py-2.5 rounded-xl text-sm font-semibold text-left border-2 transition-all ${selected ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'}`}
-                            style={selected ? { background: '#9B1C1C' } : {}}>
+                            style={selected ? { background: 'var(--brand-primary, #1e293b)' } : {}}>
                             {selected ? '✓ ' : ''}{p.name}
                           </button>
                         );
@@ -449,7 +449,7 @@ export default function DiscountsPage() {
                     type="date"
                     value={form.valid_from}
                     onChange={e => setForm(f => ({ ...f, valid_from: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                   />
                 </div>
                 <div>
@@ -460,7 +460,7 @@ export default function DiscountsPage() {
                     type="date"
                     value={form.valid_until}
                     onChange={e => setForm(f => ({ ...f, valid_until: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
                   />
                 </div>
               </div>
@@ -472,7 +472,7 @@ export default function DiscountsPage() {
                   type="checkbox"
                   checked={form.is_active}
                   onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))}
-                  className="w-4 h-4 rounded accent-red-800"
+                  className="w-4 h-4 rounded accent-slate-800"
                 />
                 <span className="text-sm font-semibold text-gray-700">Active (applied automatically at checkout)</span>
               </label>
@@ -486,7 +486,7 @@ export default function DiscountsPage() {
               </button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:opacity-90"
-                style={{ background: '#9B1C1C' }}>
+                style={{ background: 'var(--brand-primary, #1e293b)' }}>
                 <Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Discount'}
               </button>
             </div>

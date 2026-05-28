@@ -102,7 +102,7 @@ export default function MenuPage() {
       <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-5">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#9B1C1C' }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               <ChefHat className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -112,7 +112,7 @@ export default function MenuPage() {
           </div>
           <button onClick={openNew}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
-            style={{ background: '#9B1C1C' }}>
+            style={{ background: 'var(--brand-primary, #1e293b)' }}>
             <Plus className="w-4 h-4" />Add Item
           </button>
         </div>
@@ -124,7 +124,7 @@ export default function MenuPage() {
           {TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
               className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === t.id ? 'text-white shadow-sm' : 'bg-white text-gray-500 border border-gray-200 hover:border-gray-300'}`}
-              style={activeTab === t.id ? { background: '#9B1C1C' } : {}}>
+              style={activeTab === t.id ? { background: 'var(--brand-primary, #1e293b)' } : {}}>
               {t.label}
               <span className={`ml-1.5 text-xs ${activeTab === t.id ? 'text-white/70' : 'text-gray-400'}`}>
                 ({items.filter(i => i.tab === t.id).length})
@@ -135,12 +135,12 @@ export default function MenuPage() {
 
         {/* Item list */}
         {loading ? (
-          <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: '#9B1C1C', borderTopColor: 'transparent' }} /></div>
+          <div className="flex justify-center py-16"><div className="animate-spin w-8 h-8 rounded-full border-2" style={{ borderColor: 'var(--brand-primary, #1e293b)', borderTopColor: 'transparent' }} /></div>
         ) : visibleItems.length === 0 ? (
           <div className="bg-white rounded-2xl p-12 text-center border border-dashed border-gray-200">
             <ChefHat className="w-10 h-10 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500 font-semibold text-sm mb-1">No items in this category yet.</p>
-            <button onClick={openNew} className="mt-3 px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: '#9B1C1C' }}>
+            <button onClick={openNew} className="mt-3 px-4 py-2 rounded-xl text-sm font-bold text-white" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               Add First Item
             </button>
           </div>
@@ -152,11 +152,11 @@ export default function MenuPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-gray-900 text-sm">{item.name}</span>
                     {item.tag === 'popular' && <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#D97706' }}>Popular</span>}
-                    {item.tag === 'special' && <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#9B1C1C' }}>Special</span>}
+                    {item.tag === 'special' && <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: 'var(--brand-primary, #1e293b)' }}>Special</span>}
                     {item.category && <span className="text-xs text-gray-400">{item.category}</span>}
                   </div>
                   {item.description && <p className="text-xs text-gray-500 mt-0.5 truncate">{item.description}</p>}
-                  <p className="text-sm font-black mt-1" style={{ color: '#9B1C1C' }}>
+                  <p className="text-sm font-black mt-1" style={{ color: 'var(--brand-primary, #1e293b)' }}>
                     {item.price === 0 ? 'Free' : `KSh ${item.price.toLocaleString()}`}
                   </p>
                 </div>
@@ -184,7 +184,7 @@ export default function MenuPage() {
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style={{ background: '#9B1C1C' }}>
+            <div className="px-6 py-5 border-b border-gray-100 flex items-center justify-between" style={{ background: 'var(--brand-primary, #1e293b)' }}>
               <h2 className="text-base font-black text-white">{editing ? 'Edit Item' : 'Add Menu Item'}</h2>
               <button onClick={closeForm} className="text-white/70 hover:text-white"><X className="w-5 h-5" /></button>
             </div>
@@ -195,14 +195,14 @@ export default function MenuPage() {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Item Name *</label>
                 <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   placeholder="e.g. Masala Chips"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Menu Tab</label>
                   <select value={form.tab} onChange={e => setForm(f => ({ ...f, tab: e.target.value as Tab }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 bg-white">
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 bg-white">
                     {TABS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                   </select>
                 </div>
@@ -210,7 +210,7 @@ export default function MenuPage() {
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Price (KSh)</label>
                   <input type="number" value={form.price} onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))}
                     placeholder="0"
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors" />
                 </div>
               </div>
 
@@ -218,21 +218,21 @@ export default function MenuPage() {
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Category Group</label>
                 <input value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                   placeholder="e.g. Sharing Bites, Beverages"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors" />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Description</label>
                 <textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                   rows={2} placeholder="Brief description…"
-                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors resize-none" />
+                  className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors resize-none" />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Badge</label>
                   <select value={form.tag ?? ''} onChange={e => setForm(f => ({ ...f, tag: (e.target.value || null) as 'popular' | 'special' | null }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 bg-white">
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 bg-white">
                     <option value="">None</option>
                     <option value="popular">Popular</option>
                     <option value="special">Special</option>
@@ -241,13 +241,13 @@ export default function MenuPage() {
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Sort Order</label>
                   <input type="number" value={form.position} onChange={e => setForm(f => ({ ...f, position: Number(e.target.value) }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-red-800 transition-colors" />
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors" />
                 </div>
               </div>
 
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.active} onChange={e => setForm(f => ({ ...f, active: e.target.checked }))}
-                  className="w-4 h-4 rounded accent-red-800" />
+                  className="w-4 h-4 rounded accent-slate-800" />
                 <span className="text-sm font-semibold text-gray-700">Active (visible to guests)</span>
               </label>
             </div>
@@ -256,7 +256,7 @@ export default function MenuPage() {
               <button onClick={closeForm} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Cancel</button>
               <button onClick={handleSave} disabled={saving}
                 className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-50 flex items-center justify-center gap-2 transition-all hover:opacity-90"
-                style={{ background: '#9B1C1C' }}>
+                style={{ background: 'var(--brand-primary, #1e293b)' }}>
                 <Save className="w-4 h-4" />{saving ? 'Saving…' : 'Save Item'}
               </button>
             </div>

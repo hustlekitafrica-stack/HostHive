@@ -198,7 +198,7 @@ export default function RequestsPage() {
               onChange={e => setDeclineReason(e.target.value)}
               rows={3}
               placeholder="e.g. Fully booked on those dates, please try other dates…"
-              className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 resize-none mb-4"
+              className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-gray-900 resize-none mb-4"
             />
             <div className="flex gap-3">
               <button onClick={() => { setDeclineTarget(null); setDeclineReason(''); }}
@@ -219,7 +219,7 @@ export default function RequestsPage() {
         {(['all','pending','confirmed','declined'] as const).map(s => (
           <button key={s} onClick={() => setFilter(s)}
             className={`flex-shrink-0 px-4 py-2 rounded-xl text-sm font-bold transition-colors ${filter === s ? 'text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
-            style={filter === s ? { background: '#9B1C1C' } : {}}>
+            style={filter === s ? { background: 'var(--brand-primary, #1e293b)' } : {}}>
             {s.charAt(0).toUpperCase() + s.slice(1)} {counts[s] > 0 && `(${counts[s]})`}
           </button>
         ))}
@@ -324,7 +324,7 @@ export default function RequestsPage() {
                       </button>
                       <button onClick={() => sendReviewLink(req)} disabled={isSending}
                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
-                        style={{ background: '#9B1C1C' }}>
+                        style={{ background: 'var(--brand-primary, #1e293b)' }}>
                         {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
                         {isSending ? 'Sending…' : 'Send Review SMS'}
                       </button>
