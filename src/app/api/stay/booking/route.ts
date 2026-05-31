@@ -22,27 +22,36 @@ export async function POST(req: NextRequest) {
     if (!check_in || !check_out) return NextResponse.json({ error: 'Dates are required' }, { status: 400 });
     if (!room_details?.length) return NextResponse.json({ error: 'Please select at least one room' }, { status: 400 });
 
-    const { data, error } = await publicSupabase
+    const basePayload = {
+      guest_name: guest_name.trim(),
+      guest_phone: guest_phone.trim(),
+      guest_email: guest_email.trim(),
+      check_in,
+      check_out,
+      nights,
+      num_adults,
+      num_children,
+      room_details,
+      total_amount,
+      special_requests: special_requests.trim(),
+      host_user_id: process.env.STAY_HOST_USER_ID ?? '',
+      ...(user_id ? { guest_user_id: user_id } : {}),
+    };
+
+    let { data, error } = await publicSupabase
       .from('booking_requests')
-      .insert({
-        guest_name: guest_name.trim(),
-        guest_phone: guest_phone.trim(),
-        guest_email: guest_email.trim(),
-        check_in,
-        check_out,
-        nights,
-        num_adults,
-        num_children,
-        room_details,
-        total_amount,
-        discount_total: Number(discount_total) || 0,
-        applied_discounts,
-        special_requests: special_requests.trim(),
-        host_user_id: process.env.STAY_HOST_USER_ID ?? '',
-        ...(user_id ? { guest_user_id: user_id } : {}),
-      })
+      .insert({ ...basePayload, discount_total: Number(discount_total) || 0, applied_discounts })
       .select('id')
       .single();
+
+    // If discount columns don't exist yet (migration pending), retry without them
+    if (error?.message?.includes('applied_discounts') || error?.message?.includes('discount_total')) {
+      ({ data, error } = await publicSupabase
+        .from('booking_requests')
+        .insert(basePayload)
+        .select('id')
+        .single());
+    }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
