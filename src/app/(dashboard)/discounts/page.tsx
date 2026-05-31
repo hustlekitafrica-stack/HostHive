@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Save, X, Tag, Calendar, BedDouble, Percent, DollarSign } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Plus, Pencil, Trash2, ToggleLeft, ToggleRight, Save, X, Tag, Calendar, BedDouble, Percent, DollarSign, ChevronDown, ChevronUp } from 'lucide-react';
+import { DatePickerModal } from '@/components/stay/SearchWidget';
+import toast from 'react-hot-toast';
 
 type DiscountType = 'first_timer' | 'early_booking' | 'online_booking' | 'manual';
 type ValueType    = 'percentage' | 'fixed';
@@ -69,6 +71,17 @@ export default function DiscountsPage() {
   const [saving,     setSaving]     = useState(false);
   const [error,      setError]      = useState('');
   const [deleting,   setDeleting]   = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [roomsOpen,      setRoomsOpen]      = useState(false);
+  const roomsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (roomsRef.current && !roomsRef.current.contains(e.target as Node)) setRoomsOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const load = () => {
     setLoading(true);
@@ -142,6 +155,7 @@ export default function DiscountsPage() {
       const res    = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data   = await res.json();
       if (!res.ok) { setError(data.error ?? 'Failed to save.'); return; }
+      toast.success(editing ? 'Discount updated!' : 'Discount created!');
       load();
       closeForm();
     } finally {
@@ -412,59 +426,80 @@ export default function DiscountsPage() {
                 {properties.length === 0 ? (
                   <p className="text-xs text-gray-400">No rooms found. Discount will apply to all rooms.</p>
                 ) : (
-                  <div className="space-y-1.5">
-                    <button type="button"
-                      onClick={() => setForm(f => ({ ...f, property_ids: [] }))}
-                      className={`w-full px-4 py-2.5 rounded-xl text-sm font-bold text-left border-2 transition-all ${form.property_ids.length === 0 ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'}`}
-                      style={form.property_ids.length === 0 ? { background: 'var(--brand-secondary, #16a34a)' } : {}}>
-                      🏠 All Rooms
+                  <div ref={roomsRef} className="relative">
+                    <button type="button" onClick={() => setRoomsOpen(o => !o)}
+                      className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm text-left bg-white flex items-center justify-between gap-2 hover:border-gray-300 transition-colors">
+                      <span className="text-gray-700 font-medium">
+                        {form.property_ids.length === 0
+                          ? '🏠 All Rooms'
+                          : `${form.property_ids.length} room${form.property_ids.length !== 1 ? 's' : ''} selected`}
+                      </span>
+                      {roomsOpen ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />}
                     </button>
-                    <div className="grid grid-cols-1 gap-1.5 max-h-40 overflow-y-auto">
-                      {properties.map(p => {
-                        const selected = form.property_ids.includes(p.id);
-                        return (
-                          <button key={p.id} type="button"
-                            onClick={() => toggleProperty(p.id)}
-                            className={`px-4 py-2.5 rounded-xl text-sm font-semibold text-left border-2 transition-all ${selected ? 'border-transparent text-white' : 'border-gray-200 text-gray-600 bg-white hover:border-gray-300'}`}
-                            style={selected ? { background: 'var(--brand-primary, #1e293b)' } : {}}>
-                            {selected ? '✓ ' : ''}{p.name}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {form.property_ids.length > 0 && (
-                      <p className="text-xs text-gray-400">{form.property_ids.length} room{form.property_ids.length !== 1 ? 's' : ''} selected</p>
+                    {roomsOpen && (
+                      <div className="absolute top-full left-0 right-0 z-20 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                        <button type="button" onClick={() => setForm(f => ({ ...f, property_ids: [] }))}
+                          className="w-full px-4 py-3 text-sm text-left flex items-center gap-3 hover:bg-gray-50 transition-colors">
+                          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${form.property_ids.length === 0 ? 'border-transparent' : 'border-gray-300'}`}
+                            style={form.property_ids.length === 0 ? { background: 'var(--brand-secondary, #16a34a)' } : {}}>
+                            {form.property_ids.length === 0 && <span className="text-white text-[10px] font-bold">✓</span>}
+                          </div>
+                          <span className="font-semibold text-gray-700">All Rooms</span>
+                        </button>
+                        {properties.map(p => {
+                          const selected = form.property_ids.includes(p.id);
+                          return (
+                            <button key={p.id} type="button" onClick={() => toggleProperty(p.id)}
+                              className="w-full px-4 py-3 text-sm text-left flex items-center gap-3 hover:bg-gray-50 transition-colors border-t border-gray-50">
+                              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${selected ? 'border-transparent' : 'border-gray-300'}`}
+                                style={selected ? { background: 'var(--brand-primary, #1e293b)' } : {}}>
+                                {selected && <span className="text-white text-[10px] font-bold">✓</span>}
+                              </div>
+                              <span className={selected ? 'font-semibold text-gray-900' : 'text-gray-600'}>{p.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                 )}
               </div>
 
               {/* Validity dates */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                    Valid From <span className="font-normal normal-case text-gray-400">(optional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.valid_from}
-                    onChange={e => setForm(f => ({ ...f, valid_from: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-                    Valid Until <span className="font-normal normal-case text-gray-400">(optional)</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={form.valid_until}
-                    onChange={e => setForm(f => ({ ...f, valid_until: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-gray-900 transition-colors"
-                  />
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+                  Validity Period <span className="font-normal normal-case text-gray-400">(optional)</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={() => setShowDatePicker(true)}
+                    className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-sm text-left bg-white flex items-center gap-2 hover:border-gray-300 transition-colors">
+                    <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <span className={form.valid_from || form.valid_until ? 'text-gray-800 font-medium' : 'text-gray-400'}>
+                      {form.valid_from && form.valid_until
+                        ? `${form.valid_from} → ${form.valid_until}`
+                        : form.valid_from
+                          ? `From ${form.valid_from}`
+                          : form.valid_until
+                            ? `Until ${form.valid_until}`
+                            : 'Always active (no limits)'}
+                    </span>
+                  </button>
+                  {(form.valid_from || form.valid_until) && (
+                    <button type="button" onClick={() => setForm(f => ({ ...f, valid_from: '', valid_until: '' }))}
+                      className="p-3 rounded-xl border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
-              <p className="text-xs text-gray-400 -mt-2">Leave dates empty to keep the discount permanently active.</p>
+              {showDatePicker && (
+                <DatePickerModal
+                  checkIn={form.valid_from}
+                  checkOut={form.valid_until}
+                  onConfirm={(from, until) => { setForm(f => ({ ...f, valid_from: from, valid_until: until })); setShowDatePicker(false); }}
+                  onClose={() => setShowDatePicker(false)}
+                />
+              )}
 
               {/* Active toggle */}
               <label className="flex items-center gap-3 cursor-pointer">
