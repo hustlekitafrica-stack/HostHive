@@ -54,6 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data) return NextResponse.json({ error: 'Booking could not be created.' }, { status: 500 });
 
     // ── Automated SMS (non-blocking) ────────────────────────────────────────
     const firstRoom = Array.isArray(room_details) && room_details.length > 0 ? room_details[0] : null;
