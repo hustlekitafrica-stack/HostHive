@@ -2,7 +2,7 @@
   "name": "Kogelo Suites - Property Management",
   "short_name": "Kogelo Suites",
   "description": "Kogelo Suites — Your home away from home in Kogelo, Kenya",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait-primary",

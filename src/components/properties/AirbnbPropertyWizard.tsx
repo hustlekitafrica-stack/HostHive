@@ -309,6 +309,10 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [customAmenity, setCustomAmenity] = useState('');
   const [customRuleInput, setCustomRuleInput] = useState('');
   const [dragOver, setDragOver] = useState(false);
+  const photoDragSrc = useRef<number | null>(null);
+  const photoDragOverRef = useRef<number | null>(null);
+  const [photoDragOver, setPhotoDragOver] = useState<number | null>(null);
+  const photoGridRef = useRef<HTMLDivElement>(null);
   const [newSeason, setNewSeason] = useState({ name: '', start: '', end: '', price: '' });
   const [photoIdx, setPhotoIdx] = useState(0);
   const [stepError, setStepError] = useState('');
@@ -327,6 +331,26 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const TOTAL = 9;
 
   useEffect(() => { if (step === 2) loadGoogleMaps(() => {}); }, [step]);
+
+  useEffect(() => {
+    if (step !== 5) return;
+    const grid = photoGridRef.current;
+    if (!grid) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (photoDragSrc.current === null) return;
+      e.preventDefault();
+      const touch = e.touches[0];
+      const el = document.elementFromPoint(touch.clientX, touch.clientY);
+      const card = el?.closest('[data-photo-idx]') as HTMLElement | null;
+      if (card?.dataset.photoIdx !== undefined) {
+        const idx = parseInt(card.dataset.photoIdx);
+        photoDragOverRef.current = idx;
+        setPhotoDragOver(idx);
+      }
+    };
+    grid.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => grid.removeEventListener('touchmove', onTouchMove);
+  }, [step]);
 
   const showError = (msg: string) => {
     if (errorTimerRef.current) clearTimeout(errorTimerRef.current);
@@ -482,8 +506,23 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
       return { ...d, photos: [...d.photos, { url, label: '', isCover }] };
     });
   };
-  const removePhoto = (i: number) => setData(d => { const p = d.photos.filter((_, idx) => idx !== i); if (p.length > 0 && !p.some(x => x.isCover)) p[0].isCover = true; return { ...d, photos: p }; });
-  const setCover = (i: number) => setData(d => ({ ...d, photos: d.photos.map((p, idx) => ({ ...p, isCover: idx === i })) }));
+  const removePhoto = (i: number) => setData(d => { const p = d.photos.filter((_, idx) => idx !== i); return { ...d, photos: p.map((ph, idx) => ({ ...ph, isCover: idx === 0 })) }; });
+  const setCover = (i: number) => setData(d => {
+    if (i === 0) return d;
+    const photos = [...d.photos];
+    const [moved] = photos.splice(i, 1);
+    photos.unshift(moved);
+    return { ...d, photos: photos.map((ph, idx) => ({ ...ph, isCover: idx === 0 })) };
+  });
+  const reorderPhotos = (from: number, to: number) => {
+    if (from === to) return;
+    setData(d => {
+      const photos = [...d.photos];
+      const [moved] = photos.splice(from, 1);
+      photos.splice(to, 0, moved);
+      return { ...d, photos: photos.map((ph, idx) => ({ ...ph, isCover: idx === 0 })) };
+    });
+  };
 
   // ── Success Screen ──────────────────────────────────────────────────────────
 
@@ -858,19 +897,40 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
         {/* Photo grid */}
         {data.photos.length > 0 ? (
-          <div className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div ref={photoGridRef} className="mt-6 grid grid-cols-2 sm:grid-cols-3 gap-3">
             {data.photos.map((p, i) => (
-              <div key={i} className="relative group rounded-xl overflow-hidden border border-gray-200 aspect-square bg-gray-100">
-                <img src={p.url} alt="" className="w-full h-full object-cover" />
-                {p.isCover && (
-                  <span className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold">Cover</span>
+              <div
+                key={p.url}
+                data-photo-idx={i}
+                draggable
+                onDragStart={e => { photoDragSrc.current = i; photoDragOverRef.current = i; setPhotoDragOver(i); e.dataTransfer.effectAllowed = 'move'; }}
+                onDragOver={e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; photoDragOverRef.current = i; setPhotoDragOver(i); }}
+                onDrop={e => { e.preventDefault(); if (photoDragSrc.current !== null) reorderPhotos(photoDragSrc.current, i); photoDragSrc.current = null; photoDragOverRef.current = null; setPhotoDragOver(null); }}
+                onDragEnd={() => { photoDragSrc.current = null; photoDragOverRef.current = null; setPhotoDragOver(null); }}
+                onTouchStart={() => { photoDragSrc.current = i; photoDragOverRef.current = i; setPhotoDragOver(i); }}
+                onTouchEnd={() => { if (photoDragSrc.current !== null && photoDragOverRef.current !== null) reorderPhotos(photoDragSrc.current, photoDragOverRef.current); photoDragSrc.current = null; photoDragOverRef.current = null; setPhotoDragOver(null); }}
+                style={{ touchAction: 'none' }}
+                className={`relative group rounded-xl overflow-hidden aspect-square bg-gray-100 cursor-grab active:cursor-grabbing select-none transition-all border-2 ${
+                  photoDragOver === i && photoDragSrc.current !== null && photoDragSrc.current !== i
+                    ? 'border-green-500 scale-95'
+                    : photoDragSrc.current === i
+                    ? 'border-green-400 opacity-50'
+                    : 'border-gray-200'
+                }`}
+              >
+                <img src={p.url} alt="" className="w-full h-full object-cover pointer-events-none" draggable={false} />
+                {i === 0 && (
+                  <span className="absolute top-1 left-1 bg-green-600 text-white text-xs px-2 py-0.5 rounded-full font-semibold pointer-events-none">Cover</span>
                 )}
+                <div className="absolute top-1 right-1 bg-black/40 rounded p-0.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:flex">
+                  <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 10 16"><circle cx="2" cy="2" r="1.5"/><circle cx="8" cy="2" r="1.5"/><circle cx="2" cy="8" r="1.5"/><circle cx="8" cy="8" r="1.5"/><circle cx="2" cy="14" r="1.5"/><circle cx="8" cy="14" r="1.5"/></svg>
+                </div>
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:flex items-center justify-center gap-2">
-                  {!p.isCover && <button onClick={() => setCover(i)} className="bg-white text-gray-900 rounded-lg px-2 py-1 text-xs font-semibold">Set cover</button>}
-                  <button onClick={() => removePhoto(i)} className="bg-red-500 text-white rounded-lg px-2 py-1 text-xs font-semibold">Remove</button>
+                  {i !== 0 && <button onClick={e => { e.stopPropagation(); setCover(i); }} className="bg-white text-gray-900 rounded-lg px-2 py-1 text-xs font-semibold">Set cover</button>}
+                  <button onClick={e => { e.stopPropagation(); removePhoto(i); }} className="bg-red-500 text-white rounded-lg px-2 py-1 text-xs font-semibold">Remove</button>
                 </div>
                 <div className="absolute bottom-0 left-0 right-0 flex sm:hidden">
-                  {!p.isCover && <button onClick={() => setCover(i)} className="flex-1 bg-white/90 text-gray-900 text-[10px] font-bold py-1.5 border-t border-r border-gray-100">Cover</button>}
+                  {i !== 0 && <button onClick={() => setCover(i)} className="flex-1 bg-white/90 text-gray-900 text-[10px] font-bold py-1.5 border-t border-r border-gray-100">Cover</button>}
                   <button onClick={() => removePhoto(i)} className="flex-1 bg-red-500 text-white text-[10px] font-bold py-1.5 border-t border-gray-100">✕</button>
                 </div>
               </div>
