@@ -219,18 +219,6 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Sign up link */}
-        <div className="mt-4 text-center">
-          <span className="text-sm text-gray-500">Don&apos;t have an account?{' '}</span>
-          <Link
-            href="/auth/register"
-            className="text-sm font-medium transition-colors"
-            style={{ color: '#16a34a' }}
-          >
-            Sign up
-          </Link>
-        </div>
-
         {/* Footer */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-400 leading-relaxed">

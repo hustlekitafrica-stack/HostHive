@@ -570,7 +570,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
       <div>
         <div className="flex items-center justify-between mb-1">
           <h2 className="text-2xl font-bold text-gray-900">What kind of place are you listing?</h2>
-          <a href="/dashboard/unit-types" target="_blank" rel="noopener noreferrer"
+          <a href="/unit-types" target="_blank" rel="noopener noreferrer"
             className="text-xs text-green-600 hover:underline font-medium">
             Manage types ↗
           </a>

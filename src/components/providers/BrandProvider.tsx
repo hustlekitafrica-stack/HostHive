@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 function darkenHex(hex: string, factor: number): string {
   try {
@@ -31,6 +32,25 @@ export function BrandProvider({ children }: { children: React.ReactNode }) {
     applyBrand();
     window.addEventListener('brandUpdated', applyBrand);
     return () => window.removeEventListener('brandUpdated', applyBrand);
+  }, []);
+
+  useEffect(() => {
+    const syncBrandFromDB = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from('profiles')
+          .select('logo_url, favicon_url')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (data?.logo_url) localStorage.setItem('brand_logo', data.logo_url);
+        if (data?.favicon_url) localStorage.setItem('brand_favicon', data.favicon_url);
+        window.dispatchEvent(new Event('brandUpdated'));
+      } catch {}
+    };
+    syncBrandFromDB();
   }, []);
 
   return <>{children}</>;

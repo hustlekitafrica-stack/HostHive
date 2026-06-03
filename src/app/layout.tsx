@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
+import { DynamicFavicon } from "@/components/pwa/DynamicFavicon";
 import "./globals.css";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -42,6 +43,7 @@ export default function RootLayout({
         {children}
         <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
         <ServiceWorkerRegistration />
+        <DynamicFavicon />
       </body>
     </html>
   );

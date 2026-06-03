@@ -307,7 +307,7 @@ export default function DashboardPage() {
                 <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Status</h4>
                 {(stats?.properties ?? []).length > 3 && (
                   <button
-                    onClick={() => router.push('/dashboard/properties')}
+                    onClick={() => router.push('/properties')}
                     className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
                   >
                     See more
@@ -327,7 +327,7 @@ export default function DashboardPage() {
               ))}
               {(stats?.properties ?? []).length > 3 && (
                 <button
-                  onClick={() => router.push('/dashboard/properties')}
+                  onClick={() => router.push('/properties')}
                   className="w-full mt-1 text-xs text-teal-600 hover:text-teal-700 font-medium text-center py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
                 >
                   See all {(stats.properties as any[]).length} units →
@@ -613,7 +613,7 @@ export default function DashboardPage() {
                 <span className="text-xs text-gray-400">{periodLabel}</span>
                 {(stats?.unitPerformance ?? []).length > 4 && (
                   <button
-                    onClick={() => router.push('/dashboard/unit-performance')}
+                    onClick={() => router.push('/unit-performance')}
                     className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
                   >
                     See more
@@ -671,7 +671,7 @@ export default function DashboardPage() {
             {(stats?.unitPerformance ?? []).length > 4 && (
               <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
                 <button
-                  onClick={() => router.push('/dashboard/unit-performance')}
+                  onClick={() => router.push('/unit-performance')}
                   className="w-full text-xs text-teal-600 hover:text-teal-700 font-medium text-center hover:underline"
                 >
                   See all {(stats.unitPerformance as any[]).length} units →

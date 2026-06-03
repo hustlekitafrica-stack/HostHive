@@ -73,6 +73,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
   const [loading,    setLoading]    = useState(false);
   const [loggedIn,   setLoggedIn]   = useState(false);
   const [userMeta,   setUserMeta]   = useState<{ name: string; avatar: string | null } | null>(null);
+  const [brandLogo,  setBrandLogo]  = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -105,6 +106,13 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
     setLoading(false);
   }, [pathname]);
 
+  useEffect(() => {
+    fetch('/api/stay/brand')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.logo_url) setBrandLogo(d.logo_url); })
+      .catch(() => {});
+  }, []);
+
   const handleNavClick = useCallback((href: string) => {
     setMenuOpen(false);
     if (href === pathname) return;
@@ -130,7 +138,11 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               </button>
             )}
             <Link href="/stay" className="flex items-center gap-2 flex-shrink-0">
-              <span className="font-black text-lg tracking-tight text-white">Kogelo Suites</span>
+              {brandLogo ? (
+                <img src={brandLogo} alt="Logo" className="h-8 w-auto max-w-[120px] object-contain" />
+              ) : (
+                <span className="font-black text-lg tracking-tight text-white">Kogelo Suites</span>
+              )}
             </Link>
           </div>
 

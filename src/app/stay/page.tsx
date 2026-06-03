@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SearchWidget from '@/components/stay/SearchWidget';
@@ -130,7 +130,14 @@ export default function StayHomePage() {
 
       {/* ═══ HERO ═══ */}
       <section className="relative pt-[36px] pb-8 px-2 sm:px-6 sm:pt-24" style={{ background: '#1e293b' }}>
-        <div className="max-w-5xl mx-auto">
+        {/* Desktop background image — place your hero image at /images/hero.jpg */}
+        <div
+          className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: "url('/images/hero.jpg')" }}
+        >
+          <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.72)' }} />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
             Find your perfect stay
           </h1>
@@ -272,33 +279,30 @@ export default function StayHomePage() {
               </div>
             </div>
 
-            <div className="hidden md:flex flex-col overflow-hidden" style={{ minHeight: '480px' }}>
-              {(featuredDishes.length > 0 ? featuredDishes : FALLBACK_DISHES).map((dish, i, arr) => (
-                <Fragment key={dish.name}>
-                  <div className="relative overflow-hidden" style={{ flex: 1 }}>
-                    <img
-                      src={dish.image_url}
-                      alt={dish.name}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 58%)' }} />
-                    <div className="absolute top-2.5 left-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: dish.badge_color }}>
-                        {dish.badge}
-                      </span>
-                    </div>
-                    <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
-                      <div>
-                        <p className="text-white font-bold text-sm leading-tight">{dish.name}</p>
-                        <p className="text-white/65 text-xs">{dish.description}</p>
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-black text-white flex-shrink-0" style={{ background: dish.badge_color }}>
-                        KSh {Number(dish.price).toLocaleString()}
-                      </span>
-                    </div>
+            <div className="hidden md:grid md:grid-cols-2 overflow-hidden" style={{ minHeight: '480px' }}>
+              {(featuredDishes.length > 0 ? featuredDishes : FALLBACK_DISHES).map((dish) => (
+                <div key={dish.name} className="relative overflow-hidden">
+                  <img
+                    src={dish.image_url}
+                    alt={dish.name}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 58%)' }} />
+                  <div className="absolute top-2.5 left-3">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: dish.badge_color }}>
+                      {dish.badge}
+                    </span>
                   </div>
-                  {i < arr.length - 1 && <div className="h-px flex-shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />}
-                </Fragment>
+                  <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
+                    <div>
+                      <p className="text-white font-bold text-sm leading-tight">{dish.name}</p>
+                      <p className="text-white/65 text-xs">{dish.description}</p>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-full text-xs font-black text-white flex-shrink-0" style={{ background: dish.badge_color }}>
+                      KSh {Number(dish.price).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

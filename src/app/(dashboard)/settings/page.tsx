@@ -47,8 +47,16 @@ export default function SettingsPage() {
   );
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [logoName, setLogoName] = useState('');
+  const [logoUploading, setLogoUploading] = useState(false);
   const [logoPreview, setLogoPreview] = useState(() => {
     if (typeof window !== 'undefined') return localStorage.getItem('brand_logo') || '';
+    return '';
+  });
+  const faviconInputRef = useRef<HTMLInputElement>(null);
+  const [faviconName, setFaviconName] = useState('');
+  const [faviconUploading, setFaviconUploading] = useState(false);
+  const [faviconPreview, setFaviconPreview] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('brand_favicon') || '';
     return '';
   });
 
@@ -142,13 +150,21 @@ export default function SettingsPage() {
       // Load KRA + tax config from profiles
       const { data: profile } = await supabase
         .from('profiles')
-        .select('kra_pin, tax_lines')
+        .select('kra_pin, tax_lines, logo_url, favicon_url')
         .eq('id', data.user.id)
         .maybeSingle();
       if (profile) {
         setKraPin(profile.kra_pin ?? '');
         const tl = Array.isArray(profile.tax_lines) ? profile.tax_lines : [];
         setTaxLines(tl.map((t: any) => ({ label: t.label ?? '', rate: String(t.rate ?? '') })));
+        if (profile.logo_url) {
+          setLogoPreview(profile.logo_url);
+          localStorage.setItem('brand_logo', profile.logo_url);
+        }
+        if (profile.favicon_url) {
+          setFaviconPreview(profile.favicon_url);
+          localStorage.setItem('brand_favicon', profile.favicon_url);
+        }
       }
     });
   }, []);
@@ -221,6 +237,51 @@ export default function SettingsPage() {
   };
 
   const handleSaveGeneral = () => toast.success('Settings saved!');
+
+  const handleLogoUpload = async (file: File) => {
+    if (file.size > 2 * 1024 * 1024) { toast.error('Logo must be under 2 MB'); return; }
+    setLogoUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Not authenticated'); return; }
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/brand/logo.${ext}`;
+      const { error } = await supabase.storage.from('property-photos').upload(path, file, { upsert: true });
+      if (error) { toast.error('Upload failed: ' + error.message); return; }
+      const { data: { publicUrl } } = supabase.storage.from('property-photos').getPublicUrl(path);
+      setLogoPreview(publicUrl);
+      setLogoName(file.name);
+      localStorage.setItem('brand_logo', publicUrl);
+      await supabase.from('profiles').update({ logo_url: publicUrl }).eq('id', user.id);
+      window.dispatchEvent(new Event('brandUpdated'));
+      toast.success('Logo saved!');
+    } catch { toast.error('Network error'); }
+    finally { setLogoUploading(false); }
+  };
+
+  const handleFaviconUpload = async (file: File) => {
+    if (file.size > 1 * 1024 * 1024) { toast.error('Favicon must be under 1 MB'); return; }
+    setFaviconUploading(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Not authenticated'); return; }
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/brand/favicon.${ext}`;
+      const { error } = await supabase.storage.from('property-photos').upload(path, file, { upsert: true });
+      if (error) { toast.error('Upload failed: ' + error.message); return; }
+      const { data: { publicUrl } } = supabase.storage.from('property-photos').getPublicUrl(path);
+      setFaviconPreview(publicUrl);
+      setFaviconName(file.name);
+      localStorage.setItem('brand_favicon', publicUrl);
+      await supabase.from('profiles').update({ favicon_url: publicUrl }).eq('id', user.id);
+      window.dispatchEvent(new Event('brandUpdated'));
+      toast.success('Favicon saved!');
+    } catch { toast.error('Network error'); }
+    finally { setFaviconUploading(false); }
+  };
+
   const handleSaveColors = () => {
     localStorage.setItem('brand_primary', primaryColor);
     localStorage.setItem('brand_secondary', secondaryColor);
@@ -465,7 +526,7 @@ export default function SettingsPage() {
               {/* Business Logo card */}
               <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <h2 className="text-base font-bold text-gray-900 mb-1">Business Logo</h2>
-                <p className="text-sm text-gray-500 mb-5">Appears in the sidebar and on exported PDF reports. PNG, JPG, SVG or WEBP — max 2MB.</p>
+                <p className="text-sm text-gray-500 mb-5">Appears in the sidebar, nav header, and frontend. PNG, JPG, SVG or WEBP — max 2 MB.</p>
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
                     {logoPreview ? (
@@ -484,31 +545,64 @@ export default function SettingsPage() {
                       type="file"
                       accept=".png,.jpg,.jpeg,.svg,.webp"
                       className="hidden"
-                      onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        setLogoName(file.name);
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          const result = reader.result as string;
-                          setLogoPreview(result);
-                          localStorage.setItem('brand_logo', result);
-                        };
-                        reader.readAsDataURL(file);
-                      }}
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f); e.target.value = ''; }}
                     />
                     <button
                       onClick={() => logoInputRef.current?.click()}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                      disabled={logoUploading}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="17 8 12 3 7 8"/>
-                        <line x1="12" y1="3" x2="12" y2="15"/>
-                      </svg>
-                      Upload Logo
+                      {logoUploading ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                      )}
+                      {logoUploading ? 'Uploading…' : 'Upload Logo'}
                     </button>
                     {logoName && <p className="text-xs text-gray-500 mt-1">{logoName}</p>}
+                  </div>
+                </div>
+              </div>
+
+              {/* Favicon card */}
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h2 className="text-base font-bold text-gray-900 mb-1">Favicon</h2>
+                <p className="text-sm text-gray-500 mb-5">Shown in browser tabs and bookmarks for both the dashboard and guest-facing site. PNG or ICO — max 1 MB. Recommended size: 32×32 or 64×64 px.</p>
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50 overflow-hidden">
+                    {faviconPreview ? (
+                      <img src={faviconPreview} alt="Favicon" className="w-10 h-10 object-contain" />
+                    ) : (
+                      <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                        <path d="M3 12h1m8-9v1m8 8h-1M5.6 5.6l.7.7m12.1-.7-.7.7M12 19a7 7 0 1 1 0-14 7 7 0 0 1 0 14z"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <input
+                      ref={faviconInputRef}
+                      type="file"
+                      accept=".png,.ico,.jpg,.jpeg"
+                      className="hidden"
+                      onChange={e => { const f = e.target.files?.[0]; if (f) handleFaviconUpload(f); e.target.value = ''; }}
+                    />
+                    <button
+                      onClick={() => faviconInputRef.current?.click()}
+                      disabled={faviconUploading}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-60"
+                    >
+                      {faviconUploading ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                      )}
+                      {faviconUploading ? 'Uploading…' : 'Upload Favicon'}
+                    </button>
+                    {faviconName && <p className="text-xs text-gray-500 mt-1">{faviconName}</p>}
                   </div>
                 </div>
               </div>

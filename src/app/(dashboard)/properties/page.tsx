@@ -100,7 +100,7 @@ const STATUS_DOT: Record<PropStatus, string> = {
 const STEP_LABELS = ['','Property Type','Location','Basics','Amenities','Photos','Title & Description','Pricing','Rules & Check-in','Review & Publish'];
 
 const TYPES = ['All types', 'Studio', '1BR', '2BR', '3BR', 'Villa'];
-const STATUSES = ['All statuses', 'active', 'inactive', 'maintenance'];
+const STATUSES = ['All statuses', 'active', 'inactive', 'maintenance', 'draft'];
 
 type ViewMode = 'grid' | 'list';
 
