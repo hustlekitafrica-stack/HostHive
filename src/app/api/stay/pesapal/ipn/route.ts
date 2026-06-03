@@ -129,6 +129,55 @@ export async function POST(req: NextRequest) {
       }] : []),
     ]);
 
+    // ── Auto-create receipt for the full payment ────────────────────────────
+    try {
+      const hostId = bookingReq.host_user_id ?? '';
+      let defaultTaxLines: { label: string; rate: number }[] = [];
+      if (hostId) {
+        const { data: profile } = await publicSupabase
+          .from('profiles')
+          .select('tax_lines')
+          .eq('id', hostId)
+          .maybeSingle();
+        defaultTaxLines = Array.isArray(profile?.tax_lines) ? profile.tax_lines : [];
+      }
+      const roomsForReceipt = Array.isArray(bookingReq.room_details) ? bookingReq.room_details : [];
+      const subtotal = roomsForReceipt.reduce((s: number, r: any) => s + Number(r.subtotal || 0), 0)
+        || Number(bookingReq.total_amount);
+      const resolvedTaxLines = defaultTaxLines.map((tl) => ({
+        label:  tl.label,
+        rate:   Number(tl.rate) || 0,
+        amount: Math.round(subtotal * (Number(tl.rate) || 0) / 100 * 100) / 100,
+      }));
+      const taxTotal   = resolvedTaxLines.reduce((s, tl) => s + tl.amount, 0);
+      const grandTotal = subtotal + taxTotal;
+      await publicSupabase.from('receipts').insert({
+        host_user_id:       hostId || null,
+        booking_request_id: bookingReq.id,
+        guest_name:         bookingReq.guest_name,
+        guest_phone:        bookingReq.guest_phone,
+        guest_email:        bookingReq.guest_email ?? '',
+        property_name:      propName,
+        room_details:       roomsForReceipt,
+        check_in:           bookingReq.check_in,
+        check_out:          bookingReq.check_out,
+        nights:             Number(bookingReq.nights) || null,
+        subtotal,
+        tax_lines:          resolvedTaxLines,
+        tax_total:          taxTotal,
+        grand_total:        grandTotal,
+        amount_paid:        grandTotal,
+        balance_due:        0,
+        payment_method:     'pesapal',
+        payment_reference:  orderTrackingId,
+        is_partial:         false,
+      });
+      console.log('[pesapal/ipn] ✓ receipt auto-created for booking', bookingReq.id);
+    } catch (receiptErr) {
+      console.error('[pesapal/ipn] receipt auto-create failed:', receiptErr);
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // IPN response Pesapal expects
     return NextResponse.json({
       orderNotificationType: 'IPNCHANGE',

@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
 
-type Tab = 'general' | 'brand' | 'categories' | 'sms' | 'account';
+type Tab = 'general' | 'brand' | 'categories' | 'sms' | 'tax' | 'account';
+type TaxLine = { label: string; rate: string };
 type SmsTemplate = { key: string; label: string; body: string; variables: string[] };
 
 const COLOR_PRESETS = [
@@ -72,6 +73,11 @@ export default function SettingsPage() {
   const [profEmail,   setProfEmail]   = useState('');
   const [profSaving,  setProfSaving]  = useState(false);
 
+  // Tax & KRA state
+  const [kraPin,      setKraPin]      = useState('');
+  const [taxLines,    setTaxLines]    = useState<TaxLine[]>([]);
+  const [taxSaving,   setTaxSaving]   = useState(false);
+
   // Change password state
   const [newPw,       setNewPw]       = useState('');
   const [confirmPw,   setConfirmPw]   = useState('');
@@ -127,12 +133,23 @@ export default function SettingsPage() {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       const meta = data.user.user_metadata ?? {};
       setProfName(meta.full_name ?? meta.name ?? '');
       setProfPhone(meta.phone ?? '');
       setProfEmail(data.user.email ?? '');
+      // Load KRA + tax config from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('kra_pin, tax_lines')
+        .eq('id', data.user.id)
+        .maybeSingle();
+      if (profile) {
+        setKraPin(profile.kra_pin ?? '');
+        const tl = Array.isArray(profile.tax_lines) ? profile.tax_lines : [];
+        setTaxLines(tl.map((t: any) => ({ label: t.label ?? '', rate: String(t.rate ?? '') })));
+      }
     });
   }, []);
 
@@ -184,6 +201,25 @@ export default function SettingsPage() {
     finally { setAvatarUploading(false); }
   };
 
+  const handleSaveTax = async () => {
+    setTaxSaving(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Not authenticated'); return; }
+      const resolved = taxLines
+        .filter(tl => tl.label.trim() && tl.rate.trim())
+        .map(tl => ({ label: tl.label.trim(), rate: Number(tl.rate) || 0 }));
+      const { error } = await supabase
+        .from('profiles')
+        .update({ kra_pin: kraPin.trim(), tax_lines: resolved })
+        .eq('id', user.id);
+      if (error) { toast.error(error.message); return; }
+      toast.success('Tax settings saved');
+    } catch { toast.error('Network error'); }
+    finally { setTaxSaving(false); }
+  };
+
   const handleSaveGeneral = () => toast.success('Settings saved!');
   const handleSaveColors = () => {
     localStorage.setItem('brand_primary', primaryColor);
@@ -229,6 +265,7 @@ export default function SettingsPage() {
     { id: 'brand', label: 'Brand' },
     { id: 'categories', label: 'Expenses' },
     { id: 'sms', label: 'SMS Templates' },
+    { id: 'tax', label: 'Tax & KRA' },
     { id: 'account', label: 'Account' },
   ];
 
@@ -586,6 +623,81 @@ export default function SettingsPage() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* ── TAX & KRA TAB ── */}
+        {activeTab === 'tax' && (
+          <div className="space-y-6 max-w-2xl">
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-1">KRA Details</h2>
+              <p className="text-sm text-gray-500 mb-5">Your KRA PIN will appear on all receipts issued to guests.</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">KRA PIN</label>
+                <input
+                  type="text"
+                  value={kraPin}
+                  onChange={e => setKraPin(e.target.value)}
+                  placeholder="e.g. A123456789B"
+                  className="w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-green-500"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-1">Tax Lines</h2>
+              <p className="text-sm text-gray-500 mb-1">Configure up to 3 tax lines applied to every receipt (tax-exclusive — added on top of the room subtotal).</p>
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-5">These are default values. You can override them per-receipt when issuing from Booking Requests.</p>
+
+              <div className="space-y-3 mb-4">
+                {taxLines.map((tl, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <input
+                      type="text"
+                      value={tl.label}
+                      onChange={e => setTaxLines(prev => prev.map((t, j) => j === i ? { ...t, label: e.target.value } : t))}
+                      placeholder="Label (e.g. VAT)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    />
+                    <div className="relative w-32">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value={tl.rate}
+                        onChange={e => setTaxLines(prev => prev.map((t, j) => j === i ? { ...t, rate: e.target.value } : t))}
+                        placeholder="Rate"
+                        className="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+                    </div>
+                    <button
+                      onClick={() => setTaxLines(prev => prev.filter((_, j) => j !== i))}
+                      className="text-red-400 hover:text-red-600 text-lg leading-none flex-shrink-0"
+                      title="Remove"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+
+              {taxLines.length < 3 && (
+                <button
+                  onClick={() => setTaxLines(prev => [...prev, { label: '', rate: '' }])}
+                  className="flex items-center gap-1.5 text-sm text-green-700 font-medium hover:text-green-900 transition-colors mb-5"
+                >
+                  <span className="text-lg leading-none">+</span> Add Tax Line
+                </button>
+              )}
+
+              <button
+                onClick={handleSaveTax}
+                disabled={taxSaving}
+                className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
+              >
+                {taxSaving ? 'Saving…' : 'Save Tax Settings'}
+              </button>
+            </div>
           </div>
         )}
 

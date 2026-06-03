@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu, MessageSquare } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu, MessageSquare, Receipt } from 'lucide-react';
 
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
@@ -9,6 +9,14 @@ type BookingRequest = {
   room_details: { property_id?: string; property_name: string; qty: number; nightly_rate: number; subtotal: number }[];
   total_amount: number; special_requests: string; status: string; decline_reason?: string;
   payment_status?: string;
+};
+
+type TaxLine = { label: string; rate: string };
+
+type ReceiptResult = {
+  receipt_number: string;
+  receipt_url: string;
+  whatsapp_link: string;
 };
 
 const STATUS_CONFIG: Record<string, { label: string; bg: string; text: string; Icon: typeof Clock }> = {
@@ -39,6 +47,16 @@ export default function RequestsPage() {
   const [declineTarget,  setDeclineTarget]  = useState<string | null>(null);
   const [declineReason,  setDeclineReason]  = useState('');
 
+  // Receipt modal
+  const [receiptTarget,  setReceiptTarget]  = useState<BookingRequest | null>(null);
+  const [receiptTaxLines, setReceiptTaxLines] = useState<TaxLine[]>([]);
+  const [receiptAmountPaid, setReceiptAmountPaid] = useState('');
+  const [receiptMethod,  setReceiptMethod]  = useState('cash');
+  const [receiptRef,     setReceiptRef]     = useState('');
+  const [receiptNotes,   setReceiptNotes]   = useState('');
+  const [receiptSaving,  setReceiptSaving]  = useState(false);
+  const [receiptResult,  setReceiptResult]  = useState<ReceiptResult | null>(null);
+
   const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
 
   const load = () => {
@@ -47,6 +65,77 @@ export default function RequestsPage() {
       .then(r => r.json())
       .then(d => setRequests(d.requests ?? []))
       .finally(() => setLoading(false));
+  };
+
+  const openReceiptModal = async (req: BookingRequest) => {
+    const rooms = Array.isArray(req.room_details) ? req.room_details : [];
+    const subtotal = rooms.reduce((s, r) => s + Number(r.subtotal || 0), 0) || Number(req.total_amount);
+    setReceiptAmountPaid(String(subtotal));
+    setReceiptMethod('cash');
+    setReceiptRef('');
+    setReceiptNotes('');
+    setReceiptResult(null);
+    // Load default tax lines from profile
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('tax_lines')
+          .eq('id', user.id)
+          .maybeSingle();
+        const tl = Array.isArray(profile?.tax_lines) ? profile.tax_lines : [];
+        setReceiptTaxLines(tl.map((t: any) => ({ label: t.label ?? '', rate: String(t.rate ?? '') })));
+      } else {
+        setReceiptTaxLines([]);
+      }
+    } catch { setReceiptTaxLines([]); }
+    setReceiptTarget(req);
+  };
+
+  const handleIssueReceipt = async () => {
+    if (!receiptTarget) return;
+    const paid = Number(receiptAmountPaid);
+    if (!paid || paid <= 0) { showToast('Enter a valid amount paid'); return; }
+    setReceiptSaving(true);
+    try {
+      const rooms = Array.isArray(receiptTarget.room_details) ? receiptTarget.room_details : [];
+      const subtotal = rooms.reduce((s, r) => s + Number(r.subtotal || 0), 0) || Number(receiptTarget.total_amount);
+      const res = await fetch('/api/receipts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          booking_request_id: receiptTarget.id,
+          guest_name:   receiptTarget.guest_name,
+          guest_phone:  receiptTarget.guest_phone,
+          guest_email:  receiptTarget.guest_email ?? '',
+          property_name: rooms[0]?.property_name ?? '',
+          room_details: rooms,
+          check_in:    receiptTarget.check_in,
+          check_out:   receiptTarget.check_out,
+          nights:      receiptTarget.nights,
+          subtotal,
+          tax_lines: receiptTaxLines
+            .filter(tl => tl.label.trim() && tl.rate.trim())
+            .map(tl => ({ label: tl.label.trim(), rate: Number(tl.rate) || 0 })),
+          amount_paid:       paid,
+          payment_method:    receiptMethod,
+          payment_reference: receiptRef.trim(),
+          notes:             receiptNotes.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { showToast(`Error: ${data.error}`); return; }
+      setReceiptResult({
+        receipt_number: data.receipt_number,
+        receipt_url:    data.receipt_url,
+        whatsapp_link:  data.whatsapp_link,
+      });
+      showToast(`✓ Receipt ${data.receipt_number} created`);
+    } catch { showToast('Network error — receipt not saved'); }
+    finally { setReceiptSaving(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -186,6 +275,186 @@ export default function RequestsPage() {
       )}
 
     <div className={`px-4 py-5 sm:px-6 max-w-5xl transition-all duration-300 ${sidebarCollapsed ? 'lg:pl-[120px]' : 'lg:pl-[320px]'}`}>
+      {/* ── Receipt Modal ─────────────────────────────────────────────────── */}
+      {receiptTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => { if (!receiptSaving) setReceiptTarget(null); }} />
+          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 overflow-y-auto max-h-[90vh]">
+            <h3 className="text-base font-black text-gray-900 mb-0.5">Issue Receipt</h3>
+            <p className="text-xs text-gray-400 mb-5">{receiptTarget.guest_name} · {receiptTarget.check_in} → {receiptTarget.check_out}</p>
+
+            {!receiptResult ? (
+              <div className="space-y-4">
+                {/* Amount Paid */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Amount Paid (KSh) <span className="text-red-500">*</span></label>
+                  <input
+                    type="number" min="1" step="1"
+                    value={receiptAmountPaid}
+                    onChange={e => setReceiptAmountPaid(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-bold focus:outline-none focus:border-gray-900"
+                  />
+                </div>
+
+                {/* Payment Method */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Payment Method</label>
+                  <select
+                    value={receiptMethod}
+                    onChange={e => setReceiptMethod(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900"
+                  >
+                    <option value="cash">Cash</option>
+                    <option value="mpesa">M-Pesa</option>
+                    <option value="bank">Bank Transfer</option>
+                    <option value="card">Card</option>
+                    <option value="pesapal">Pesapal (Online)</option>
+                  </select>
+                </div>
+
+                {/* Reference */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Reference / M-Pesa Code</label>
+                  <input
+                    type="text"
+                    value={receiptRef}
+                    onChange={e => setReceiptRef(e.target.value)}
+                    placeholder="e.g. QHJ2XXXXX"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:border-gray-900"
+                  />
+                </div>
+
+                {/* Tax Lines */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-gray-700">Tax Lines (KRA)</label>
+                    {receiptTaxLines.length < 3 && (
+                      <button
+                        onClick={() => setReceiptTaxLines(prev => [...prev, { label: '', rate: '' }])}
+                        className="text-xs text-green-700 font-bold hover:text-green-900"
+                      >+ Add line</button>
+                    )}
+                  </div>
+                  {receiptTaxLines.length === 0 && (
+                    <p className="text-xs text-gray-400 italic">No tax lines — configure defaults in Settings → Tax & KRA, or add one above.</p>
+                  )}
+                  <div className="space-y-2">
+                    {receiptTaxLines.map((tl, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={tl.label}
+                          onChange={e => setReceiptTaxLines(prev => prev.map((t, j) => j === i ? { ...t, label: e.target.value } : t))}
+                          placeholder="e.g. VAT"
+                          className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-gray-900"
+                        />
+                        <div className="relative w-24">
+                          <input
+                            type="number" min="0" max="100" step="0.1"
+                            value={tl.rate}
+                            onChange={e => setReceiptTaxLines(prev => prev.map((t, j) => j === i ? { ...t, rate: e.target.value } : t))}
+                            placeholder="%"
+                            className="w-full pl-2 pr-6 py-2 border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-gray-900"
+                          />
+                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">%</span>
+                        </div>
+                        <button onClick={() => setReceiptTaxLines(prev => prev.filter((_, j) => j !== i))}
+                          className="text-red-400 hover:text-red-600 text-base leading-none">×</button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Live tax preview */}
+                  {receiptTaxLines.some(tl => tl.label && tl.rate) && (() => {
+                    const sub  = Number(receiptAmountPaid) > 0
+                      ? (() => {
+                          const rooms2 = Array.isArray(receiptTarget.room_details) ? receiptTarget.room_details : [];
+                          return rooms2.reduce((s, r) => s + Number(r.subtotal || 0), 0) || Number(receiptTarget.total_amount);
+                        })()
+                      : 0;
+                    const taxTotal = receiptTaxLines
+                      .filter(tl => tl.label && tl.rate)
+                      .reduce((s, tl) => s + sub * (Number(tl.rate) || 0) / 100, 0);
+                    const grand = sub + taxTotal;
+                    return (
+                      <div className="mt-2 bg-gray-50 rounded-xl px-3 py-2 text-xs space-y-0.5">
+                        <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>KSh {sub.toLocaleString()}</span></div>
+                        {receiptTaxLines.filter(tl => tl.label && tl.rate).map((tl, i) => (
+                          <div key={i} className="flex justify-between text-gray-500">
+                            <span>{tl.label} ({tl.rate}%)</span>
+                            <span>KSh {(sub * Number(tl.rate) / 100).toLocaleString('en-KE', { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between font-black text-gray-900 border-t border-gray-200 pt-1 mt-1">
+                          <span>Grand Total</span><span>KSh {grand.toLocaleString('en-KE', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1">Notes (optional)</label>
+                  <textarea
+                    value={receiptNotes}
+                    onChange={e => setReceiptNotes(e.target.value)}
+                    rows={2}
+                    placeholder="Any additional notes for the guest"
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-gray-900 resize-none"
+                  />
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-3 pt-1">
+                  <button onClick={() => setReceiptTarget(null)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-600 hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  <button onClick={handleIssueReceipt} disabled={receiptSaving}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50"
+                    style={{ background: '#1e293b' }}>
+                    {receiptSaving ? 'Creating…' : 'Issue Receipt'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* Success state — show Print + WhatsApp */
+              <div className="space-y-4">
+                <div className="bg-green-50 border border-green-200 rounded-2xl p-4 text-center">
+                  <div className="text-2xl mb-2">✅</div>
+                  <p className="font-black text-green-800 text-sm">{receiptResult.receipt_number}</p>
+                  <p className="text-xs text-green-600 mt-0.5">Receipt created successfully</p>
+                </div>
+                <a
+                  href={receiptResult.receipt_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white bg-gray-900 hover:bg-gray-700 transition-colors"
+                >
+                  <Receipt className="w-4 h-4" />
+                  🖨️ Print Receipt
+                </a>
+                <a
+                  href={receiptResult.whatsapp_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Send via WhatsApp
+                </a>
+                <button
+                  onClick={() => setReceiptTarget(null)}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold border-2 border-gray-200 text-gray-600 hover:bg-gray-50"
+                >
+                  Done
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Decline reason modal */}
       {declineTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -311,7 +580,7 @@ export default function RequestsPage() {
                     </div>
                   )}
 
-                  {/* Confirmed: Send Payment Link + prompt SMS */}
+                  {/* Confirmed: Send Payment Link + Issue Receipt + Review SMS */}
                   {req.status === 'confirmed' && (
                     <div className="space-y-2">
                       <button
@@ -322,9 +591,15 @@ export default function RequestsPage() {
                         {sendingPayment === req.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
                         {sendingPayment === req.id ? 'Generating…' : 'Send Payment Link'}
                       </button>
+                      <button onClick={() => openReceiptModal(req)}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity"
+                        style={{ background: '#1e293b' }}>
+                        <Receipt className="w-4 h-4" />
+                        Issue Receipt
+                      </button>
                       <button onClick={() => sendReviewLink(req)} disabled={isSending}
                         className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold text-white disabled:opacity-50 transition-opacity"
-                        style={{ background: 'var(--brand-primary, #1e293b)' }}>
+                        style={{ background: 'var(--brand-primary, #1e293b)', opacity: 0.75 }}>
                         {isSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
                         {isSending ? 'Sending…' : 'Send Review SMS'}
                       </button>
