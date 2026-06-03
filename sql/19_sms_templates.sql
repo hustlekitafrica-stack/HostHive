@@ -10,8 +10,14 @@ CREATE TABLE IF NOT EXISTS sms_templates (
 );
 
 ALTER TABLE sms_templates ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Anyone can read SMS templates"  ON sms_templates FOR SELECT USING (true);
-CREATE POLICY "Anyone can upsert SMS templates" ON sms_templates FOR ALL USING (true);
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sms_templates' AND policyname='Anyone can read SMS templates') THEN
+    CREATE POLICY "Anyone can read SMS templates"  ON sms_templates FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sms_templates' AND policyname='Anyone can upsert SMS templates') THEN
+    CREATE POLICY "Anyone can upsert SMS templates" ON sms_templates FOR ALL USING (true);
+  END IF;
+END $$;
 
 -- Insert default templates
 INSERT INTO sms_templates (key, label, body, variables) VALUES

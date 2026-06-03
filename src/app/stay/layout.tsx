@@ -67,6 +67,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
   const isPropertyPage = /^\/stay\/rooms\/[^/]+/.test(pathname);
   const isRoomsPage    = pathname === '/stay/rooms';
   const isCheckoutPage = pathname.startsWith('/stay/checkout');
+  const isCartPage     = pathname.startsWith('/stay/book/cart');
   const router    = useRouter();
   const [menuOpen,   setMenuOpen]   = useState(false);
   const [loading,    setLoading]    = useState(false);
@@ -301,7 +302,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Mobile sticky bottom nav ── */}
-      {!isPropertyPage && !isRoomsPage && !isCheckoutPage && <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
+      {!isPropertyPage && !isRoomsPage && !isCheckoutPage && !isCartPage && <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 flex items-stretch" style={{ background: '#1e293b' }}>
         {NAV_LINKS.filter(l => {
           if (l.label === 'Rooms') return false;
           if (l.label === 'Trips' && !loggedIn) return false;

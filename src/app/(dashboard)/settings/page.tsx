@@ -591,15 +591,7 @@ export default function SettingsPage() {
         {/* ── SMS TEMPLATES TAB ── */}
         {activeTab === 'sms' && (
           <div className="space-y-5 max-w-3xl">
-            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
-              <strong>Setup required:</strong> Run <code className="bg-amber-100 px-1 rounded">sql/19_sms_templates.sql</code> in Supabase, then set <code className="bg-amber-100 px-1 rounded">SMS_PROVIDER</code>, <code className="bg-amber-100 px-1 rounded">SMS_API_KEY</code>, and <code className="bg-amber-100 px-1 rounded">SMS_USERNAME</code> in <code className="bg-amber-100 px-1 rounded">.env.local</code> (africastalking or twilio).
-            </div>
-            {smsTemplates.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-sm text-gray-400">
-                No templates found — run <strong>sql/19_sms_templates.sql</strong> in Supabase first.
-              </div>
-            ) : (
-              smsTemplates.map(t => (
+            {smsTemplates.map(t => (
                 <div key={t.key} className="bg-white border border-gray-200 rounded-xl p-5">
                   <h3 className="text-sm font-bold text-gray-900 mb-0.5">{t.label}</h3>
                   <p className="text-xs text-gray-400 mb-2">
@@ -621,8 +613,7 @@ export default function SettingsPage() {
                     </button>
                   </div>
                 </div>
-              ))
-            )}
+            ))}
           </div>
         )}
 
