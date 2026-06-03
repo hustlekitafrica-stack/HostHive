@@ -36,7 +36,7 @@ const HIGHLIGHTS = [
 
 function RoomCard({ property, wishlisted, onToggle }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
   return (
-    <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-64 sm:w-72">
+    <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-64 sm:w-72 md:w-auto">
       {/* Image */}
       <div className="relative rounded-2xl overflow-hidden mb-3">
         <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-52" />
@@ -166,13 +166,13 @@ export default function StayHomePage() {
           </div>
 
           {properties.length > 0 ? (
-            <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+            <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
               {properties.slice(0, 8).map(p => <RoomCard key={p.id} property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />)}
             </div>
           ) : (
-            <div className="flex gap-5 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+            <div className="flex md:grid md:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
               {[1,2,3,4].map(i => (
-                <div key={i} className="flex-shrink-0 w-72 bg-gray-100 rounded-2xl overflow-hidden animate-pulse">
+                <div key={i} className="flex-shrink-0 w-72 md:w-auto bg-gray-100 rounded-2xl overflow-hidden animate-pulse">
                   <div className="h-48 bg-gray-200" />
                   <div className="p-4 space-y-2">
                     <div className="h-4 bg-gray-200 rounded w-3/4" />

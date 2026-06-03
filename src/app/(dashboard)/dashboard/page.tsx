@@ -303,10 +303,20 @@ export default function DashboardPage() {
 
             {/* Unit Status Section */}
             <div className="pt-4 border-t border-gray-200 mb-4">
-              <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-3">Unit Status</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Unit Status</h4>
+                {(stats?.properties ?? []).length > 3 && (
+                  <button
+                    onClick={() => router.push('/dashboard/properties')}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
+                  >
+                    See more
+                  </button>
+                )}
+              </div>
               {(stats?.properties ?? []).length === 0 ? (
                 <p className="text-xs text-gray-400">No properties yet.</p>
-              ) : (stats.properties as any[]).map((p: any) => (
+              ) : (stats.properties as any[]).slice(0, 3).map((p: any) => (
                 <div key={p.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 mb-1">
                   <span className="text-sm text-gray-700 font-medium truncate max-w-[130px]">{p.name}</span>
                   <div className="flex items-center gap-2">
@@ -315,6 +325,14 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ))}
+              {(stats?.properties ?? []).length > 3 && (
+                <button
+                  onClick={() => router.push('/dashboard/properties')}
+                  className="w-full mt-1 text-xs text-teal-600 hover:text-teal-700 font-medium text-center py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                >
+                  See all {(stats.properties as any[]).length} units →
+                </button>
+              )}
             </div>
 
             {/* Booking Forecast */}
@@ -591,7 +609,17 @@ export default function DashboardPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
               <h3 className="text-base font-semibold text-gray-900">Unit Performance</h3>
-              <span className="text-xs text-gray-400">{periodLabel}</span>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-gray-400">{periodLabel}</span>
+                {(stats?.unitPerformance ?? []).length > 4 && (
+                  <button
+                    onClick={() => router.push('/dashboard/unit-performance')}
+                    className="text-xs text-teal-600 hover:text-teal-700 font-medium hover:underline"
+                  >
+                    See more
+                  </button>
+                )}
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -607,7 +635,7 @@ export default function DashboardPage() {
                     <tr><td colSpan={3} className="px-5 py-6 text-center text-gray-400 text-xs">Loading…</td></tr>
                   ) : (stats?.unitPerformance ?? []).length === 0 ? (
                     <tr><td colSpan={3} className="px-5 py-6 text-center text-gray-400 text-xs">No active properties yet.</td></tr>
-                  ) : (stats.unitPerformance as any[]).map((u: any) => {
+                  ) : (stats.unitPerformance as any[]).slice(0, 4).map((u: any) => {
                     const maxRev = stats.maxUnitRevenue ?? 1;
                     return (
                       <tr key={u.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
@@ -640,6 +668,16 @@ export default function DashboardPage() {
                 </tbody>
               </table>
             </div>
+            {(stats?.unitPerformance ?? []).length > 4 && (
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50">
+                <button
+                  onClick={() => router.push('/dashboard/unit-performance')}
+                  className="w-full text-xs text-teal-600 hover:text-teal-700 font-medium text-center hover:underline"
+                >
+                  See all {(stats.unitPerformance as any[]).length} units →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Payment Methods Card */}
