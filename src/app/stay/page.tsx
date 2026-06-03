@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import SearchWidget from '@/components/stay/SearchWidget';
@@ -139,7 +139,7 @@ export default function StayHomePage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#16a34a' }}>Choose Your Space</p>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Our Rooms</h2>
-              <p className="text-gray-500 mt-2">40 units — studios to suites, all in one exclusive compound.</p>
+              <p className="text-gray-500 mt-2">{properties.length} unit{properties.length !== 1 ? 's' : ''} available — studios to suites, all in one exclusive compound.</p>
             </div>
             <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#16a34a' }}>
               View all rooms →
@@ -205,7 +205,7 @@ export default function StayHomePage() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#16a34a' }}>Swim & Unwind</p>
                   <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Poolside Properties</h2>
-                  <p className="text-gray-500 mt-2">Rooms with direct or shared pool access — wake up steps from the water.</p>
+                  <p className="text-gray-500 mt-2">{poolside.length} unit{poolside.length !== 1 ? 's' : ''} with direct or shared pool access — wake up steps from the water.</p>
                 </div>
                 <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#16a34a' }}>
                   View all rooms →
@@ -260,17 +260,39 @@ export default function StayHomePage() {
               </div>
             </div>
 
-            <div className="relative hidden md:block min-h-64">
-              <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                <Utensils className="w-40 h-40 text-white" />
-              </div>
-              <div className="absolute inset-0 grid grid-cols-2 gap-3 p-8 opacity-90">
-                {['¼ Traditional Chicken — KSh 600', 'Whole Tilapia — KSh 800', 'Chicken Pilau — KSh 700', 'BBQ Chicken Wings — KSh 600'].map((item, i) => (
-                  <div key={i} className="rounded-xl p-4 text-xs font-semibold text-white" style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
-                    {item}
+            <div className="hidden md:flex flex-col overflow-hidden" style={{ minHeight: '480px' }}>
+              {[
+                { src: '/images/chicken-pilau.jpg',     alt: 'Chicken Pilau',      name: 'Chicken Pilau',      sub: 'Spiced basmati rice',       price: 'KSh 700', badge: '⭐ Chef\'s Pick',   badgeBg: '#D97706' },
+                { src: '/images/kienyeji-chicken.jpg',  alt: 'Kienyeji Chicken',   name: 'Kienyeji Chicken',   sub: 'Slow-cooked, rich sauce',   price: 'KSh 600', badge: '🌿 Traditional',   badgeBg: '#16a34a' },
+                { src: '/images/bbq-chicken-wings.jpg', alt: 'BBQ Chicken Wings',  name: 'BBQ Chicken Wings',  sub: 'Smoky, sticky & charred',   price: 'KSh 600', badge: '🔥 Fan Favourite', badgeBg: '#dc2626' },
+                { src: '/images/tilapia.jpg',           alt: 'Whole Tilapia',      name: 'Whole Tilapia',      sub: 'In rich tomato sauce',      price: 'KSh 800', badge: '🐟 Lake Fresh',    badgeBg: '#0369a1' },
+              ].map((dish, i, arr) => (
+                <Fragment key={dish.alt}>
+                  <div className="relative overflow-hidden" style={{ flex: 1 }}>
+                    <img
+                      src={dish.src}
+                      alt={dish.alt}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 58%)' }} />
+                    <div className="absolute top-2.5 left-3">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: dish.badgeBg }}>
+                        {dish.badge}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
+                      <div>
+                        <p className="text-white font-bold text-sm leading-tight">{dish.name}</p>
+                        <p className="text-white/65 text-xs">{dish.sub}</p>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-black text-white flex-shrink-0" style={{ background: dish.badgeBg }}>
+                        {dish.price}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
+                  {i < arr.length - 1 && <div className="h-px flex-shrink-0" style={{ background: 'rgba(255,255,255,0.07)' }} />}
+                </Fragment>
+              ))}
             </div>
           </div>
         </div>

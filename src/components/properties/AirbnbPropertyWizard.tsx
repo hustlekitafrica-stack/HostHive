@@ -36,7 +36,7 @@ const INITIAL: WizardFormData = {
   publish: { availableFrom: '', group: '', status: 'publish' },
 };
 
-const PROPERTY_TYPES = [
+const DEFAULT_PROPERTY_TYPES = [
   { id: 'studio',       label: 'Studio',       desc: 'Open-plan bedroom + living area' },
   { id: 'bedsitter',    label: 'Bedsitter',    desc: 'Single room with kitchenette' },
   { id: 'one-bedroom',  label: 'One Bedroom',  desc: 'Separate bedroom + living space' },
@@ -289,6 +289,26 @@ interface Props {
 
 export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initialStep = 1, propertyId }: Props) {
   const isEdit = mode === 'edit';
+  const [propertyTypes, setPropertyTypes] = useState<{ id: string; label: string; desc: string }[]>(DEFAULT_PROPERTY_TYPES);
+  const [typesLoading, setTypesLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/unit-types')
+      .then(r => r.json())
+      .then(d => {
+        const active = (d.unit_types ?? []).filter((t: any) => t.is_active);
+        if (active.length > 0) {
+          setPropertyTypes(active.map((t: any) => ({
+            id: t.id,
+            label: t.name,
+            desc: t.description || t.name,
+          })));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setTypesLoading(false));
+  }, []);
+
   const [step, setStep] = useState(Math.max(1, Math.min(initialStep, 9)));
   const [highestStep, setHighestStep] = useState(Math.max(1, Math.min(initialStep, 9)));
   const [dir, setDir] = useState<'fwd' | 'bwd'>('fwd');
@@ -548,26 +568,38 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     // STEP 1
     if (step === 1) return (
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">What kind of place are you listing?</h2>
-        <p className="text-sm text-gray-500 mb-6">Choose the type that best describes your property. <span className="text-red-500">*</span></p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {PROPERTY_TYPES.map(t => (
-            <button
-              key={t.id}
-              onClick={() => upd('propertyType', t.id)}
-              className={`p-5 rounded-2xl text-left transition-all duration-150 ${
-                data.propertyType === t.id
-                  ? 'border-2 border-green-600 bg-green-50'
-                  : 'border border-gray-200 bg-white hover:border-green-600'
-              }`}>
-              <div className={`mb-3 ${data.propertyType === t.id ? 'text-green-600' : 'text-gray-800'}`}>
-                <PropIcon id={t.id} />
-              </div>
-              <p className="font-bold text-gray-900 text-sm mb-1">{t.label}</p>
-              <p className={`text-xs leading-snug ${data.propertyType === t.id ? 'text-green-600' : 'text-blue-500'}`}>{t.desc}</p>
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-2xl font-bold text-gray-900">What kind of place are you listing?</h2>
+          <a href="/dashboard/unit-types" target="_blank" rel="noopener noreferrer"
+            className="text-xs text-green-600 hover:underline font-medium">
+            Manage types ↗
+          </a>
         </div>
+        <p className="text-sm text-gray-500 mb-6">Choose the type that best describes your property. <span className="text-red-500">*</span></p>
+        {typesLoading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {[1,2,3,4].map(i => <div key={i} className="h-28 rounded-2xl bg-gray-100 animate-pulse" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {propertyTypes.map(t => (
+              <button
+                key={t.id}
+                onClick={() => upd('propertyType', t.id)}
+                className={`p-5 rounded-2xl text-left transition-all duration-150 ${
+                  data.propertyType === t.id
+                    ? 'border-2 border-green-600 bg-green-50'
+                    : 'border border-gray-200 bg-white hover:border-green-600'
+                }`}>
+                <div className={`mb-3 ${data.propertyType === t.id ? 'text-green-600' : 'text-gray-800'}`}>
+                  <PropIcon id={t.id} />
+                </div>
+                <p className="font-bold text-gray-900 text-sm mb-1">{t.label}</p>
+                <p className={`text-xs leading-snug ${data.propertyType === t.id ? 'text-green-600' : 'text-blue-500'}`}>{t.desc}</p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     );
 
