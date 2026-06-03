@@ -701,17 +701,17 @@ function RoomDetailContent({ id }: { id: string }) {
                 <Heart className="w-4 h-4" style={{ color: '#16a34a' }} fill={wishlisted ? '#16a34a' : 'none'} />
               </button>
             </div>
-            {/* Dots / counter */}
-            <div className="absolute bottom-4 left-0 right-0 flex justify-center items-center gap-1.5 z-20">
+            {/* Dots / counter — matches CardImageCarousel style */}
+            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1.5 z-20">
               {photos.length <= 12 ? (
                 photos.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setMobileSlide(i)}
-                    className={`rounded-full transition-all duration-300 ease-in-out ${
+                    className={`rounded-full transition-all duration-200 ${
                       i === mobileSlide
-                        ? 'w-5 h-1.5 bg-white shadow'
-                        : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
+                        ? 'w-4 h-1.5 bg-white'
+                        : 'w-1.5 h-1.5 bg-white/50'
                     }`}
                     aria-label={`Photo ${i + 1}`}
                   />

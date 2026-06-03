@@ -77,6 +77,14 @@ export default function StayHomePage() {
   const reviewScrollRef = useRef<HTMLDivElement>(null);
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [wishPending, setWishPending] = useState<Set<string>>(new Set());
+  const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
+
+  const FALLBACK_DISHES = [
+    { image_url: '/images/chicken-pilau.jpg',     name: 'Chicken Pilau',      description: 'Spiced basmati rice',     price: 700, badge: "\u2b50 Chef's Pick",   badge_color: '#D97706' },
+    { image_url: '/images/kienyeji-chicken.jpg',  name: 'Kienyeji Chicken',   description: 'Slow-cooked, rich sauce', price: 600, badge: '\ud83c\udf3f Traditional',   badge_color: '#16a34a' },
+    { image_url: '/images/bbq-chicken-wings.jpg', name: 'BBQ Chicken Wings',  description: 'Smoky, sticky & charred',price: 600, badge: '\ud83d\udd25 Fan Favourite', badge_color: '#dc2626' },
+    { image_url: '/images/tilapia.jpg',           name: 'Whole Tilapia',      description: 'In rich tomato sauce',    price: 800, badge: '\ud83d\udc1f Lake Fresh',    badge_color: '#0369a1' },
+  ];
 
   useEffect(() => {
     fetch('/api/stay/properties')
@@ -90,6 +98,10 @@ export default function StayHomePage() {
     fetch('/api/stay/wishlist')
       .then(r => r.json())
       .then(d => setWishlistIds(new Set(d.property_ids ?? [])))
+      .catch(() => {});
+    fetch('/api/featured-dishes')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.dishes?.length) setFeaturedDishes(d.dishes.filter((x: any) => x.is_active)); })
       .catch(() => {});
   }, []);
 
@@ -261,32 +273,27 @@ export default function StayHomePage() {
             </div>
 
             <div className="hidden md:flex flex-col overflow-hidden" style={{ minHeight: '480px' }}>
-              {[
-                { src: '/images/chicken-pilau.jpg',     alt: 'Chicken Pilau',      name: 'Chicken Pilau',      sub: 'Spiced basmati rice',       price: 'KSh 700', badge: '⭐ Chef\'s Pick',   badgeBg: '#D97706' },
-                { src: '/images/kienyeji-chicken.jpg',  alt: 'Kienyeji Chicken',   name: 'Kienyeji Chicken',   sub: 'Slow-cooked, rich sauce',   price: 'KSh 600', badge: '🌿 Traditional',   badgeBg: '#16a34a' },
-                { src: '/images/bbq-chicken-wings.jpg', alt: 'BBQ Chicken Wings',  name: 'BBQ Chicken Wings',  sub: 'Smoky, sticky & charred',   price: 'KSh 600', badge: '🔥 Fan Favourite', badgeBg: '#dc2626' },
-                { src: '/images/tilapia.jpg',           alt: 'Whole Tilapia',      name: 'Whole Tilapia',      sub: 'In rich tomato sauce',      price: 'KSh 800', badge: '🐟 Lake Fresh',    badgeBg: '#0369a1' },
-              ].map((dish, i, arr) => (
-                <Fragment key={dish.alt}>
+              {(featuredDishes.length > 0 ? featuredDishes : FALLBACK_DISHES).map((dish, i, arr) => (
+                <Fragment key={dish.name}>
                   <div className="relative overflow-hidden" style={{ flex: 1 }}>
                     <img
-                      src={dish.src}
-                      alt={dish.alt}
+                      src={dish.image_url}
+                      alt={dish.name}
                       className="absolute inset-0 w-full h-full object-cover"
                     />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, transparent 58%)' }} />
                     <div className="absolute top-2.5 left-3">
-                      <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: dish.badgeBg }}>
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold text-white" style={{ background: dish.badge_color }}>
                         {dish.badge}
                       </span>
                     </div>
                     <div className="absolute bottom-2.5 left-3 right-3 flex items-end justify-between">
                       <div>
                         <p className="text-white font-bold text-sm leading-tight">{dish.name}</p>
-                        <p className="text-white/65 text-xs">{dish.sub}</p>
+                        <p className="text-white/65 text-xs">{dish.description}</p>
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-xs font-black text-white flex-shrink-0" style={{ background: dish.badgeBg }}>
-                        {dish.price}
+                      <span className="px-2.5 py-1 rounded-full text-xs font-black text-white flex-shrink-0" style={{ background: dish.badge_color }}>
+                        KSh {Number(dish.price).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -402,7 +409,7 @@ export default function StayHomePage() {
       )}
 
       {/* ═══ CTA ═══ */}
-      <section className="py-24 px-4 sm:px-6 text-center" style={{ background: 'linear-gradient(135deg, #16a34a, #0f172a)' }}>
+      <section className="py-24 px-4 sm:px-6 text-center" style={{ background: 'radial-gradient(ellipse at 50% 0%, #166534 0%, #0f172a 65%)' }}>
         <div className="max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-4">Ready to Experience Kogelo?</h2>
           <p className="text-white/70 mb-10 text-lg">Book your stay today. Flexible dates. Instant confirmation.</p>
