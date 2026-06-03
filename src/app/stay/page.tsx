@@ -132,25 +132,6 @@ export default function StayHomePage() {
         </div>
       </section>
 
-      {/* ═══ AMENITIES ═══ */}
-      <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
-        <div className="text-center mb-14">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#16a34a' }}>Everything You Need</p>
-          <h2 className="text-3xl sm:text-4xl font-black text-gray-900">World-Class Amenities</h2>
-          <p className="text-gray-500 mt-3 max-w-xl mx-auto">Every detail has been considered to make your stay exceptional.</p>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
-          {AMENITIES.map(a => (
-            <div key={a.label} className="group bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
-              <div className="flex justify-center mb-4"><a.Icon className="w-8 h-8" style={{ color: '#16a34a' }} /></div>
-              <h3 className="font-bold text-gray-900 text-sm mb-1">{a.label}</h3>
-              <p className="text-xs text-gray-500 leading-snug">{a.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* ═══ ROOMS PREVIEW ═══ */}
       <section className="py-20 bg-white">
         <div className="px-4 sm:px-6 max-w-7xl mx-auto">
@@ -191,6 +172,59 @@ export default function StayHomePage() {
           </div>
         </div>
       </section>
+
+      {/* ═══ AMENITIES ═══ */}
+      <section className="py-20 px-4 sm:px-6 max-w-7xl mx-auto">
+        <div className="text-center mb-14">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#16a34a' }}>Everything You Need</p>
+          <h2 className="text-3xl sm:text-4xl font-black text-gray-900">World-Class Amenities</h2>
+          <p className="text-gray-500 mt-3 max-w-xl mx-auto">Every detail has been considered to make your stay exceptional.</p>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
+          {AMENITIES.map(a => (
+            <div key={a.label} className="group bg-white rounded-2xl p-6 text-center shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+              <div className="flex justify-center mb-4"><a.Icon className="w-8 h-8" style={{ color: '#16a34a' }} /></div>
+              <h3 className="font-bold text-gray-900 text-sm mb-1">{a.label}</h3>
+              <p className="text-xs text-gray-500 leading-snug">{a.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══ POOLSIDE PROPERTIES ═══ */}
+      {(() => {
+        const poolside = properties.filter(p =>
+          (p.amenities ?? []).some((a: string) => a.toLowerCase().includes('pool'))
+        );
+        if (poolside.length === 0) return null;
+        return (
+          <section className="py-20 px-4 sm:px-6" style={{ background: 'linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%)' }}>
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-end justify-between mb-10">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#16a34a' }}>Swim & Unwind</p>
+                  <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Poolside Properties</h2>
+                  <p className="text-gray-500 mt-2">Rooms with direct or shared pool access — wake up steps from the water.</p>
+                </div>
+                <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#16a34a' }}>
+                  View all rooms →
+                </Link>
+              </div>
+              <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
+                {poolside.slice(0, 8).map(p => (
+                  <RoomCard key={p.id} property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
+                ))}
+              </div>
+              <div className="mt-8 text-center sm:hidden">
+                <Link href="/stay/rooms" className="inline-flex items-center gap-2 py-3 px-8 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
+                  View All Rooms →
+                </Link>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
 
       {/* ═══ DINING ═══ */}
       <section className="py-20 px-4 sm:px-6">
