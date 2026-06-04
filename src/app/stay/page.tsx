@@ -120,11 +120,11 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative pt-[36px] pb-8 px-2 sm:px-6 sm:pt-24" style={{ background: '#1e293b' }}>
+      <section className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-2 sm:px-6 sm:pt-32 sm:pb-20" style={{ background: '#1e293b' }}>
         {/* Desktop background image */}
         <div className="hidden sm:block absolute inset-0 overflow-hidden">
           <img
-            src="/images/hero.jpg"
+            src="/images/hero.png"
             alt=""
             className="w-full h-full object-cover object-center"
           />
