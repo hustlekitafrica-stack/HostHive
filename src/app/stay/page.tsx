@@ -277,9 +277,9 @@ export default function StayHomePage() {
               </div>
             </div>
 
-            <div className="hidden md:grid md:grid-cols-2 overflow-hidden" style={{ minHeight: '480px' }}>
+            <div className="hidden md:grid md:grid-cols-2 gap-2 p-2" style={{ minHeight: '480px' }}>
               {(featuredDishes.length > 0 ? featuredDishes : FALLBACK_DISHES).map((dish) => (
-                <div key={dish.name} className="relative overflow-hidden">
+                <div key={dish.name} className="relative overflow-hidden rounded-2xl">
                   <img
                     src={dish.image_url}
                     alt={dish.name}
