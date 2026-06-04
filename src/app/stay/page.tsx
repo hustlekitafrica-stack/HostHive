@@ -7,8 +7,8 @@ import SearchWidget from '@/components/stay/SearchWidget';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import {
   Waves, Utensils, Wifi, Car, Bell, Leaf, ShieldCheck, Sparkles,
-  BedDouble, Droplets, Users, MapPin, ChefHat, Home as HomeIcon,
-  Search, Phone, TrendingUp, Star, Heart, type LucideIcon,
+  ChefHat, Home as HomeIcon,
+  Phone, Star, type LucideIcon,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -34,35 +34,27 @@ const HIGHLIGHTS = [
 ];
 
 
-function RoomCard({ property, wishlisted, onToggle }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
+function RoomCard({ property }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
+  const amenities: string[] = property.amenities ?? [];
+  const beds = property.bedrooms ?? 1;
+  const badge = beds === 0 ? 'Studio' : amenities.some((a: string) => a.toLowerCase().includes('pool')) ? 'Pool Access' : 'Trending';
   return (
-    <Link href={`/stay/rooms/${property.id}`} className="group flex-shrink-0 w-64 sm:w-72 md:w-auto">
-      {/* Image */}
-      <div className="relative rounded-2xl overflow-hidden mb-3">
-        <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-52" />
-        {/* Guest favourite badge */}
-        <div className="absolute top-3 left-3 z-10 bg-white/95 backdrop-blur-sm rounded-full px-3 py-1 flex items-center gap-1.5 shadow-sm">
-          <span className="text-xs font-bold text-gray-900">Guest favourite</span>
+    <Link href={`/stay/rooms/${property.id}`} className="group block">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+        {/* Image */}
+        <div className="relative aspect-[4/5]">
+          <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-full" />
+          {/* Badge */}
+          <div className="absolute top-3 left-3 z-10 bg-white rounded-xl px-3 py-1.5 shadow-sm">
+            <span className="text-sm font-bold text-gray-900">{badge}</span>
+          </div>
         </div>
-        {/* Heart */}
-        <button
-          onClick={e => onToggle(e, property.id)}
-          className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-sm transition-all hover:scale-110"
-          title={wishlisted ? 'Remove from wishlist' : 'Save to wishlist'}>
-          <Heart className="w-4 h-4 transition-colors" style={{ color: wishlisted ? '#16a34a' : '#374151' }} fill={wishlisted ? '#16a34a' : 'none'} />
-        </button>
-      </div>
-      {/* Info */}
-      <div>
-        <h3 className="font-bold text-gray-900 text-sm leading-snug truncate">{property.type ? `${property.type} in` : 'Stay in'} {property.city || property.location || 'Kogelo'}</h3>
-        <p className="text-xs text-gray-500 mt-0.5 truncate">{property.name}</p>
-        <div className="flex items-center justify-between mt-1.5">
-          <p className="text-sm font-semibold" style={{ color: '#D97706' }}>
-            KSh {Number(property.nightly_rate || 0).toLocaleString()} <span className="font-normal text-gray-500">/ night</span>
-          </p>
-          <p className="text-xs text-gray-700 flex items-center gap-0.5 font-semibold">
-            <Star className="w-3 h-3 fill-gray-800 stroke-none" /> {property.rating ?? '5.0'}
-          </p>
+        {/* Footer */}
+        <div className="flex items-center justify-between px-3 py-3 gap-2">
+          <p className="font-semibold text-gray-900 text-sm truncate min-w-0">{property.name}</p>
+          <span className="flex-shrink-0 bg-gray-100 rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 whitespace-nowrap">
+            See details
+          </span>
         </div>
       </div>
     </Link>
@@ -168,18 +160,21 @@ export default function StayHomePage() {
           </div>
 
           {properties.length > 0 ? (
-            <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
-              {properties.slice(0, 8).map(p => <RoomCard key={p.id} property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />)}
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
+              {properties.slice(0, 8).map(p => (
+                <div key={p.id} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto">
+                  <RoomCard property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="flex md:grid md:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
               {[1,2,3,4].map(i => (
-                <div key={i} className="flex-shrink-0 w-72 md:w-auto bg-gray-100 rounded-2xl overflow-hidden animate-pulse">
-                  <div className="h-48 bg-gray-200" />
-                  <div className="p-4 space-y-2">
-                    <div className="h-4 bg-gray-200 rounded w-3/4" />
-                    <div className="h-3 bg-gray-200 rounded w-1/2" />
-                    <div className="h-8 bg-gray-200 rounded mt-4" />
+                <div key={i} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
+                  <div className="aspect-[4/5] bg-gray-200" />
+                  <div className="px-3 py-3 flex items-center justify-between gap-2">
+                    <div className="h-4 bg-gray-200 rounded flex-1" />
+                    <div className="h-8 bg-gray-200 rounded-full w-24 flex-shrink-0" />
                   </div>
                 </div>
               ))}
@@ -232,9 +227,11 @@ export default function StayHomePage() {
                   View all rooms →
                 </Link>
               </div>
-              <div className="flex md:grid md:grid-cols-3 lg:grid-cols-4 gap-5 overflow-x-auto md:overflow-visible pb-4 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 scrollbar-hide">
+              <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
                 {poolside.slice(0, 8).map(p => (
-                  <RoomCard key={p.id} property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
+                  <div key={p.id} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto">
+                    <RoomCard property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
+                  </div>
                 ))}
               </div>
               <div className="mt-8 text-center sm:hidden">
