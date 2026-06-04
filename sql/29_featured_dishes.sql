@@ -30,6 +30,17 @@ DO $$ BEGIN
   END IF;
 END $$;
 
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE tablename = 'featured_dishes' AND policyname = 'Public can read active featured dishes'
+  ) THEN
+    CREATE POLICY "Public can read active featured dishes"
+      ON featured_dishes FOR SELECT
+      USING (is_active = true);
+  END IF;
+END $$;
+
 -- Seed default dishes for existing users (only if they have none yet)
 INSERT INTO featured_dishes (user_id, name, description, price, image_url, badge, badge_color, sort_order)
 SELECT DISTINCT

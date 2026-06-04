@@ -99,9 +99,9 @@ export default function StayHomePage() {
       .then(r => r.json())
       .then(d => setWishlistIds(new Set(d.property_ids ?? [])))
       .catch(() => {});
-    fetch('/api/featured-dishes')
+    fetch('/api/stay/featured-dishes')
       .then(r => r.ok ? r.json() : null)
-      .then(d => { if (d?.dishes?.length) setFeaturedDishes(d.dishes.filter((x: any) => x.is_active)); })
+      .then(d => { if (d?.dishes?.length) setFeaturedDishes(d.dishes); })
       .catch(() => {});
   }, []);
 
