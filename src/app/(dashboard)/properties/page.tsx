@@ -39,14 +39,20 @@ interface Property {
   cancellationPolicy: string;
 }
 
+const VALID_PROPERTY_TYPES = ['apartment', 'villa', 'studio', 'house', 'cottage', 'room', 'bungalow', 'townhouse', 'penthouse', 'cabin'];
+
 function dbRowToProperty(row: any): Property {
   const beds = row.bedrooms ?? 1;
   const bedsLabel = beds === 0 ? 'Studio' : `${beds}BR`;
+  const rawType = (row.type || '').toLowerCase();
+  const safeCategory = VALID_PROPERTY_TYPES.includes(rawType)
+    ? rawType.charAt(0).toUpperCase() + rawType.slice(1)
+    : 'Apartment';
   return {
     id: row.id,
     name: row.name || row.title || 'Untitled',
     type: bedsLabel,
-    category: row.type ? row.type.charAt(0).toUpperCase() + row.type.slice(1) : 'Apartment',
+    category: safeCategory,
     bedrooms: bedsLabel,
     bathrooms: row.bathrooms ?? 1,
     maxGuests: row.max_guests ?? 2,
@@ -697,7 +703,7 @@ export default function PropertiesPage() {
                   <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-3 ml-4">
                     <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 010 4H2"/><path d="M2 16h14a2 2 0 010 4H2"/></svg>
                     <span className="font-medium text-gray-700">{p.bedrooms}</span>
-                    <span>{p.category}</span>
+                    {p.category !== 'Apartment' && <span>{p.category}</span>}
                     <span className="truncate max-w-[120px]">{p.location}</span>
                   </div>
 

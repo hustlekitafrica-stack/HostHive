@@ -19,6 +19,8 @@ export async function POST(req: NextRequest) {
 
     if (!guest_name?.trim()) return NextResponse.json({ error: 'Guest name is required' }, { status: 400 });
     if (!guest_phone?.trim()) return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    if (!guest_email?.trim()) return NextResponse.json({ error: 'Email address is required' }, { status: 400 });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guest_email.trim())) return NextResponse.json({ error: 'Please enter a valid email address' }, { status: 400 });
     if (!check_in || !check_out) return NextResponse.json({ error: 'Dates are required' }, { status: 400 });
     if (!room_details?.length) return NextResponse.json({ error: 'Please select at least one room' }, { status: 400 });
 

@@ -164,6 +164,8 @@ function CheckoutContent() {
     }
     if (!name.trim())  { setError('Please enter your full name.'); return; }
     if (!phone.trim()) { setError('Please enter your phone number.'); return; }
+    if (!email.trim()) { setError('Please enter your email address.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
     if (!property)     { setError('Room information not found.'); return; }
     if (nights <= 0)   { setError('Invalid dates. Please go back and select valid dates.'); return; }
 
@@ -304,7 +306,7 @@ function CheckoutContent() {
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Email <span className="text-gray-400 font-normal normal-case">(optional)</span></label>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Email <span className="text-red-500">*</span></label>
                   <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" type="email"
                     className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800 transition-colors" />
                 </div>

@@ -130,12 +130,14 @@ export default function StayHomePage() {
 
       {/* ═══ HERO ═══ */}
       <section className="relative pt-[36px] pb-8 px-2 sm:px-6 sm:pt-24" style={{ background: '#1e293b' }}>
-        {/* Desktop background image — place your hero image at /images/hero.jpg */}
-        <div
-          className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/images/hero.jpg')" }}
-        >
-          <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.72)' }} />
+        {/* Desktop background image */}
+        <div className="hidden sm:block absolute inset-0 overflow-hidden">
+          <img
+            src="/images/hero.jpg"
+            alt=""
+            className="w-full h-full object-cover object-center"
+          />
+          <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.65)' }} />
         </div>
         <div className="max-w-5xl mx-auto relative z-10">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
