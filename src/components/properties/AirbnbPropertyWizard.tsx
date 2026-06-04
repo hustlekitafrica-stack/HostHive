@@ -299,7 +299,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
         const active = (d.unit_types ?? []).filter((t: any) => t.is_active);
         if (active.length > 0) {
           setPropertyTypes(active.map((t: any) => ({
-            id: t.id,
+            id: t.name,
             label: t.name,
             desc: t.description || t.name,
           })));

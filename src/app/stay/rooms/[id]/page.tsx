@@ -650,6 +650,10 @@ function RoomDetailContent({ id }: { id: string }) {
 
   const photos: string[] = property.photos?.length ? property.photos : [];
   const amenities: string[] = property.amenities ?? [];
+  const isUUID = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+  const typeLabel = property.type && !isUUID(property.type)
+    ? property.type.charAt(0).toUpperCase() + property.type.slice(1)
+    : 'Room';
 
   const HOUSE_RULES = [
     { Icon: Clock,     label: `Check-in from ${property.check_in_time ?? '14:00'}` },
@@ -734,7 +738,7 @@ function RoomDetailContent({ id }: { id: string }) {
       <div className="block sm:hidden bg-white px-4 pt-5 pb-4">
         <h1 className="text-2xl font-bold text-gray-900 mb-1">{property.name}</h1>
         <p className="text-sm text-gray-600 mb-0.5">
-          {property.type ? `Entire ${property.type} in` : 'Property in'} {[property.city, 'Kenya'].filter(Boolean).join(', ')}
+          {`${typeLabel} in`} {[property.city, 'Kenya'].filter(Boolean).join(', ')}
         </p>
         <p className="text-sm text-gray-500 mb-4">
           {property.max_guests ?? 2} guest{(property.max_guests ?? 2) !== 1 ? 's' : ''} · 
@@ -827,7 +831,7 @@ function RoomDetailContent({ id }: { id: string }) {
       <div className="hidden sm:flex max-w-7xl mx-auto px-4 sm:px-6 py-4 flex-wrap items-center justify-between gap-3 overflow-hidden">
         <div>
           <p className="text-base font-semibold text-gray-900">
-            {(property.type ? property.type.charAt(0).toUpperCase() + property.type.slice(1) : 'Room')} in {[property.city, property.county, 'Kenya'].filter(Boolean).join(', ')}
+            {typeLabel} in {[property.city, property.county, 'Kenya'].filter(Boolean).join(', ')}
           </p>
           <p className="text-sm text-gray-500 mt-0.5">
             {property.max_guests ?? 2} guest{(property.max_guests ?? 2) !== 1 ? 's' : ''} · 
