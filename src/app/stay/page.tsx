@@ -35,9 +35,8 @@ const HIGHLIGHTS = [
 
 
 function RoomCard({ property }: { property: any; wishlisted: boolean; onToggle: (e: React.MouseEvent, id: string) => void }) {
-  const amenities: string[] = property.amenities ?? [];
   const beds = property.bedrooms ?? 1;
-  const badge = beds === 0 ? 'Studio' : amenities.some((a: string) => a.toLowerCase().includes('pool')) ? 'Pool Access' : 'Trending';
+  const badge = beds === 0 ? 'Studio' : beds === 1 ? '1 Bedroom' : `${beds} Bedrooms`;
   return (
     <Link href={`/stay/rooms/${property.id}`} className="group block">
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
@@ -45,14 +44,14 @@ function RoomCard({ property }: { property: any; wishlisted: boolean; onToggle: 
         <div className="relative aspect-[4/5]">
           <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-full" />
           {/* Badge */}
-          <div className="absolute top-3 left-3 z-10 bg-white rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-sm font-bold text-gray-900">{badge}</span>
+          <div className="absolute top-2 left-2 z-10 bg-white rounded-lg px-1.5 py-0.5 shadow-sm sm:top-3 sm:left-3 sm:rounded-xl sm:px-3 sm:py-1.5">
+            <span className="text-[10px] font-bold text-gray-900 sm:text-sm">{badge}</span>
           </div>
         </div>
         {/* Footer */}
-        <div className="flex items-center justify-between px-3 py-3 gap-2">
-          <p className="font-semibold text-gray-900 text-sm truncate min-w-0">{property.name}</p>
-          <span className="flex-shrink-0 bg-gray-100 rounded-full px-4 py-1.5 text-sm font-medium text-gray-600 whitespace-nowrap">
+        <div className="flex items-center justify-between px-2 py-2 gap-1 sm:px-3 sm:py-3 sm:gap-2">
+          <p className="font-semibold text-gray-900 text-[11px] truncate min-w-0 sm:text-sm">{property.name}</p>
+          <span className="flex-shrink-0 bg-gray-100 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-600 whitespace-nowrap sm:px-4 sm:py-1.5 sm:text-sm">
             See details
           </span>
         </div>
