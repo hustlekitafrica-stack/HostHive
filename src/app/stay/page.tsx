@@ -120,16 +120,16 @@ export default function StayHomePage() {
     <div className="bg-[#f8fafc]">
 
       {/* ═══ HERO ═══ */}
-      <section className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-2 sm:px-6 sm:pt-32 sm:pb-20" style={{ background: '#1e293b' }}>
-        {/* Desktop background image */}
-        <div className="hidden sm:block absolute inset-0 overflow-hidden">
-          <img
-            src="/images/hero.png"
-            alt=""
-            className="w-full h-full object-cover object-center"
-          />
-          <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.65)' }} />
-        </div>
+      <section
+        className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-2 sm:px-6 sm:pt-32 sm:pb-20"
+        style={{
+          background: '#1e293b',
+          backgroundImage: 'url(/images/hero.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.62)' }} />
         <div className="max-w-5xl mx-auto relative z-10">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
             Find your perfect stay
