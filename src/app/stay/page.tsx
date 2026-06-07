@@ -120,19 +120,12 @@ export default function StayHomePage() {
   return (
     <>
       {/* ═══ HERO ═══ */}
-      {/* Preload hero image silently */}
-      <img src="/images/hero.jpg" alt="" aria-hidden className="hidden" onLoad={() => setHeroLoaded(true)} />
       <section
-        className="relative w-full flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
-        style={{
-          backgroundImage: heroLoaded ? 'url(/images/hero.jpg)' : undefined,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
+        className="relative overflow-hidden w-full flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
       >
-        {heroLoaded && <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.50)' }} />}
-        <div className="max-w-5xl mx-auto relative z-10" style={{ transition: 'color 0.3s' }}>
+        <img src="/images/hero.jpg" alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover z-0" onLoad={() => setHeroLoaded(true)} />
+        {heroLoaded && <div className="absolute inset-0 z-[1]" style={{ background: 'rgba(0, 0, 0, 0.50)' }} />}
+        <div className="max-w-5xl mx-auto relative z-[2]" style={{ transition: 'color 0.3s' }}>
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black mb-2 leading-tight px-2 sm:px-0" style={{ color: heroLoaded ? '#fff' : '#111' }}>
             Find your perfect stay
           </h1>
