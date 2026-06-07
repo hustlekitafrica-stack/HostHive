@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicSupabase } from '@/lib/supabase/public';
 import { sendSmsBulk, buildGuestRequestSms, buildAdminRequestSms, normalizePhone } from '@/lib/sms';
+import { fireMakeBookingWebhook } from '@/lib/makeWebhook';
 
 export async function POST(req: NextRequest) {
   try {
@@ -58,9 +59,27 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     if (!data) return NextResponse.json({ error: 'Booking could not be created.' }, { status: 500 });
 
-    // ── Automated SMS (non-blocking) ────────────────────────────────────────
+    // ── Make.com webhook — AI-personalised emails (non-blocking) ────────────
     const firstRoom = Array.isArray(room_details) && room_details.length > 0 ? room_details[0] : null;
     const propertyName = firstRoom?.property_name ?? 'Kogelo Suites';
+
+    fireMakeBookingWebhook({
+      id:               data.id,
+      guest_name:       guest_name.trim(),
+      guest_email:      guest_email.trim(),
+      guest_phone:      guest_phone.trim(),
+      check_in,
+      check_out,
+      nights:           Number(nights),
+      room_name:        propertyName,
+      room_details:     Array.isArray(room_details) ? room_details : [],
+      total_amount:     Number(total_amount),
+      special_requests: special_requests.trim(),
+      admin_email:      process.env.ADMIN_EMAIL ?? '',
+    });
+    // ────────────────────────────────────────────────────────────────────────
+
+    // ── Automated SMS (non-blocking) ────────────────────────────────────────
     const adminPhone   = normalizePhone(process.env.ADMIN_PHONE ?? '');
     const guestE164    = normalizePhone(guest_phone.trim());
 

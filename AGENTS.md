@@ -17,6 +17,16 @@ SMS_FROM=KogeloSuite                                  # Fallback: used only when
 ADMIN_PHONE=+254700000000                             # Host/admin phone — receives booking notifications
 ```
 
+### Make.com — AI-personalised email notifications
+
+```
+MAKE_WEBHOOK_BOOKING_REQUEST=https://hook.eu2.make.com/xxxxxx  # Custom Webhook URL from your Make.com scenario
+ADMIN_EMAIL=you@example.com                                     # Admin email — forwarded in the webhook payload
+```
+
+Scenario flow: Webhook → OpenAI (guest email) → OpenAI (admin email) → Email to guest → Email to admin.
+If MAKE_WEBHOOK_BOOKING_REQUEST is absent, the webhook call is silently skipped.
+
 ### SMS (Africa's Talking — legacy, kept for reference)
 
 ```
