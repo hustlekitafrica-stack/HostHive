@@ -26,6 +26,9 @@ html {
 }
 
 body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), 'Plus Jakarta Sans', system-ui, sans-serif;

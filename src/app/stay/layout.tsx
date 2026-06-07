@@ -122,7 +122,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
   }, [router, pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
+    <div className="w-full min-h-screen flex flex-col" style={{ fontFamily: 'var(--font-sans), Plus Jakarta Sans, system-ui, sans-serif' }}>
 
       {/* ── Top Navigation ── */}
       {!isPropertyPage && <header className="fixed top-0 left-0 right-0 z-50" style={{ background: '#1e293b' }}>
@@ -297,7 +297,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
       )}
 
       {/* ── Page content ── */}
-      <main className={`flex-1${isPropertyPage ? '' : ' pt-14'}`} style={{ overflowX: 'clip' }}>
+      <main className={`w-full flex-1${isPropertyPage ? '' : ' pt-14'}`} style={{ overflowX: 'clip' }}>
         {children}
       </main>
 

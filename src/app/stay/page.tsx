@@ -69,6 +69,7 @@ export default function StayHomePage() {
   const [wishlistIds, setWishlistIds] = useState<Set<string>>(new Set());
   const [wishPending, setWishPending] = useState<Set<string>>(new Set());
   const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
+  const [heroLoaded, setHeroLoaded] = useState(false);
 
   const FALLBACK_DISHES = [
     { image_url: '/images/chicken-pilau.jpg',     name: 'Chicken Pilau',      description: 'Spiced basmati rice',     price: 700, badge: "\u2b50 Chef's Pick",   badge_color: '#D97706' },
@@ -119,22 +120,23 @@ export default function StayHomePage() {
   return (
     <>
       {/* ═══ HERO ═══ */}
+      {/* Preload hero image silently */}
+      <img src="/images/hero.jpg" alt="" aria-hidden className="hidden" onLoad={() => setHeroLoaded(true)} />
       <section
-        className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
+        className="relative w-full flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
         style={{
-          backgroundColor: '#000',
-          backgroundImage: 'url(/images/hero.jpg)',
+          backgroundImage: heroLoaded ? 'url(/images/hero.jpg)' : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
         }}
       >
-        <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.50)' }} />
-        <div className="max-w-5xl mx-auto relative z-10">
-          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
+        {heroLoaded && <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.50)' }} />}
+        <div className="max-w-5xl mx-auto relative z-10" style={{ transition: 'color 0.3s' }}>
+          <h1 className="text-2xl sm:text-4xl md:text-5xl font-black mb-2 leading-tight px-2 sm:px-0" style={{ color: heroLoaded ? '#fff' : '#111' }}>
             Find your perfect stay
           </h1>
-          <p className="text-white/80 text-sm sm:text-lg mb-7 px-2 sm:px-0">
+          <p className="text-sm sm:text-lg mb-7 px-2 sm:px-0" style={{ color: heroLoaded ? 'rgba(255,255,255,0.8)' : '#555' }}>
             Discover rooms, suites, and more at Kogelo Suites…
           </p>
 
