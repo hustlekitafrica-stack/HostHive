@@ -49,13 +49,23 @@ export interface BookingWebhookPayload {
  */
 export function fireMakeBookingWebhook(payload: BookingWebhookPayload): void {
   const webhookUrl = process.env.MAKE_WEBHOOK_BOOKING_REQUEST;
-  if (!webhookUrl) return;
+
+  if (!webhookUrl) {
+    console.warn('[Make.com] MAKE_WEBHOOK_BOOKING_REQUEST is not set — skipping webhook');
+    return;
+  }
+
+  console.log('[Make.com] Firing booking webhook for:', payload.guest_email, '| booking id:', payload.id);
 
   fetch(webhookUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
-  }).catch(err => {
-    console.error('[Make.com booking webhook]', err);
-  });
+  })
+    .then(res => {
+      console.log('[Make.com] Webhook response status:', res.status);
+    })
+    .catch(err => {
+      console.error('[Make.com] Webhook fetch error:', err);
+    });
 }
