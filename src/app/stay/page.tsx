@@ -117,23 +117,19 @@ export default function StayHomePage() {
   }, [router, wishPending]);
 
   return (
-    <div className="bg-[#f8fafc]">
-
+    <>
       {/* ═══ HERO ═══ */}
       <section
         className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
         style={{
-          backgroundColor: '#111',
+          backgroundColor: '#000',
           backgroundImage: 'url(/images/hero.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          width: '100vw',
-          left: '50%',
-          transform: 'translateX(-50%)',
         }}
       >
-        <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.62)' }} />
+        <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.50)' }} />
         <div className="max-w-5xl mx-auto relative z-10">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black text-white mb-2 leading-tight px-2 sm:px-0">
             Find your perfect stay
@@ -148,6 +144,7 @@ export default function StayHomePage() {
         </div>
       </section>
 
+      <div className="bg-[#f8fafc]">
       {/* ═══ ROOMS PREVIEW ═══ */}
       <section className="py-20 bg-white">
         <div className="px-4 sm:px-6 max-w-7xl mx-auto">
@@ -428,5 +425,6 @@ export default function StayHomePage() {
       </section>
 
     </div>
+    </>
   );
 }
