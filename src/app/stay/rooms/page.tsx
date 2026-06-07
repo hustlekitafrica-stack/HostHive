@@ -18,8 +18,8 @@ function normalizeType(t: string): string {
     '2br': 'Two Bedroom', 'two-bedroom': 'Two Bedroom', 'two bedroom': 'Two Bedroom',
   };
   const key = (t || '').toLowerCase();
-  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t)) return 'Room';
-  return m[key] || (t ? t.charAt(0).toUpperCase() + t.slice(1) : 'Room');
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(t)) return '';
+  return m[key] || (t ? t.charAt(0).toUpperCase() + t.slice(1) : '');
 }
 
 function RoomsContent() {
@@ -353,9 +353,11 @@ function RoomsContent() {
                 }`}>
                 <div className="relative">
                   <CardImageCarousel photos={p.photos ?? []} alt={p.name} height="h-52" />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
-                    {normalizeType(p.type || '')}
-                  </div>
+                  {normalizeType(p.type || '') && (
+                    <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-bold text-white capitalize z-10" style={{ background: '#16a34a' }}>
+                      {normalizeType(p.type || '')}
+                    </div>
+                  )}
                   {/* Heart / wishlist button */}
                   <button
                     onClick={e => toggleWishlist(e, p.id)}
