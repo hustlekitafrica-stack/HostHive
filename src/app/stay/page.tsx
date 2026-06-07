@@ -121,12 +121,13 @@ export default function StayHomePage() {
 
       {/* ═══ HERO ═══ */}
       <section
-        className="relative flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-2 sm:px-6 sm:pt-32 sm:pb-20"
+        className="relative flex flex-col justify-center w-full min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20"
         style={{
-          background: '#1e293b',
+          backgroundColor: '#111',
           backgroundImage: 'url(/images/hero.jpg)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
         <div className="absolute inset-0" style={{ background: 'rgba(15, 23, 42, 0.62)' }} />
