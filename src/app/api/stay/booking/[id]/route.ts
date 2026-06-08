@@ -132,17 +132,33 @@ export async function PATCH(
         coverPhotoUrl = propData?.cover_photo ?? '';
       }
 
-      // Fallback: look up email from guests table if booking_request has none
+      // Resolve guest email: booking field → guests table → auth.users (via guest_user_id)
       let guestEmail = req2.guest_email ?? '';
+
       if (!guestEmail && req2.guest_name) {
         const { data: guestRow } = await publicSupabase
-          .from('guests')
-          .select('email')
+          .from('guests').select('email')
           .ilike('name', (req2.guest_name as string).trim())
-          .not('email', 'is', null)
-          .neq('email', '')
-          .maybeSingle();
+          .not('email', 'is', null).neq('email', '').maybeSingle();
         guestEmail = guestRow?.email ?? '';
+      }
+
+      if (!guestEmail && req2.guest_user_id) {
+        try {
+          const { createClient: createAdmin } = await import('@supabase/supabase-js');
+          const adminClient = createAdmin(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+          const { data: authData } = await adminClient.auth.admin.getUserById(req2.guest_user_id);
+          guestEmail = authData?.user?.email ?? '';
+          if (guestEmail) {
+            await publicSupabase.from('booking_requests')
+              .update({ guest_email: guestEmail }).eq('id', req2.id);
+          }
+        } catch (e) {
+          console.error('[confirm] auth email lookup failed:', e);
+        }
       }
 
       fireMakeConfirmationWebhook({
