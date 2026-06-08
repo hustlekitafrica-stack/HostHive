@@ -45,6 +45,7 @@ export interface BookingWebhookPayload {
 
 export interface ConfirmationWebhookPayload {
   id: string;
+  short_ref: string;
   guest_name: string;
   guest_email: string;
   guest_phone: string;
@@ -53,6 +54,7 @@ export interface ConfirmationWebhookPayload {
   nights: number;
   room_name: string;
   room_details: unknown[];
+  cover_photo_url: string;
   total_amount: number;
   special_requests: string;
   admin_email: string;

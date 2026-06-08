@@ -122,8 +122,19 @@ export async function PATCH(
 
     // ── Make.com confirmation emails (non-blocking) ──────────────────────────
     if (status === 'confirmed') {
+      const shortRef = String(Math.floor(1000000 + parseInt(req2.id.replace(/-/g, '').slice(0, 9), 16) % 9000000));
+
+      let coverPhotoUrl = '';
+      const firstPropertyId = rooms[0]?.property_id;
+      if (firstPropertyId) {
+        const { data: propData } = await publicSupabase
+          .from('properties').select('cover_photo').eq('id', firstPropertyId).single();
+        coverPhotoUrl = propData?.cover_photo ?? '';
+      }
+
       fireMakeConfirmationWebhook({
         id:               req2.id,
+        short_ref:        shortRef,
         guest_name:       req2.guest_name ?? '',
         guest_email:      req2.guest_email ?? '',
         guest_phone:      req2.guest_phone ?? '',
@@ -132,6 +143,7 @@ export async function PATCH(
         nights:           Number(req2.nights),
         room_name:        propName,
         room_details:     rooms,
+        cover_photo_url:  coverPhotoUrl,
         total_amount:     Number(req2.total_amount),
         special_requests: req2.special_requests ?? '',
         admin_email:      process.env.ADMIN_EMAIL ?? '',
