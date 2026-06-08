@@ -132,11 +132,24 @@ export async function PATCH(
         coverPhotoUrl = propData?.cover_photo ?? '';
       }
 
+      // Fallback: look up email from guests table if booking_request has none
+      let guestEmail = req2.guest_email ?? '';
+      if (!guestEmail && req2.guest_name) {
+        const { data: guestRow } = await publicSupabase
+          .from('guests')
+          .select('email')
+          .ilike('name', (req2.guest_name as string).trim())
+          .not('email', 'is', null)
+          .neq('email', '')
+          .maybeSingle();
+        guestEmail = guestRow?.email ?? '';
+      }
+
       fireMakeConfirmationWebhook({
         id:               req2.id,
         short_ref:        shortRef,
         guest_name:       req2.guest_name ?? '',
-        guest_email:      req2.guest_email ?? '',
+        guest_email:      guestEmail,
         guest_phone:      req2.guest_phone ?? '',
         check_in:         req2.check_in,
         check_out:        req2.check_out,
