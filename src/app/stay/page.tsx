@@ -63,6 +63,7 @@ function RoomCard({ property }: { property: any; wishlisted: boolean; onToggle: 
 export default function StayHomePage() {
   const router = useRouter();
   const [properties, setProperties] = useState<any[]>([]);
+  const [propertiesLoaded, setPropertiesLoaded] = useState(false);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [revIdx, setRevIdx] = useState(0);
   const reviewScrollRef = useRef<HTMLDivElement>(null);
@@ -81,8 +82,8 @@ export default function StayHomePage() {
   useEffect(() => {
     fetch('/api/stay/properties')
       .then(r => r.json())
-      .then(d => setProperties(d.properties ?? []))
-      .catch(() => {});
+      .then(d => { setProperties(d.properties ?? []); setPropertiesLoaded(true); })
+      .catch(() => { setPropertiesLoaded(true); });
     fetch('/api/stay/reviews')
       .then(r => r.json())
       .then(d => setReviews(d.reviews ?? []))
@@ -147,22 +148,14 @@ export default function StayHomePage() {
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#16a34a' }}>Choose Your Space</p>
               <h2 className="text-3xl sm:text-4xl font-black text-gray-900">Our Rooms</h2>
-              <p className="text-gray-500 mt-2">{properties.length} unit{properties.length !== 1 ? 's' : ''} available — studios to suites, all in one exclusive compound.</p>
+              <p className="text-gray-500 mt-2">{propertiesLoaded ? `${properties.length} unit${properties.length !== 1 ? 's' : ''} available` : 'Loading available rooms…'} — studios to suites, all in one exclusive compound.</p>
             </div>
             <Link href="/stay/rooms" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-bold hover:gap-3 transition-all" style={{ color: '#16a34a' }}>
               View all rooms →
             </Link>
           </div>
 
-          {properties.length > 0 ? (
-            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
-              {properties.slice(0, 8).map(p => (
-                <div key={p.id} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto">
-                  <RoomCard property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
-                </div>
-              ))}
-            </div>
-          ) : (
+          {!propertiesLoaded ? (
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
               {[1,2,3,4].map(i => (
                 <div key={i} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 animate-pulse">
@@ -173,6 +166,27 @@ export default function StayHomePage() {
                   </div>
                 </div>
               ))}
+            </div>
+          ) : properties.length > 0 ? (
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:gap-5 md:overflow-visible md:pb-0">
+              {properties.slice(0, 8).map(p => (
+                <div key={p.id} className="flex-shrink-0 w-[46vw] sm:w-56 md:w-auto">
+                  <RoomCard property={p} wishlisted={wishlistIds.has(p.id)} onToggle={toggleWishlist} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 px-4 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 text-center">
+              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">No rooms available right now</h3>
+              <p className="text-gray-500 text-sm max-w-xs">All units are currently occupied. Please check back soon or contact us directly to enquire about upcoming availability.</p>
+              <a href="tel:+254700000000" className="mt-6 inline-flex items-center gap-2 py-2.5 px-6 rounded-xl text-sm font-bold text-white" style={{ background: '#16a34a' }}>
+                Contact Us
+              </a>
             </div>
           )}
 
