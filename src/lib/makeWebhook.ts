@@ -43,6 +43,49 @@ export interface BookingWebhookPayload {
   admin_email: string;
 }
 
+export interface ConfirmationWebhookPayload {
+  id: string;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string;
+  check_in: string;
+  check_out: string;
+  nights: number;
+  room_name: string;
+  room_details: unknown[];
+  total_amount: number;
+  special_requests: string;
+  admin_email: string;
+}
+
+/**
+ * Fire-and-forget POST to the Make.com booking-confirmed webhook.
+ * Triggered when a host accepts a booking request.
+ * Never throws — errors are logged but do not affect the caller.
+ */
+export function fireMakeConfirmationWebhook(payload: ConfirmationWebhookPayload): void {
+  const webhookUrl = process.env.MAKE_WEBHOOK_BOOKING_CONFIRMED;
+
+  if (!webhookUrl) {
+    console.warn('[Make.com] MAKE_WEBHOOK_BOOKING_CONFIRMED is not set — skipping confirmation webhook');
+    return;
+  }
+
+  console.log('[Make.com] Firing confirmation webhook for:', payload.guest_email, '| booking id:', payload.id);
+
+  fetch(webhookUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+    .then(res => {
+      console.log('[Make.com] Confirmation webhook response status:', res.status);
+    })
+    .catch(err => {
+      console.error('[Make.com] Confirmation webhook fetch error:', err);
+    });
+}
+
 /**
  * Fire-and-forget POST to the Make.com booking-request webhook.
  * Never throws — errors are logged but do not affect the caller.

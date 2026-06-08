@@ -20,12 +20,14 @@ ADMIN_PHONE=+254700000000                             # Host/admin phone — rec
 ### Make.com — AI-personalised email notifications
 
 ```
-MAKE_WEBHOOK_BOOKING_REQUEST=https://hook.eu2.make.com/xxxxxx  # Custom Webhook URL from your Make.com scenario
-ADMIN_EMAIL=you@example.com                                     # Admin email — forwarded in the webhook payload
+MAKE_WEBHOOK_BOOKING_REQUEST=https://hook.eu2.make.com/xxxxxx   # Fired on new booking request
+MAKE_WEBHOOK_BOOKING_CONFIRMED=https://hook.eu2.make.com/xxxxxx # Fired when host accepts a booking
+ADMIN_EMAIL=you@example.com                                      # Admin email — forwarded in both payloads
 ```
 
-Scenario flow: Webhook → OpenAI (guest email) → OpenAI (admin email) → Email to guest → Email to admin.
-If MAKE_WEBHOOK_BOOKING_REQUEST is absent, the webhook call is silently skipped.
+Booking request scenario:  Webhook → Email to guest (request received) → Email to admin (new request).
+Booking confirmed scenario: Webhook → Email to guest (booking confirmed) → Email to admin (booking confirmed).
+If either webhook env var is absent, that call is silently skipped.
 
 ### SMS (Africa's Talking — legacy, kept for reference)
 

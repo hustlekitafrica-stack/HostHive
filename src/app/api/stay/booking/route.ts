@@ -4,8 +4,10 @@ import { sendSmsBulk, buildGuestRequestSms, buildAdminRequestSms, normalizePhone
 import { fireMakeBookingWebhook } from '@/lib/makeWebhook';
 
 export async function POST(req: NextRequest) {
+  console.log('[booking] POST received');
   try {
     const body = await req.json();
+    console.log('[booking] body parsed, guest_email:', body.guest_email ?? '(missing)');
     const {
       guest_name, guest_phone, guest_email = '',
       check_in, check_out, nights,
@@ -56,8 +58,12 @@ export async function POST(req: NextRequest) {
         .single());
     }
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error('[booking] Supabase insert error:', error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     if (!data) return NextResponse.json({ error: 'Booking could not be created.' }, { status: 500 });
+    console.log('[booking] insert OK, id:', data.id, '— firing Make.com webhook');
 
     // ── Make.com webhook — AI-personalised emails (non-blocking) ────────────
     const firstRoom = Array.isArray(room_details) && room_details.length > 0 ? room_details[0] : null;

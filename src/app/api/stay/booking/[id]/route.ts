@@ -8,6 +8,7 @@ import {
   buildAdminConfirmedSms,
   normalizePhone,
 } from '@/lib/sms';
+import { fireMakeConfirmationWebhook } from '@/lib/makeWebhook';
 
 /** PATCH /api/stay/booking/[id] — host accepts or declines a booking request */
 export async function PATCH(
@@ -118,6 +119,25 @@ export async function PATCH(
     const propName   = rooms[0]?.property_name ?? 'Kogelo Suites';
     const adminPhone = normalizePhone(process.env.ADMIN_PHONE ?? '');
     const guestE164  = normalizePhone(req2.guest_phone ?? '');
+
+    // ── Make.com confirmation emails (non-blocking) ──────────────────────────
+    if (status === 'confirmed') {
+      fireMakeConfirmationWebhook({
+        id:               req2.id,
+        guest_name:       req2.guest_name ?? '',
+        guest_email:      req2.guest_email ?? '',
+        guest_phone:      req2.guest_phone ?? '',
+        check_in:         req2.check_in,
+        check_out:        req2.check_out,
+        nights:           Number(req2.nights),
+        room_name:        propName,
+        room_details:     rooms,
+        total_amount:     Number(req2.total_amount),
+        special_requests: req2.special_requests ?? '',
+        admin_email:      process.env.ADMIN_EMAIL ?? '',
+      });
+    }
+    // ────────────────────────────────────────────────────────────────────────
 
     if (status === 'confirmed') {
       const messages = [
