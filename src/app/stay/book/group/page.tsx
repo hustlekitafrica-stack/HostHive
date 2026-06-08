@@ -25,6 +25,7 @@ function GroupBookingContent() {
   const [groupName,  setGroupName]  = useState('');
   const [name,       setName]       = useState('');
   const [phone,      setPhone]      = useState('');
+  const [email,      setEmail]      = useState('');
   const [requests,   setRequests]   = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error,      setError]      = useState('');
@@ -64,6 +65,8 @@ function GroupBookingContent() {
     setError('');
     if (!name.trim())          { setError('Please enter the group leader name.'); return; }
     if (!phone.trim())         { setError('Please enter a phone number.'); return; }
+    if (!email.trim())         { setError('Please enter an email address.'); return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
     if (nights <= 0)           { setError('Please select valid dates.'); return; }
     if (selected.length === 0) { setError('Please select at least one room.'); return; }
     setSubmitting(true);
@@ -72,7 +75,7 @@ function GroupBookingContent() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          guest_name: name.trim(), guest_phone: phone.trim(), guest_email: '',
+          guest_name: name.trim(), guest_phone: phone.trim(), guest_email: email.trim(),
           check_in: checkIn, check_out: checkOut, nights,
           num_adults: adults, num_children: children,
           room_details: selected.map(r => ({
@@ -328,6 +331,11 @@ function GroupBookingContent() {
                   <div>
                     <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Phone Number *</label>
                     <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="07XX XXX XXX" type="tel"
+                      className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Email Address *</label>
+                    <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" type="email"
                       className="w-full text-sm border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-red-800" />
                   </div>
                   <div>

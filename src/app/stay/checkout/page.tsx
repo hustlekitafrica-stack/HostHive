@@ -82,7 +82,7 @@ function CheckoutContent() {
         const meta = data.user.user_metadata ?? {};
         const u: AuthUser = {
           id:    data.user.id,
-          email: data.user.email ?? meta.profile_email ?? '',
+          email: meta.profile_email || data.user.email || '',
           name:  meta.full_name ?? meta.name ?? '',
           phone: data.user.phone ?? meta.phone ?? '',
         };
@@ -202,6 +202,11 @@ function CheckoutContent() {
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setBookingRef(data.id ?? '');
+      // Persist the email the guest used so it pre-fills on their next booking
+      try {
+        const supabase = createClient();
+        await supabase.auth.updateUser({ data: { profile_email: email.trim() } });
+      } catch { /* non-critical */ }
       setSuccess(true);
       setConfetti(true);
       setTimeout(() => setConfetti(false), 7000);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu, MessageSquare, Receipt } from 'lucide-react';
+import { Clock, CheckCircle2, XCircle, BedDouble, Calendar, Phone, User, MessageCircle, RefreshCw, Send, CreditCard, AlertCircle, Menu, MessageSquare, Receipt, Mail } from 'lucide-react';
 
 type BookingRequest = {
   id: string; created_at: string; guest_name: string; guest_phone: string; guest_email: string;
@@ -538,6 +538,12 @@ export default function RequestsPage() {
                   <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <span className="text-sm text-gray-600">{req.guest_phone}</span>
                 </div>
+                {req.guest_email && (
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <span className="text-sm text-gray-600">{req.guest_email}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
                   <span className="text-sm text-gray-600">{req.check_in} → {req.check_out} · {req.nights} night{req.nights !== 1 ? 's' : ''}</span>

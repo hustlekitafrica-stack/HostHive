@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
   let query = publicSupabase
     .from('booking_requests')
-    .select('id, created_at, guest_name, guest_phone, check_in, check_out, nights, num_adults, num_children, room_details, total_amount, special_requests, status, updated_at')
+    .select('id, created_at, guest_name, guest_phone, guest_email, check_in, check_out, nights, num_adults, num_children, room_details, total_amount, special_requests, status, updated_at')
     .order('created_at', { ascending: false });
 
   if (userId) {
