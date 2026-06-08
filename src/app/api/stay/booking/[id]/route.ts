@@ -134,16 +134,20 @@ export async function PATCH(
 
       // Resolve guest email: booking field → guests table → auth.users (via guest_user_id)
       let guestEmail = req2.guest_email ?? '';
+      console.log('[confirm] email step 1 - from booking_requests:', guestEmail || '(empty)');
 
       if (!guestEmail && req2.guest_name) {
+        console.log('[confirm] email step 2 - looking up guests table by name:', req2.guest_name);
         const { data: guestRow } = await publicSupabase
           .from('guests').select('email')
           .ilike('name', (req2.guest_name as string).trim())
           .not('email', 'is', null).neq('email', '').maybeSingle();
         guestEmail = guestRow?.email ?? '';
+        console.log('[confirm] email step 2 - guests table result:', guestEmail || '(not found)');
       }
 
       if (!guestEmail && req2.guest_user_id) {
+        console.log('[confirm] email step 3 - looking up auth.users by guest_user_id:', req2.guest_user_id);
         try {
           const { createClient: createAdmin } = await import('@supabase/supabase-js');
           const adminClient = createAdmin(
@@ -152,14 +156,18 @@ export async function PATCH(
           );
           const { data: authData } = await adminClient.auth.admin.getUserById(req2.guest_user_id);
           guestEmail = authData?.user?.email ?? '';
+          console.log('[confirm] email step 3 - auth.users result:', guestEmail || '(not found)');
           if (guestEmail) {
             await publicSupabase.from('booking_requests')
               .update({ guest_email: guestEmail }).eq('id', req2.id);
+            console.log('[confirm] email step 3 - saved to booking_requests');
           }
         } catch (e) {
           console.error('[confirm] auth email lookup failed:', e);
         }
       }
+
+      console.log('[confirm] final guest_email for webhook:', guestEmail || '(STILL EMPTY)');
 
       fireMakeConfirmationWebhook({
         id:               req2.id,
