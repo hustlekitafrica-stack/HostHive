@@ -72,9 +72,20 @@ export default function GuestProfilePage() {
       if (user) {
         setLoggedIn(true);
         const meta = user.user_metadata ?? {};
+        const resolvedName = (meta.full_name as string) || (meta.name as string) || '';
         setEmail(user.email || (meta.profile_email as string) || '');
-        setName((meta.full_name as string) || (meta.name as string) || 'Guest');
         setPhone(user.phone || (meta.phone as string) || '');
+        setName(resolvedName || 'Guest');
+
+        if (!resolvedName) {
+          try {
+            const res = await fetch(`/api/stay/my-bookings?userId=${user.id}`);
+            const d = await res.json();
+            const prev = d.bookings?.[0];
+            if (prev?.guest_name) setName(prev.guest_name);
+            if (!user.phone && !(meta.phone as string) && prev?.guest_phone) setPhone(prev.guest_phone);
+          } catch { /* non-critical */ }
+        }
       }
 
       setLoading(false);
