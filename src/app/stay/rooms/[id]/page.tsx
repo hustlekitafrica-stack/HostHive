@@ -2,9 +2,20 @@ import { notFound } from 'next/navigation';
 import { MapPin, Clock, DoorOpen, ShieldOff, PawPrint, VolumeX } from 'lucide-react';
 import { publicSupabase } from '@/lib/supabase/public';
 import { isUUID, toRoomSlug } from '@/lib/stay/roomSlug';
+
 import RoomDetailGallery from '@/components/stay/room-detail/RoomDetailGallery';
 import RoomDetailBooking from '@/components/stay/room-detail/RoomDetailBooking';
 import RoomDetailReviews from '@/components/stay/room-detail/RoomDetailReviews';
+
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const { data } = await publicSupabase
+    .from('properties')
+    .select('id, slug')
+    .eq('status', 'active');
+  return (data ?? []).map(p => ({ id: p.slug || p.id }));
+}
 
 const IC = 'w-6 h-6 flex-shrink-0';
 

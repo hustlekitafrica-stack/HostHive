@@ -133,6 +133,16 @@ export default async function RoomDetailLayout({
       }
     : null;
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home',  item: `${BASE_URL}/stay` },
+      { '@type': 'ListItem', position: 2, name: 'Rooms', item: `${BASE_URL}/stay/rooms` },
+      { '@type': 'ListItem', position: 3, name: property?.name ?? 'Room' },
+    ],
+  };
+
   return (
     <>
       {roomJsonLd && (
@@ -141,6 +151,10 @@ export default async function RoomDetailLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(roomJsonLd) }}
         />
       )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
       {children}
     </>
   );

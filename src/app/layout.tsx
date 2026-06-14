@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
@@ -17,6 +17,10 @@ const geistMono = Geist_Mono({
 });
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kogelosuites.com';
+
+export const viewport: Viewport = {
+  themeColor: '#0f766e',
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -38,7 +42,6 @@ export const metadata: Metadata = {
   creator: 'Kogelo Suites',
   icons: { icon: '/favicon.ico' },
   manifest: '/manifest.json',
-  themeColor: '#0f766e',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',

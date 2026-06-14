@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import SearchWidget from '@/components/stay/SearchWidget';
 import {
   Waves, Utensils, Wifi, Car, Bell, Leaf, ShieldCheck, Sparkles,
@@ -31,7 +32,7 @@ const FALLBACK_DISHES = [
 export default async function StayHomePage() {
   const hostId = process.env.STAY_HOST_USER_ID;
 
-  const [properties, reviewsResult, dishesResult] = await Promise.all([
+  const [properties, reviewsResult, dishesResult, ratingResult] = await Promise.all([
     fetchAvailableProperties(),
     (async () => {
       let q = publicSupabase
@@ -54,18 +55,46 @@ export default async function StayHomePage() {
       const { data } = await q;
       return data ?? [];
     })(),
+    (async () => {
+      const { data } = await publicSupabase
+        .from('property_reviews')
+        .select('rating')
+        .not('rating', 'is', null);
+      if (!data || data.length === 0) return null;
+      const avg = data.reduce((s, r) => s + (r.rating ?? 0), 0) / data.length;
+      return { avg: Math.round(avg * 10) / 10, count: data.length };
+    })(),
   ]);
 
   const dishes = dishesResult.length > 0 ? dishesResult : FALLBACK_DISHES;
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kogelosuites.com';
+  const aggregateRatingLd = ratingResult ? {
+    '@context': 'https://schema.org',
+    '@type': 'LodgingBusiness',
+    '@id': `${BASE_URL}/stay`,
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: ratingResult.avg,
+      reviewCount: ratingResult.count,
+      bestRating: 5,
+      worstRating: 1,
+    },
+  } : null;
   const poolside = properties.filter(p =>
     (p.amenities ?? []).some((a: string) => a.toLowerCase().includes('pool'))
   );
 
   return (
     <>
+      {aggregateRatingLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(aggregateRatingLd) }}
+        />
+      )}
       {/* ═══ HERO ═══ */}
       <section className="relative overflow-hidden w-full flex flex-col justify-center min-h-[260px] sm:min-h-[520px] pt-[36px] pb-10 px-4 sm:px-8 sm:pt-32 sm:pb-20">
-        <img src="/images/hero.jpg" alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover z-0" />
+        <Image src="/images/hero.jpg" alt="" aria-hidden fill priority className="object-cover z-0" />
         <div className="absolute inset-0 z-[1]" style={{ background: 'rgba(0,0,0,0.50)' }} />
         <div className="max-w-5xl mx-auto relative z-[2]">
           <h1 className="text-2xl sm:text-4xl md:text-5xl font-black mb-2 leading-tight px-2 sm:px-0 text-white">
