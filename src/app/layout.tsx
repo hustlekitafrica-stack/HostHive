@@ -25,18 +25,20 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'Kogelo Suites — Hotel & Accommodation in Kogelo, Kenya',
+    default: 'Kogelo Suites — Hotel & Accommodation in Kisumu, Kenya',
     template: '%s | Kogelo Suites',
   },
   description:
-    'Book your stay at Kogelo Suites in Kogelo, Siaya County, Kenya. Comfortable rooms, swimming pool, restaurant, free WiFi and 24/7 security. Ideal for leisure and business travellers.',
+    'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests — any time of day. Experience genuine Kenyan hospitality at Kogelo Suites on Museum Road, Kisumu, Kenya.',
   keywords: [
     'Kogelo Suites',
-    'hotel Kogelo',
-    'accommodation Siaya Kenya',
-    'rooms Kogelo',
+    'hotel Kisumu',
+    'accommodation Kisumu Kenya',
+    'hotel Museum Road Kisumu',
+    'rooms with kitchenette Kisumu',
+    'swimming pool hotel Kisumu',
+    'restaurant and bar Kisumu',
     'book hotel Kenya',
-    'Kogelo village hotel',
   ],
   authors: [{ name: 'Kogelo Suites' }],
   creator: 'Kogelo Suites',
@@ -52,23 +54,23 @@ export const metadata: Metadata = {
     locale: 'en_KE',
     url: `${BASE_URL}/stay`,
     siteName: 'Kogelo Suites',
-    title: 'Kogelo Suites — Hotel & Accommodation in Kogelo, Kenya',
+    title: 'Kogelo Suites — Hotel & Accommodation in Kisumu, Kenya',
     description:
-      'Book your stay at Kogelo Suites in Kogelo, Siaya County, Kenya. Comfortable rooms, swimming pool, restaurant, free WiFi and 24/7 security.',
+      'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests. Kogelo Suites on Museum Road, Kisumu, Kenya.',
     images: [
       {
         url: '/images/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Kogelo Suites — Hotel in Kogelo, Kenya',
+        alt: 'Kogelo Suites — Hotel on Museum Road, Kisumu, Kenya',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Kogelo Suites — Hotel & Accommodation in Kogelo, Kenya',
+    title: 'Kogelo Suites — Hotel & Accommodation in Kisumu, Kenya',
     description:
-      'Book your stay at Kogelo Suites in Kogelo, Siaya County, Kenya.',
+      'Fully furnished rooms with kitchenettes, restaurant & bar, and a pool open 24/7. Kogelo Suites, Museum Road, Kisumu.',
     images: ['/images/og-image.jpg'],
   },
   alternates: {
@@ -82,18 +84,18 @@ const lodgingBusinessJsonLd = {
   name: 'Kogelo Suites',
   url: `${BASE_URL}/stay`,
   description:
-    'Kogelo Suites is a comfortable hotel and accommodation facility located in Kogelo village, Siaya County, Kenya, offering rooms, suites, a restaurant, swimming pool, and free WiFi.',
+    'Kogelo Suites is a hotel on Museum Road, Kisumu, Kenya, offering fully furnished rooms with kitchenettes, a restaurant and bar, and a swimming pool accessible to all guests at any time.',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'Kogelo Village',
-    addressLocality: 'Kogelo',
-    addressRegion: 'Siaya County',
+    streetAddress: 'Museum Road',
+    addressLocality: 'Kisumu',
+    addressRegion: 'Kisumu County',
     addressCountry: 'KE',
   },
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: '0.1971',
-    longitude: '34.3516',
+    latitude: '-0.1022',
+    longitude: '34.7617',
   },
   telephone: process.env.ADMIN_PHONE || '',
   starRating: {
