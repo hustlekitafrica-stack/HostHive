@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
 import type { StayProperty } from '@/lib/stay/fetchProperties';
+import { toRoomSlug } from '@/lib/stay/roomSlug';
 
 function RoomCard({ property, wishlisted, onToggle }: {
   property: StayProperty;
@@ -15,7 +16,7 @@ function RoomCard({ property, wishlisted, onToggle }: {
   const beds = property.bedrooms ?? 1;
   const badge = beds === 0 ? 'Studio' : beds === 1 ? '1 Bedroom' : `${beds} Bedrooms`;
   return (
-    <Link href={`/stay/rooms/${property.id}`} className="group block">
+    <Link href={`/stay/rooms/${toRoomSlug(property.name, property.id)}`} className="group block">
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
         <div className="relative aspect-[4/5]">
           <CardImageCarousel photos={property.photos ?? []} alt={property.name} height="h-full" />

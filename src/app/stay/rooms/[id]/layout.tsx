@@ -1,12 +1,14 @@
 import type { Metadata } from 'next';
 import { publicSupabase } from '@/lib/supabase/public';
+import { idFromSlug } from '@/lib/stay/roomSlug';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kogelosuites.com';
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
-  const { id } = await params;
+  const { id: slug } = await params;
+  const id = idFromSlug(slug);
 
   const { data: property } = await publicSupabase
     .from('properties')
@@ -42,12 +44,12 @@ export async function generateMetadata(
     title,
     description,
     alternates: {
-      canonical: `${BASE_URL}/stay/rooms/${id}`,
+      canonical: `${BASE_URL}/stay/rooms/${slug}`,
     },
     openGraph: {
       title: `${title} | Kogelo Suites`,
       description,
-      url: `${BASE_URL}/stay/rooms/${id}`,
+      url: `${BASE_URL}/stay/rooms/${slug}`,
       siteName: 'Kogelo Suites',
       images: [
         {
@@ -76,7 +78,8 @@ export default async function RoomDetailLayout({
   children: React.ReactNode;
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params;
+  const { id: slug } = await params;
+  const id = idFromSlug(slug);
 
   const [{ data: property }, { data: photos }] = await Promise.all([
     publicSupabase
@@ -101,7 +104,7 @@ export default async function RoomDetailLayout({
         description:
           property.description ||
           `A comfortable room at Kogelo Suites, Kogelo, Kenya.`,
-        url: `${BASE_URL}/stay/rooms/${id}`,
+        url: `${BASE_URL}/stay/rooms/${slug}`,
         image: photos?.map((p) => p.url) ?? [],
         occupancy: {
           '@type': 'QuantitativeValue',

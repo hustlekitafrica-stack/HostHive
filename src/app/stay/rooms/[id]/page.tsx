@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { MapPin, Clock, DoorOpen, ShieldOff, PawPrint, VolumeX } from 'lucide-react';
 import { publicSupabase } from '@/lib/supabase/public';
+import { idFromSlug, toRoomSlug } from '@/lib/stay/roomSlug';
 import RoomDetailGallery from '@/components/stay/room-detail/RoomDetailGallery';
 import RoomDetailBooking from '@/components/stay/room-detail/RoomDetailBooking';
 import RoomDetailReviews from '@/components/stay/room-detail/RoomDetailReviews';
@@ -38,7 +39,8 @@ export default async function RoomDetailPage({
 }: {
   params: PageParams; searchParams: SearchParams;
 }) {
-  const { id } = await params;
+  const { id: slug } = await params;
+  const id = idFromSlug(slug);
   const sp = await searchParams;
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -87,7 +89,7 @@ export default async function RoomDetailPage({
     <div className="min-h-screen bg-[#f8fafc]" style={{ overflowX: 'clip' }}>
 
       {/* Photo gallery + wishlist — client interactive */}
-      <RoomDetailGallery photos={photos} propertyName={property.name} propertyId={id} />
+      <RoomDetailGallery photos={photos} propertyName={property.name} propertyId={id} propertySlug={toRoomSlug(property.name, id)} />
 
       {/* Mobile hero info — server rendered */}
       <div className="block sm:hidden bg-white px-4 pt-5 pb-4">

@@ -10,9 +10,10 @@ interface Props {
   photos: string[];
   propertyName: string;
   propertyId: string;
+  propertySlug: string;
 }
 
-export default function RoomDetailGallery({ photos, propertyName, propertyId }: Props) {
+export default function RoomDetailGallery({ photos, propertyName, propertyId, propertySlug }: Props) {
   const router = useRouter();
   const [photoIdx,    setPhotoIdx]    = useState(0);
   const [lightbox,    setLightbox]    = useState(false);
@@ -25,7 +26,7 @@ export default function RoomDetailGallery({ photos, propertyName, propertyId }: 
   const handleWishlist = async () => {
     const supabase = createClient();
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) { router.push(`/stay/auth?redirect=/stay/rooms/${propertyId}`); return; }
+    if (!session?.user) { router.push(`/stay/auth?redirect=/stay/rooms/${propertySlug}`); return; }
     setWishLoading(true);
     const res  = await fetch('/api/stay/wishlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ property_id: propertyId }) });
     const data = await res.json();

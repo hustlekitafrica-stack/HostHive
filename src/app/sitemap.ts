@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { publicSupabase } from '@/lib/supabase/public';
+import { toRoomSlug } from '@/lib/stay/roomSlug';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://kogelosuites.com';
@@ -28,11 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: properties } = await publicSupabase
       .from('properties')
-      .select('id, updated_at')
+      .select('id, name, updated_at')
       .eq('status', 'active');
 
     const roomPages: MetadataRoute.Sitemap = (properties ?? []).map((p) => ({
-      url: `${baseUrl}/stay/rooms/${p.id}`,
+      url: `${baseUrl}/stay/rooms/${toRoomSlug(p.name, p.id)}`,
       lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,
