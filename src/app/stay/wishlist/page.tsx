@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { BedDouble, Droplets, Users, Heart, Search } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import CardImageCarousel from '@/components/stay/CardImageCarousel';
+import { toRoomSlug } from '@/lib/stay/roomSlug';
 
 export default function WishlistPage() {
   const router = useRouter();
@@ -116,7 +117,7 @@ export default function WishlistPage() {
                     <Heart className="w-4 h-4 text-white fill-white" />
                   </button>
                 </div>
-                <Link href={`/stay/rooms/${p.id}`} className="block p-4">
+                <Link href={`/stay/rooms/${toRoomSlug(p.slug, p.name, p.id)}`} className="block p-4">
                   <h3 className="font-bold text-gray-900 mb-1 truncate">{p.name}</h3>
                   <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
                     <span className="flex items-center gap-1"><BedDouble className="w-3 h-3" /> {p.bedrooms ?? 1}</span>

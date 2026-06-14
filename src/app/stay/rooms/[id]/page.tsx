@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { MapPin, Clock, DoorOpen, ShieldOff, PawPrint, VolumeX } from 'lucide-react';
 import { publicSupabase } from '@/lib/supabase/public';
-import { idFromSlug, toRoomSlug } from '@/lib/stay/roomSlug';
+import { isUUID, toRoomSlug } from '@/lib/stay/roomSlug';
 import RoomDetailGallery from '@/components/stay/room-detail/RoomDetailGallery';
 import RoomDetailBooking from '@/components/stay/room-detail/RoomDetailBooking';
 import RoomDetailReviews from '@/components/stay/room-detail/RoomDetailReviews';
@@ -40,7 +40,6 @@ export default async function RoomDetailPage({
   params: PageParams; searchParams: SearchParams;
 }) {
   const { id: slug } = await params;
-  const id = idFromSlug(slug);
   const sp = await searchParams;
   const today    = new Date().toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -48,13 +47,18 @@ export default async function RoomDetailPage({
   const initialCheckOut = sp.checkOut ?? tomorrow;
   const initialGuests   = Number(sp.guests ?? 1);
 
-  const [propResult, photosResult, amenitiesResult] = await Promise.all([
-    publicSupabase
-      .from('properties')
-      .select('id, name, type, description, location, city, county, bedrooms, bathrooms, max_guests, nightly_rate, check_in_time, check_out_time, cancellation_policy, house_rules, cover_photo, status')
-      .eq('id', id)
-      .eq('status', 'active')
-      .single(),
+  const propCol = isUUID(slug) ? 'id' : 'slug';
+  const { data: property } = await publicSupabase
+    .from('properties')
+    .select('id, name, type, description, location, city, county, bedrooms, bathrooms, max_guests, nightly_rate, check_in_time, check_out_time, cancellation_policy, house_rules, cover_photo, slug, status')
+    .eq(propCol, slug)
+    .eq('status', 'active')
+    .single();
+
+  if (!property) notFound();
+  const id = property.id;
+
+  const [photosResult, amenitiesResult] = await Promise.all([
     publicSupabase
       .from('property_photos')
       .select('url, sort_order')
@@ -66,13 +70,9 @@ export default async function RoomDetailPage({
       .eq('property_id', id),
   ]);
 
-  const property = propResult.data;
-  if (!property) notFound();
-
   const photos    = photosResult.data?.map((p: any) => p.url) ?? (property.cover_photo ? [property.cover_photo] : []);
   const amenities = amenitiesResult.data?.map((a: any) => a.name) ?? [];
 
-  const isUUID    = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
   const typeLabel = property.type && !isUUID(property.type)
     ? property.type.charAt(0).toUpperCase() + property.type.slice(1) : 'Room';
 
@@ -89,7 +89,7 @@ export default async function RoomDetailPage({
     <div className="min-h-screen bg-[#f8fafc]" style={{ overflowX: 'clip' }}>
 
       {/* Photo gallery + wishlist — client interactive */}
-      <RoomDetailGallery photos={photos} propertyName={property.name} propertyId={id} propertySlug={toRoomSlug(property.name, id)} />
+      <RoomDetailGallery photos={photos} propertyName={property.name} propertyId={id} propertySlug={toRoomSlug(property.slug, property.name, id)} />
 
       {/* Mobile hero info — server rendered */}
       <div className="block sm:hidden bg-white px-4 pt-5 pb-4">

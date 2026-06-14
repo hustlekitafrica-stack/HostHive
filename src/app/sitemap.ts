@@ -29,11 +29,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const { data: properties } = await publicSupabase
       .from('properties')
-      .select('id, name, updated_at')
+      .select('id, name, slug, updated_at')
       .eq('status', 'active');
 
     const roomPages: MetadataRoute.Sitemap = (properties ?? []).map((p) => ({
-      url: `${baseUrl}/stay/rooms/${toRoomSlug(p.name, p.id)}`,
+      url: `${baseUrl}/stay/rooms/${toRoomSlug(p.slug, p.name, p.id)}`,
       lastModified: p.updated_at ? new Date(p.updated_at) : new Date(),
       changeFrequency: 'weekly' as const,
       priority: 0.8,

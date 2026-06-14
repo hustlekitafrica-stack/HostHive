@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { publicSupabase } from '@/lib/supabase/public';
-import { idFromSlug } from '@/lib/stay/roomSlug';
+import { isUUID } from '@/lib/stay/roomSlug';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://kogelosuites.com';
 
@@ -8,12 +8,12 @@ export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id: slug } = await params;
-  const id = idFromSlug(slug);
+  const propCol = isUUID(slug) ? 'id' : 'slug';
 
   const { data: property } = await publicSupabase
     .from('properties')
     .select('id, name, description, nightly_rate, bedrooms, bathrooms, max_guests, type')
-    .eq('id', id)
+    .eq(propCol, slug)
     .eq('status', 'active')
     .single();
 
@@ -24,6 +24,7 @@ export async function generateMetadata(
     };
   }
 
+  const id = property.id;
   const beds = property.bedrooms ?? 1;
   const bedLabel = beds === 0 ? 'Studio' : beds === 1 ? '1-Bedroom' : `${beds}-Bedroom`;
   const title = property.name ?? `${bedLabel} Suite`;
@@ -79,19 +80,21 @@ export default async function RoomDetailLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id: slug } = await params;
-  const id = idFromSlug(slug);
+  const propCol2 = isUUID(slug) ? 'id' : 'slug';
 
-  const [{ data: property }, { data: photos }] = await Promise.all([
-    publicSupabase
-      .from('properties')
-      .select('id, name, description, nightly_rate, bedrooms, bathrooms, max_guests, type')
-      .eq('id', id)
-      .eq('status', 'active')
-      .single(),
+  const { data: property } = await publicSupabase
+    .from('properties')
+    .select('id, name, description, nightly_rate, bedrooms, bathrooms, max_guests, type')
+    .eq(propCol2, slug)
+    .eq('status', 'active')
+    .single();
+
+  const layoutId = property?.id ?? '';
+  const [{ data: photos }] = await Promise.all([
     publicSupabase
       .from('property_photos')
       .select('url')
-      .eq('property_id', id)
+      .eq('property_id', layoutId)
       .order('sort_order')
       .limit(3),
   ]);

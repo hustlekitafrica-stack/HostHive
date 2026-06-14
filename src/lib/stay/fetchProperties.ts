@@ -23,6 +23,7 @@ export type StayProperty = {
   check_out_time: string;
   cancellation_policy: string;
   house_rules: Record<string, boolean> | null;
+  slug: string | null;
   photos: string[];
   amenities: string[];
 };
@@ -42,7 +43,7 @@ export async function fetchAvailableProperties(
   let query = publicSupabase
     .from('properties')
     .select(
-      'id, name, type, description, location, address, city, county, bedrooms, bathrooms, max_guests, nightly_rate, weekend_rate, breakfast_rate, cover_photo, status, latitude, longitude, check_in_time, check_out_time, cancellation_policy, house_rules'
+      'id, name, type, description, location, address, city, county, bedrooms, bathrooms, max_guests, nightly_rate, weekend_rate, breakfast_rate, cover_photo, status, latitude, longitude, check_in_time, check_out_time, cancellation_policy, house_rules, slug'
     )
     .eq('status', 'active')
     .order('name');

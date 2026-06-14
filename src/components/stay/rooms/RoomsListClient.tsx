@@ -332,7 +332,7 @@ export default function RoomsListClient({
             ) : (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filtered.map(p => (
-                  <Link key={p.id} href={`/stay/rooms/${toRoomSlug(p.name, p.id)}${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
+                  <Link key={p.id} href={`/stay/rooms/${toRoomSlug(p.slug, p.name, p.id)}${checkIn ? `?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guestFilter}` : ''}`}
                     className={`group rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-2 ${
                       isMultiMode && cart.some(c => c.property.id === p.id) ? 'border-green-500 bg-green-50' : 'border-gray-100 bg-white'
                     }`}>
