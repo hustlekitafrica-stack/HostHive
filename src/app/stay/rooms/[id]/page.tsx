@@ -200,6 +200,7 @@ export default async function RoomDetailPage({
           <RoomDetailBooking
             property={{
               id:              property.id,
+              slug:            property.slug,
               nightly_rate:    Number(property.nightly_rate    ?? 0),
               max_guests:      Number(property.max_guests      ?? 2),
               city:            property.city,

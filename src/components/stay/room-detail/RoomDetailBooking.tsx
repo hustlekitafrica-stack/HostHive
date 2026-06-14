@@ -255,6 +255,7 @@ function MobileCalendar({
 
 export interface RoomDetailBookingProperty {
   id: string;
+  slug?: string | null;
   nightly_rate: number;
   max_guests: number;
   city?: string;
@@ -293,7 +294,7 @@ export default function RoomDetailBooking({
   const total = rate * nights * rooms;
 
   const handleBook = () => {
-    router.push(`/stay/checkout?propertyId=${property.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
+    router.push(`/stay/checkout?propertyId=${property.slug || property.id}&checkIn=${checkIn}&checkOut=${checkOut}&guests=${adults + children}&rooms=${rooms}`);
   };
 
   const guests = adults + children;

@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { publicSupabase } from '@/lib/supabase/public';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = await params;
-    const [propRes, photoRes, amenRes] = await Promise.all([
-      publicSupabase.from('properties').select('*').eq('id', id).eq('status', 'active').single(),
-      publicSupabase.from('property_photos').select('url, sort_order').eq('property_id', id).order('sort_order'),
-      publicSupabase.from('property_amenities').select('name').eq('property_id', id),
-    ]);
+    const { id: param } = await params;
+    const col = UUID_RE.test(param) ? 'id' : 'slug';
 
+    const propRes = await publicSupabase.from('properties').select('*').eq(col, param).eq('status', 'active').single();
     if (propRes.error || !propRes.data) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 });
     }
+    const id = propRes.data.id;
+
+    const [photoRes, amenRes] = await Promise.all([
+      publicSupabase.from('property_photos').select('url, sort_order').eq('property_id', id).order('sort_order'),
+      publicSupabase.from('property_amenities').select('name').eq('property_id', id),
+    ]);
 
     const p = propRes.data;
     const photos = photoRes.data?.map((ph: any) => ph.url) ?? (p.cover_photo ? [p.cover_photo] : []);

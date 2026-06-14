@@ -13,6 +13,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ discounts: [] });
     }
 
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let resolvedPropertyId = propertyId;
+    if (!UUID_RE.test(propertyId)) {
+      const { data: prop } = await publicSupabase.from('properties').select('id').eq('slug', propertyId).single();
+      if (prop) resolvedPropertyId = prop.id;
+    }
+
     const hostId = process.env.STAY_HOST_USER_ID ?? '';
     const today  = new Date();
     const checkInDate = new Date(checkIn);
@@ -39,7 +46,7 @@ export async function GET(req: NextRequest) {
     const propertyValid = dateValid.filter(d => {
       const linked = (d.discount_properties ?? []) as { property_id: string }[];
       if (linked.length === 0) return true; // applies to all
-      return linked.some(lp => lp.property_id === propertyId);
+      return linked.some(lp => lp.property_id === resolvedPropertyId);
     });
 
     // Determine which trigger conditions are met
