@@ -29,11 +29,12 @@ export const metadata: Metadata = {
     template: '%s | Kogelo Suites',
   },
   description:
-    'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests — any time of day. Experience genuine Kenyan hospitality at Kogelo Suites on Museum Road, Kisumu, Kenya.',
+    'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests — any time of day. Experience genuine Kenyan hospitality at Kogelo Suites, Milimani, Museum Road, Kisumu, Kenya.',
   keywords: [
     'Kogelo Suites',
     'hotel Kisumu',
     'accommodation Kisumu Kenya',
+    'hotel Milimani Kisumu',
     'hotel Museum Road Kisumu',
     'rooms with kitchenette Kisumu',
     'swimming pool hotel Kisumu',
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     siteName: 'Kogelo Suites',
     title: 'Kogelo Suites — Hotel & Accommodation in Kisumu, Kenya',
     description:
-      'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests. Kogelo Suites on Museum Road, Kisumu, Kenya.',
+      'Fully furnished rooms with kitchenettes, a restaurant & bar, and a pool open to all guests. Kogelo Suites, Milimani, Museum Road, Kisumu, Kenya.',
     images: [
       {
         url: '/images/og-image.jpg',
@@ -70,7 +71,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Kogelo Suites — Hotel & Accommodation in Kisumu, Kenya',
     description:
-      'Fully furnished rooms with kitchenettes, restaurant & bar, and a pool open 24/7. Kogelo Suites, Museum Road, Kisumu.',
+      'Fully furnished rooms with kitchenettes, restaurant & bar, and a pool open 24/7. Kogelo Suites, Milimani, Kisumu.',
     images: ['/images/og-image.jpg'],
   },
   alternates: {
@@ -84,10 +85,10 @@ const lodgingBusinessJsonLd = {
   name: 'Kogelo Suites',
   url: `${BASE_URL}/stay`,
   description:
-    'Kogelo Suites is a hotel on Museum Road, Kisumu, Kenya, offering fully furnished rooms with kitchenettes, a restaurant and bar, and a swimming pool accessible to all guests at any time.',
+    'Kogelo Suites is a hotel in Milimani, on Museum Road, Kisumu, Kenya, offering fully furnished rooms with kitchenettes, a restaurant and bar, and a swimming pool accessible to all guests at any time.',
   address: {
     '@type': 'PostalAddress',
-    streetAddress: 'Museum Road',
+    streetAddress: 'Museum Road, Milimani',
     addressLocality: 'Kisumu',
     addressRegion: 'Kisumu County',
     addressCountry: 'KE',
