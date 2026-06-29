@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-const ADMIN_DOMAIN  = process.env.NEXT_PUBLIC_ADMIN_DOMAIN  || 'admin.kogelosuites.com';
-const GUEST_DOMAIN  = process.env.NEXT_PUBLIC_GUEST_DOMAIN  || 'kogelosuites.com';
+const ADMIN_DOMAIN      = process.env.NEXT_PUBLIC_ADMIN_DOMAIN      || 'admin.kogelosuites.com';
+const GUEST_DOMAIN      = process.env.NEXT_PUBLIC_GUEST_DOMAIN      || 'kogelosuites.com';
+const RESTAURANT_DOMAIN = process.env.NEXT_PUBLIC_RESTAURANT_DOMAIN || 'restaurant.kogelosuites.com';
 
 const ADMIN_PATH_PREFIXES = [
   '/dashboard', '/bookings', '/bookings-enhanced', '/calendar', '/booking-calendar',
@@ -20,8 +21,16 @@ export async function middleware(request: NextRequest) {
   const url      = request.nextUrl.clone();
   const hostname = request.headers.get('host') ?? '';
 
-  const isAdmin = hostname === ADMIN_DOMAIN || hostname.startsWith('admin.');
-  const isGuest = hostname === GUEST_DOMAIN || (!isAdmin && !hostname.startsWith('admin.'));
+  const isRestaurant = hostname === RESTAURANT_DOMAIN || hostname.startsWith('restaurant.');
+  const isAdmin      = !isRestaurant && (hostname === ADMIN_DOMAIN || hostname.startsWith('admin.'));
+  const isGuest      = !isRestaurant && !isAdmin;
+
+  // ── Restaurant subdomain ─────────────────────────────────────────────────
+  if (isRestaurant) {
+    const rewriteUrl = url.clone();
+    rewriteUrl.pathname = '/restaurant';
+    return NextResponse.rewrite(rewriteUrl);
+  }
 
   // ── Admin subdomain ──────────────────────────────────────────────────────
   if (isAdmin) {
@@ -39,6 +48,10 @@ export async function middleware(request: NextRequest) {
 
   // ── Guest domain ─────────────────────────────────────────────────────────
   if (isGuest) {
+    // Redirect /stay/dining → restaurant subdomain
+    if (url.pathname === '/stay/dining' || url.pathname.startsWith('/stay/dining/')) {
+      return NextResponse.redirect(`https://${RESTAURANT_DOMAIN}`);
+    }
     // Block dashboard routes on guest domain
     if (
       url.pathname.startsWith('/dashboard') ||

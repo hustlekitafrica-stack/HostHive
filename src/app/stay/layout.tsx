@@ -34,7 +34,7 @@ const NAV_LINKS = [
     ),
   },
   {
-    href: '/stay/dining',
+    href: 'https://restaurant.kogelosuites.com',
     label: 'Dining',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
@@ -116,6 +116,10 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
   const handleNavClick = useCallback((href: string) => {
     setMenuOpen(false);
     if (href === pathname) return;
+    if (href.startsWith('http')) {
+      window.location.href = href;
+      return;
+    }
     setLoading(true);
     router.push(href);
     setTimeout(() => setLoading(false), 3000);
@@ -246,7 +250,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
               <ul className="space-y-1">
                 {[
                   { href: '/stay/rooms',        label: 'Browse Rooms' },
-                  { href: '/stay/dining',        label: 'Restaurant & Dining' },
+                  { href: 'https://restaurant.kogelosuites.com', label: 'Restaurant & Dining' },
                   { href: '/stay/rooms',         label: 'Make a Booking' },
                   { href: '/stay/reviews/new',   label: 'Write a Review' },
                   ...(loggedIn ? [
@@ -320,7 +324,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
           if (l.label === 'Trips' && !loggedIn) return false;
           return true;
         }).map(l => {
-          const active = pathname === l.href;
+          const active = !l.href.startsWith('http') && pathname === l.href;
           return (
             <button key={l.href} onClick={() => handleNavClick(l.href)}
               className={`flex-1 flex flex-col items-center justify-center gap-0.5 py-2 transition-colors ${
@@ -354,7 +358,7 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
             <ul className="space-y-2">
               {[
                 { href: '/stay/rooms',        label: 'Browse Rooms' },
-                { href: '/stay/dining',       label: 'Restaurant & Dining' },
+                { href: 'https://restaurant.kogelosuites.com', label: 'Restaurant & Dining' },
                 { href: '/stay/book',         label: 'Make a Booking' },
                 { href: '/stay/reviews/new',  label: 'Write a Review' },
                 ...(loggedIn ? [
@@ -363,7 +367,11 @@ export default function StayLayout({ children }: { children: React.ReactNode }) 
                 ] : []),
               ].map(l => (
                 <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</Link>
+                  {l.href.startsWith('http') ? (
+                    <a href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</a>
+                  ) : (
+                    <Link href={l.href} className="text-sm text-gray-400 hover:text-white transition-colors">{l.label}</Link>
+                  )}
                 </li>
               ))}
             </ul>

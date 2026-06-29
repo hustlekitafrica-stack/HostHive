@@ -192,9 +192,9 @@ export default async function StayHomePage() {
                   ))}
                 </div>
                 <div className="flex gap-3">
-                  <Link href="/stay/dining" className="inline-flex items-center gap-2 py-3 px-6 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#D97706' }}>
+                  <a href="https://restaurant.kogelosuites.com" className="inline-flex items-center gap-2 py-3 px-6 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90" style={{ background: '#D97706' }}>
                     Menu
-                  </Link>
+                  </a>
                   <a href="tel:0726566795" className="inline-flex items-center gap-2 py-3 px-6 rounded-xl text-sm font-bold border border-white/30 text-white hover:bg-white/10 transition-all">
                     <Phone className="w-4 h-4" /> Call
                   </a>
