@@ -3,7 +3,7 @@
 import { useState, useReducer, useEffect, useRef, useCallback } from 'react';
 import {
   ShoppingCart, MapPin, Phone, CheckCircle2, ArrowLeft,
-  Star, Clock, Navigation, Loader2, Minus, Plus, X, ChevronRight,
+  Star, Clock, Navigation, Loader2, Minus, Plus, X, ChevronRight, Bell,
 } from 'lucide-react';
 import { MENU_DATA, MENU_TABS, ORDER_PHONE, ROOM_SERVICE_FEE, DELIVERY_FEE, type MenuItem, type MenuCategory } from '@/lib/menu-data';
 
@@ -48,6 +48,77 @@ const CATEGORY_EMOJI: Record<string, string> = {
   mains:      '🍖', sharing:      '🍗', beverages: '☕', fruits:     '🍉',
   sides:      '🥗', vegetables:   '🌿',
 };
+
+// ─── Popular card (Uber Eats horizontal scroll card) ───────────────────────
+
+type PopularItem = {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  imageUrl?: string;
+  badge: string;
+  badgeColor: string;
+  tabId?: string;
+  tag?: 'popular' | 'special';
+};
+
+const TAB_GRADIENT: Record<string, string> = {
+  breakfast: 'linear-gradient(135deg, #92400e, #D97706)',
+  mains:     'linear-gradient(135deg, #14532d, #16a34a)',
+  snacks:    'linear-gradient(135deg, #7c2d12, #ea580c)',
+  drinks:    'linear-gradient(135deg, #0c4a6e, #0ea5e9)',
+  sides:     'linear-gradient(135deg, #134e4a, #0f766e)',
+};
+
+function PopularCard({ item, qty, onAdd, onRemove }: {
+  item: PopularItem;
+  qty: number;
+  onAdd: () => void;
+  onRemove: () => void;
+}) {
+  const bg    = TAB_GRADIENT[item.tabId ?? ''] ?? TAB_GRADIENT.mains;
+  const emoji = TAB_EMOJI[item.tabId ?? '']    ?? '🍽️';
+  return (
+    <div style={{ width: 158, flexShrink: 0 }} className="rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+      <div className="relative" style={{ height: 112 }}>
+        {item.imageUrl ? (
+          <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-4xl" style={{ background: bg }}>
+            {emoji}
+          </div>
+        )}
+        <div
+          className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-white text-[10px] font-bold"
+          style={{ background: item.badgeColor }}
+        >
+          {item.badge}
+        </div>
+      </div>
+      <div className="p-3">
+        <p className="font-bold text-sm text-gray-900 leading-tight line-clamp-1 mb-0.5">{item.name}</p>
+        <div className="flex items-center gap-1 mb-2.5">
+          <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>KSh {item.price.toLocaleString()}</span>
+          <span className="text-[10px] text-gray-300 mx-0.5">·</span>
+          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+          <span className="text-[11px] text-gray-500">4.8</span>
+        </div>
+        {qty === 0 ? (
+          <button onClick={onAdd} className="w-full py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: '#16a34a' }}>
+            + Add
+          </button>
+        ) : (
+          <div className="flex items-center justify-between bg-gray-50 rounded-lg px-2 py-1">
+            <button onClick={onRemove} style={{ color: '#16a34a' }}><Minus className="w-3 h-3" /></button>
+            <span className="text-xs font-black text-gray-900">{qty}</span>
+            <button onClick={onAdd} style={{ color: '#16a34a' }}><Plus className="w-3 h-3" /></button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── Uber Eats–style menu item row ───────────────────────────────────────────
 
@@ -116,13 +187,13 @@ const HOTEL_URL = 'https://kogelosuites.com';
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? '';
 
 export default function RestaurantPage() {
-  const [cart, dispatch]         = useReducer(cartReducer, []);
-  const [view, setView]          = useState<View>('menu');
-  const [orderType, setOrderType] = useState<OrderType>('dine_in');
-  const [activeTab, setActiveTab] = useState<typeof MENU_TABS[0]['id']>('breakfast');
-  const [showCart, setShowCart]   = useState(false);
-  const [scrolled, setScrolled]   = useState(false);
-  const [dynamicMenu, setDynamicMenu] = useState<MenuCategory[] | null>(null);
+  const [cart, dispatch]              = useReducer(cartReducer, []);
+  const [view, setView]               = useState<View>('menu');
+  const [orderType, setOrderType]      = useState<OrderType>('dine_in');
+  const [activeTab, setActiveTab]      = useState<string>('all');
+  const [showCart, setShowCart]        = useState(false);
+  const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
+  const [dynamicMenu, setDynamicMenu]  = useState<MenuCategory[] | null>(null);
 
   const [name,        setName]        = useState('');
   const [phone,       setPhone]       = useState('');
@@ -142,14 +213,14 @@ export default function RestaurantPage() {
   const [payError,     setPayError]     = useState('');
   const [payLoading,   setPayLoading]   = useState(false);
 
-  const tabsRef   = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // ── Scroll tracking ────────────────────────────────────────────────────────
+  // ── Fetch featured dishes ──────────────────────────────────────────────────
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 180);
-    window.addEventListener('scroll', handler, { passive: true });
-    return () => window.removeEventListener('scroll', handler);
+    fetch('/api/stay/featured-dishes')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.dishes?.length) setFeaturedDishes(d.dishes); })
+      .catch(() => {});
   }, []);
 
   // ── Fetch dynamic menu ─────────────────────────────────────────────────────
@@ -186,7 +257,7 @@ export default function RestaurantPage() {
 
   // ── Sticky tab scroll ──────────────────────────────────────────────────────
   const scrollToSection = useCallback((tab: string) => {
-    setActiveTab(tab as typeof MENU_TABS[0]['id']);
+    setActiveTab(tab);
     const el = sectionRefs.current[tab];
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -503,150 +574,247 @@ export default function RestaurantPage() {
   );
 
   // ══════════════════════════════════════════════════════════════════════════
-  // RENDER: MENU (main Uber Eats view)
+  // RENDER: MENU — Uber Eats home UI
   // ══════════════════════════════════════════════════════════════════════════
 
   const tabsForMenu = MENU_TABS.filter(t => menuData.some(c => c.tab === t.id));
 
-  return (
-    <div className="min-h-screen bg-gray-50" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+  const popularItems: PopularItem[] = featuredDishes.length > 0
+    ? featuredDishes.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        price: Number(d.price),
+        description: d.description,
+        imageUrl: d.image_url,
+        badge: d.badge || '🔥 Popular',
+        badgeColor: d.badge_color || '#D97706',
+        tag: 'popular' as const,
+      }))
+    : MENU_DATA
+        .flatMap(cat => cat.items.map(item => ({ ...item, tabId: cat.tab })))
+        .filter(item => item.tag === 'popular' || item.tag === 'special')
+        .slice(0, 8)
+        .map(item => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          imageUrl: undefined,
+          badge: item.tag === 'popular' ? '🔥 Popular' : '⭐ Special',
+          badgeColor: item.tag === 'popular' ? '#D97706' : '#16a34a',
+          tag: item.tag,
+          tabId: item.tabId,
+        }));
 
-      {/* ── Sticky top bar ── */}
-      <header
-        className="fixed top-0 left-0 right-0 z-50 h-14 flex items-center justify-between px-4 transition-all duration-200"
-        style={{ background: scrolled ? '#fff' : 'transparent', boxShadow: scrolled ? '0 1px 4px rgba(0,0,0,0.08)' : 'none' }}
-      >
-        <a href={HOTEL_URL} className="p-2 -ml-2 rounded-full" style={{ background: 'rgba(255,255,255,0.9)', display: 'flex' }}>
-          <ArrowLeft className="w-5 h-5 text-gray-800" />
+  return (
+    <div className="min-h-screen" style={{ background: '#f4f4f4', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+
+      {/* ── Sticky top bar (always white — Uber Eats style) ── */}
+      <header className="sticky top-0 z-50 bg-white h-14 flex items-center justify-between px-4 border-b border-gray-100">
+        <a href={HOTEL_URL} className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
+          <ArrowLeft className="w-4 h-4 text-gray-700" />
         </a>
-        <span
-          className="font-black text-base text-gray-900 transition-opacity duration-200"
-          style={{ opacity: scrolled ? 1 : 0 }}
-        >
-          Kogelo Restaurant
-        </span>
-        <button
-          onClick={() => setShowCart(true)}
-          className="relative p-2 rounded-full"
-          style={{ background: 'rgba(255,255,255,0.9)' }}
-          aria-label="View cart"
-        >
-          <ShoppingCart className="w-5 h-5 text-gray-800" />
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-[10px] font-black flex items-center justify-center" style={{ background: '#16a34a' }}>
-              {cartCount}
-            </span>
-          )}
-        </button>
+        <span className="font-black text-gray-900 text-base">Kogelo Restaurant</span>
+        <div className="flex items-center gap-1.5">
+          <button className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
+            <Bell className="w-4 h-4 text-gray-700" />
+          </button>
+          <button
+            onClick={() => setShowCart(true)}
+            className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center relative"
+            aria-label="View cart"
+          >
+            <ShoppingCart className="w-4 h-4 text-gray-700" />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-white text-[9px] font-black flex items-center justify-center" style={{ background: '#16a34a' }}>
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
       </header>
 
-      {/* ── Hero banner ── */}
-      <div
-        className="relative pt-14 pb-8 px-4 text-white"
-        style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1a3a2a 60%, #16a34a22 100%)', minHeight: 260 }}
-      >
-        <div className="max-w-2xl mx-auto pt-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#D97706' }}>Kogelo Restaurant</p>
-          <h1 className="text-3xl sm:text-4xl font-black leading-tight mb-2">
-            Authentic Flavours,<br />Every Meal
-          </h1>
-          <p className="text-white/60 text-sm mb-5">Order to your room · Dine in · Delivery</p>
-          <div className="flex flex-wrap gap-2">
-            {['🍽 African', '☕ Breakfast', '🍗 Sharing Bites', '🚀 Fast Service'].map(c => (
-              <span key={c} className="text-xs font-semibold px-3 py-1 rounded-full border border-white/20 text-white/80">{c}</span>
-            ))}
+      {/* ── WHITE TOP SECTION ── */}
+      <div className="bg-white">
+
+        {/* ROW 2: Horizontal pill tabs (All + categories) */}
+        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-2 px-4 pt-3 pb-2 min-w-max">
+            {(['all', ...tabsForMenu.map(t => t.id)] as string[]).map(tabId => {
+              const tab = MENU_TABS.find(t => t.id === tabId);
+              const isActive = activeTab === tabId;
+              return (
+                <button
+                  key={tabId}
+                  onClick={() => {
+                    setActiveTab(tabId);
+                    if (tabId !== 'all') scrollToSection(tabId);
+                    else window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all"
+                  style={isActive
+                    ? { background: '#16a34a', color: '#fff' }
+                    : { background: '#f1f5f9', color: '#374151' }}
+                >
+                  {tabId === 'all' ? 'All' : `${TAB_EMOJI[tabId] ?? ''} ${tab?.label ?? tabId}`}
+                </button>
+              );
+            })}
           </div>
         </div>
-      </div>
 
-      {/* ── Info strip + order type toggle ── */}
-      <div className="bg-white border-b border-gray-100 px-4 py-4">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex flex-wrap gap-4 text-sm text-gray-500 mb-4">
-            <span className="flex items-center gap-1.5"><Star className="w-4 h-4" style={{ color: '#D97706' }} fill="#D97706" /> 4.8</span>
-            <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> 7 AM – 10 PM</span>
-            <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> Milimani, Kisumu</span>
-            <a href={'tel:' + ORDER_PHONE} className="flex items-center gap-1.5 hover:text-gray-800">
-              <Phone className="w-4 h-4" /> {ORDER_PHONE}
-            </a>
-          </div>
-          <div className="flex gap-2">
-            {([
-              { id: 'room_service' as OrderType, label: '🛎 Room Service', fee: ROOM_SERVICE_FEE },
-              { id: 'dine_in'      as OrderType, label: '🍽 Dine In',      fee: 0 },
-              { id: 'delivery'     as OrderType, label: '🚴 Delivery',     fee: DELIVERY_FEE },
-            ]).map(t => (
+        {/* ROW 3: Large circular category icons */}
+        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-5 px-4 pb-5 pt-2 min-w-max">
+            {tabsForMenu.map(tab => (
               <button
-                key={t.id}
-                onClick={() => setOrderType(t.id)}
-                className="flex-1 py-2 px-2 rounded-xl text-xs font-bold border transition-all"
-                style={orderType === t.id
-                  ? { background: '#16a34a', color: '#fff', borderColor: '#16a34a' }
-                  : { background: '#f8fafc', color: '#374151', borderColor: '#e5e7eb' }}
+                key={tab.id}
+                onClick={() => scrollToSection(tab.id)}
+                className="flex flex-col items-center gap-1.5 flex-shrink-0"
               >
-                <span className="block">{t.label}</span>
-                {t.fee > 0 && <span className="block font-normal opacity-70">+KSh {t.fee}</span>}
-                {t.fee === 0 && <span className="block font-normal opacity-70">Free</span>}
+                <div
+                  className="w-16 h-16 rounded-full flex items-center justify-center text-2xl transition-all"
+                  style={{
+                    background: '#fff',
+                    boxShadow: activeTab === tab.id
+                      ? '0 0 0 2.5px #16a34a, 0 2px 10px rgba(0,0,0,0.10)'
+                      : '0 2px 10px rgba(0,0,0,0.10)',
+                  }}
+                >
+                  {TAB_EMOJI[tab.id] ?? '🍽️'}
+                </div>
+                <span className="text-[11px] font-semibold text-gray-700 whitespace-nowrap">{tab.label}</span>
               </button>
             ))}
           </div>
         </div>
+
+        {/* ROW 4: Order type filter pills + info */}
+        <div className="border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex items-center gap-2 px-4 py-2.5 min-w-max">
+            {([
+              { id: 'room_service' as OrderType, emoji: '🛎', label: 'Room Service', fee: ROOM_SERVICE_FEE },
+              { id: 'dine_in'      as OrderType, emoji: '🍽', label: 'Dine In',      fee: 0 },
+              { id: 'delivery'     as OrderType, emoji: '🚴', label: 'Delivery',     fee: DELIVERY_FEE },
+            ]).map(t => (
+              <button
+                key={t.id}
+                onClick={() => setOrderType(t.id)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap"
+                style={orderType === t.id
+                  ? { background: '#16a34a', color: '#fff', borderColor: '#16a34a' }
+                  : { background: '#fff', color: '#4b5563', borderColor: '#e5e7eb' }}
+              >
+                {t.emoji} {t.label}{t.fee > 0 ? ` +KSh ${t.fee}` : ''}
+              </button>
+            ))}
+            <span className="w-px h-4 bg-gray-200 mx-1" />
+            <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
+              <Clock className="w-3.5 h-3.5" /> 7 AM – 10 PM
+            </span>
+            <a href={'tel:' + ORDER_PHONE} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 whitespace-nowrap">
+              <Phone className="w-3.5 h-3.5" /> {ORDER_PHONE}
+            </a>
+          </div>
+        </div>
       </div>
 
-      {/* ── Sticky category tabs ── */}
-      <div
-        ref={tabsRef}
-        className="sticky z-30 bg-white border-b border-gray-100 overflow-x-auto"
-        style={{ top: 56 }}
-      >
-        <div className="flex gap-1 px-4 py-2 max-w-2xl mx-auto" style={{ minWidth: 'max-content' }}>
+      {/* ── Section divider ── */}
+      <div style={{ height: 8, background: '#f4f4f4' }} />
+
+      {/* ── ⭐ Popular Right Now (Uber Eats "Featured" section) ── */}
+      {popularItems.length > 0 && (
+        <div className="bg-white py-4">
+          <div className="flex items-center justify-between px-4 mb-3">
+            <div>
+              <h2 className="font-black text-base text-gray-900">⭐ Popular Right Now</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Most ordered from Kogelo Restaurant</p>
+            </div>
+            <button
+              onClick={() => scrollToSection(tabsForMenu[0]?.id ?? '')}
+              className="flex items-center gap-0.5 text-xs font-bold"
+              style={{ color: '#16a34a' }}
+            >
+              See all <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div className="flex gap-3 px-4" style={{ minWidth: 'max-content', paddingBottom: 4 }}>
+              {popularItems.map(pItem => (
+                <PopularCard
+                  key={pItem.id}
+                  item={pItem}
+                  qty={cart.find(c => c.id === pItem.id)?.qty ?? 0}
+                  onAdd={() => dispatch({ type: 'ADD', item: { id: pItem.id, name: pItem.name, price: pItem.price, description: pItem.description, tag: pItem.tag } })}
+                  onRemove={() => dispatch({ type: 'REMOVE', id: pItem.id })}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Section divider ── */}
+      <div style={{ height: 8, background: '#f4f4f4' }} />
+
+      {/* ── Sticky mini tab bar (sticks below top bar when scrolling) ── */}
+      <div className="sticky z-30 bg-white border-b border-gray-100 overflow-x-auto" style={{ top: 56, WebkitOverflowScrolling: 'touch' as any }}>
+        <div className="flex gap-1 px-4 py-2" style={{ minWidth: 'max-content' }}>
           {tabsForMenu.map(t => (
             <button
               key={t.id}
               onClick={() => scrollToSection(t.id)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap"
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap"
               style={activeTab === t.id
                 ? { background: '#16a34a', color: '#fff' }
                 : { background: '#f1f5f9', color: '#374151' }}
             >
-              {TAB_EMOJI[t.id] ?? '🍽'} {t.label}
+              {TAB_EMOJI[t.id]} {t.label}
             </button>
           ))}
         </div>
       </div>
 
       {/* ── Menu sections ── */}
-      <div className="max-w-2xl mx-auto px-4 pb-32">
+      <div className="pb-32">
         {tabsForMenu.map(tab => {
           const cats = menuData.filter(c => c.tab === tab.id);
           return (
-            <div
-              key={tab.id}
-              ref={el => { sectionRefs.current[tab.id] = el; }}
-              className="pt-6"
-            >
-              <h2 className="text-lg font-black text-gray-900 mb-1">{TAB_EMOJI[tab.id]} {tab.label}</h2>
-              {cats.map(cat => (
-                <div key={cat.id} className="mb-4">
-                  {cat.name !== tab.label && (
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-1 mt-3">{cat.name}</h3>
-                  )}
-                  {cat.description && (
-                    <p className="text-xs text-gray-400 mb-2">{cat.description}</p>
-                  )}
-                  <div className="bg-white rounded-2xl px-4">
-                    {cat.items.map(item => (
-                      <ItemRow
-                        key={item.id}
-                        item={item}
-                        qty={cart.find(c => c.id === item.id)?.qty ?? 0}
-                        onAdd={() => dispatch({ type: 'ADD', item })}
-                        onRemove={() => dispatch({ type: 'REMOVE', id: item.id })}
-                      />
-                    ))}
+            <div key={tab.id} ref={el => { sectionRefs.current[tab.id] = el; }}>
+              {/* Section header */}
+              <div className="flex items-center justify-between px-4 py-3 bg-white">
+                <h2 className="font-black text-base text-gray-900">{TAB_EMOJI[tab.id]} {tab.label}</h2>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
+              </div>
+              {/* Items */}
+              <div className="bg-white">
+                {cats.map(cat => (
+                  <div key={cat.id}>
+                    {cats.length > 1 && (
+                      <div className="px-4 pt-3 pb-0">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">{cat.name}</p>
+                        {cat.description && <p className="text-[11px] text-gray-400 mt-0.5">{cat.description}</p>}
+                      </div>
+                    )}
+                    {cats.length === 1 && cat.description && (
+                      <p className="px-4 text-xs text-gray-400 -mt-1 mb-1">{cat.description}</p>
+                    )}
+                    <div className="px-4">
+                      {cat.items.map(item => (
+                        <ItemRow
+                          key={item.id}
+                          item={item}
+                          qty={cart.find(c => c.id === item.id)?.qty ?? 0}
+                          onAdd={() => dispatch({ type: 'ADD', item })}
+                          onRemove={() => dispatch({ type: 'REMOVE', id: item.id })}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              {/* Thick separator between sections */}
+              <div style={{ height: 8, background: '#f4f4f4' }} />
             </div>
           );
         })}
@@ -657,7 +825,7 @@ export default function RestaurantPage() {
         <div className="fixed bottom-6 left-4 right-4 z-40 max-w-2xl mx-auto">
           <button
             onClick={() => setView('checkout')}
-            className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white font-black shadow-xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+            className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white font-black shadow-xl transition-transform hover:scale-[1.01] active:scale-[0.99]"
             style={{ background: '#16a34a' }}
           >
             <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-sm font-black">{cartCount}</span>
@@ -667,7 +835,7 @@ export default function RestaurantPage() {
         </div>
       )}
 
-      {/* ── Cart drawer (mobile) ── */}
+      {/* ── Cart drawer ── */}
       {showCart && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowCart(false)} />
