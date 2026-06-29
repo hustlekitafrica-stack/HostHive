@@ -120,6 +120,71 @@ function PopularCard({ item, qty, onAdd, onRemove }: {
   );
 }
 
+// ─── Full menu card (2-col grid, Uber Eats card style) ─────────────────────────
+
+function MenuCard({ item, qty, onAdd, onRemove, tabId }: {
+  item: MenuItem; qty: number; onAdd: () => void; onRemove: () => void; tabId: string;
+}) {
+  const bg    = TAB_GRADIENT[tabId] ?? TAB_GRADIENT.mains;
+  const emoji = CATEGORY_EMOJI[item.id.replace(/\d+$/, '')] ?? TAB_EMOJI[tabId] ?? '🍽️';
+  const badge = item.tag === 'popular'
+    ? { text: '⭐ Chef\'s Pick', bg: '#D97706',  color: '#fff' }
+    : item.tag === 'special'
+    ? { text: '🌿 Traditional',  bg: '#16a34a', color: '#fff' }
+    : null;
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}>
+      {/* Image area */}
+      <div className="relative" style={{ height: 148 }}>
+        <div className="w-full h-full flex items-center justify-center text-5xl" style={{ background: bg }}>
+          {emoji}
+        </div>
+        {badge && (
+          <div
+            className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
+            style={{ background: badge.bg, color: badge.color }}
+          >
+            {badge.text}
+          </div>
+        )}
+      </div>
+      {/* Info */}
+      <div className="p-3">
+        <p className="font-black text-gray-900 text-base leading-snug mb-1 line-clamp-2">{item.name}</p>
+        <div className="flex items-center gap-1.5 mb-3">
+          <span className="font-bold text-base" style={{ color: '#16a34a' }}>
+            {item.price === 0 ? 'Free' : `KSh ${item.price.toLocaleString()}`}
+          </span>
+          {item.price > 0 && (
+            <>
+              <span className="text-gray-300 text-sm">·</span>
+              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+              <span className="text-sm text-gray-500">4.8</span>
+            </>
+          )}
+        </div>
+        {item.price > 0 && (
+          qty === 0 ? (
+            <button
+              onClick={onAdd}
+              className="w-full py-2.5 rounded-xl text-sm font-black text-white"
+              style={{ background: '#16a34a' }}
+            >
+              + Add
+            </button>
+          ) : (
+            <div className="flex items-center justify-between rounded-xl px-3 py-2" style={{ background: '#16a34a' }}>
+              <button onClick={onRemove} className="text-white"><Minus className="w-4 h-4" /></button>
+              <span className="font-black text-white">{qty}</span>
+              <button onClick={onAdd} className="text-white"><Plus className="w-4 h-4" /></button>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Uber Eats–style menu item row ───────────────────────────────────────────
 
 function ItemRow({
@@ -190,6 +255,7 @@ export default function RestaurantPage() {
   const [cart, dispatch]              = useReducer(cartReducer, []);
   const [view, setView]               = useState<View>('menu');
   const [orderType, setOrderType]      = useState<OrderType>('dine_in');
+  const [checkoutStep, setCheckoutStep] = useState<'type' | 'details'>('type');
   const [activeTab, setActiveTab]      = useState<string>('all');
   const [showCart, setShowCart]        = useState(false);
   const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
@@ -423,34 +489,92 @@ export default function RestaurantPage() {
   );
 
   // ══════════════════════════════════════════════════════════════════════════
-  // RENDER: CHECKOUT
+  // RENDER: CHECKOUT — Step 1: order type selection
   // ══════════════════════════════════════════════════════════════════════════
-  if (view === 'checkout') return (
+  if (view === 'checkout' && checkoutStep === 'type') return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3">
         <button onClick={() => setView('menu')} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
-        <span className="font-black text-base text-gray-900">Your Order</span>
+        <span className="font-black text-base text-gray-900">How would you like it?</span>
+      </header>
+
+      <div className="max-w-lg mx-auto px-4 pt-5 pb-10 space-y-3">
+        {/* Compact cart pill */}
+        <div className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-gray-100">
+          <span className="text-sm text-gray-500">{cartCount} item{cartCount !== 1 ? 's' : ''} in cart</span>
+          <span className="font-black text-gray-900">KSh {subtotal.toLocaleString()}</span>
+        </div>
+
+        <p className="text-xs text-gray-400 px-1 pt-1">Select how you'd like to receive your order</p>
+
+        {/* Room Service */}
+        <button
+          onClick={() => { setOrderType('room_service'); setCheckoutStep('details'); }}
+          className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
+          style={{ borderColor: '#e5e7eb' }}
+        >
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: '#fef3c7' }}>🛎</div>
+          <div className="flex-1">
+            <p className="font-black text-gray-900 text-base">Room Service</p>
+            <p className="text-xs text-gray-500 mt-0.5">Delivered straight to your room</p>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block" style={{ background: '#fef3c7', color: '#92400e' }}>+KSh {ROOM_SERVICE_FEE} service fee</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        </button>
+
+        {/* Dine In */}
+        <button
+          onClick={() => { setOrderType('dine_in'); setCheckoutStep('details'); }}
+          className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
+          style={{ borderColor: '#e5e7eb' }}
+        >
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: '#f0fdf4' }}>🍽</div>
+          <div className="flex-1">
+            <p className="font-black text-gray-900 text-base">Dine In</p>
+            <p className="text-xs text-gray-500 mt-0.5">Come to the restaurant — we'll have it ready</p>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block" style={{ background: '#f0fdf4', color: '#14532d' }}>No extra fee</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        </button>
+
+        {/* Delivery */}
+        <button
+          onClick={() => { setOrderType('delivery'); setCheckoutStep('details'); }}
+          className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
+          style={{ borderColor: '#e5e7eb' }}
+        >
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0" style={{ background: '#eff6ff' }}>🚴</div>
+          <div className="flex-1">
+            <p className="font-black text-gray-900 text-base">Delivery</p>
+            <p className="text-xs text-gray-500 mt-0.5">We bring it to your location</p>
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full mt-1.5 inline-block" style={{ background: '#eff6ff', color: '#1e40af' }}>+KSh {DELIVERY_FEE} delivery fee</span>
+          </div>
+          <ChevronRight className="w-5 h-5 text-gray-400 flex-shrink-0" />
+        </button>
+      </div>
+    </div>
+  );
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RENDER: CHECKOUT — Step 2: details & confirm
+  // ══════════════════════════════════════════════════════════════════════════
+  if (view === 'checkout') return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3">
+        <button onClick={() => setCheckoutStep('type')} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+          <ArrowLeft className="w-5 h-5 text-gray-700" />
+        </button>
+        <div>
+          <span className="font-black text-base text-gray-900">
+            {orderType === 'room_service' ? '🛎 Room Service' : orderType === 'dine_in' ? '🍽 Dine In' : '🚴 Delivery'}
+          </span>
+          <p className="text-[11px] text-gray-400 leading-none mt-0.5">Your details</p>
+        </div>
       </header>
 
       <div className="max-w-lg mx-auto p-4 pb-10 space-y-4">
-        {/* Order type pills */}
-        <div className="flex gap-2">
-          {(['room_service', 'dine_in', 'delivery'] as OrderType[]).map(t => (
-            <button
-              key={t}
-              onClick={() => setOrderType(t)}
-              className="flex-1 py-2 rounded-xl text-xs font-bold border transition-all"
-              style={orderType === t
-                ? { background: '#16a34a', color: '#fff', borderColor: '#16a34a' }
-                : { background: '#fff', color: '#374151', borderColor: '#e5e7eb' }}
-            >
-              {t === 'room_service' ? '🛎 Room Service' : t === 'dine_in' ? '🍽 Dine In' : '🚴 Delivery'}
-            </button>
-          ))}
-        </div>
-
         {/* Cart summary */}
         <div className="bg-white rounded-2xl overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-50">
@@ -637,32 +761,6 @@ export default function RestaurantPage() {
       {/* ── WHITE TOP SECTION ── */}
       <div className="bg-white">
 
-        {/* ROW 2: Horizontal pill tabs (All + categories) */}
-        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex gap-2 px-4 pt-3 pb-2 min-w-max">
-            {(['all', ...tabsForMenu.map(t => t.id)] as string[]).map(tabId => {
-              const tab = MENU_TABS.find(t => t.id === tabId);
-              const isActive = activeTab === tabId;
-              return (
-                <button
-                  key={tabId}
-                  onClick={() => {
-                    setActiveTab(tabId);
-                    if (tabId !== 'all') scrollToSection(tabId);
-                    else window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all"
-                  style={isActive
-                    ? { background: '#16a34a', color: '#fff' }
-                    : { background: '#f1f5f9', color: '#374151' }}
-                >
-                  {tabId === 'all' ? 'All' : `${TAB_EMOJI[tabId] ?? ''} ${tab?.label ?? tabId}`}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
         {/* ROW 3: Large circular category icons */}
         <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <div className="flex gap-5 px-4 pb-5 pt-2 min-w-max">
@@ -689,29 +787,13 @@ export default function RestaurantPage() {
           </div>
         </div>
 
-        {/* ROW 4: Order type filter pills + info */}
+        {/* Info strip */}
         <div className="border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="flex items-center gap-2 px-4 py-2.5 min-w-max">
-            {([
-              { id: 'room_service' as OrderType, emoji: '🛎', label: 'Room Service', fee: ROOM_SERVICE_FEE },
-              { id: 'dine_in'      as OrderType, emoji: '🍽', label: 'Dine In',      fee: 0 },
-              { id: 'delivery'     as OrderType, emoji: '🚴', label: 'Delivery',     fee: DELIVERY_FEE },
-            ]).map(t => (
-              <button
-                key={t.id}
-                onClick={() => setOrderType(t.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border transition-all whitespace-nowrap"
-                style={orderType === t.id
-                  ? { background: '#16a34a', color: '#fff', borderColor: '#16a34a' }
-                  : { background: '#fff', color: '#4b5563', borderColor: '#e5e7eb' }}
-              >
-                {t.emoji} {t.label}{t.fee > 0 ? ` +KSh ${t.fee}` : ''}
-              </button>
-            ))}
-            <span className="w-px h-4 bg-gray-200 mx-1" />
+          <div className="flex items-center gap-3 px-4 py-2.5 min-w-max">
             <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
               <Clock className="w-3.5 h-3.5" /> 7 AM – 10 PM
             </span>
+            <span className="w-px h-4 bg-gray-200" />
             <a href={'tel:' + ORDER_PHONE} className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 whitespace-nowrap">
               <Phone className="w-3.5 h-3.5" /> {ORDER_PHONE}
             </a>
@@ -799,11 +881,12 @@ export default function RestaurantPage() {
                     {cats.length === 1 && cat.description && (
                       <p className="px-4 text-xs text-gray-400 -mt-1 mb-1">{cat.description}</p>
                     )}
-                    <div className="px-4">
+                    <div className="grid grid-cols-2 gap-3 px-4 pb-2">
                       {cat.items.map(item => (
-                        <ItemRow
+                        <MenuCard
                           key={item.id}
                           item={item}
+                          tabId={tab.id}
                           qty={cart.find(c => c.id === item.id)?.qty ?? 0}
                           onAdd={() => dispatch({ type: 'ADD', item })}
                           onRemove={() => dispatch({ type: 'REMOVE', id: item.id })}
@@ -824,7 +907,7 @@ export default function RestaurantPage() {
       {cartCount > 0 && (
         <div className="fixed bottom-6 left-4 right-4 z-40 max-w-2xl mx-auto">
           <button
-            onClick={() => setView('checkout')}
+            onClick={() => { setCheckoutStep('type'); setView('checkout'); }}
             className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white font-black shadow-xl transition-transform hover:scale-[1.01] active:scale-[0.99]"
             style={{ background: '#16a34a' }}
           >
@@ -871,7 +954,7 @@ export default function RestaurantPage() {
                   <span>Total</span><span>KSh {total.toLocaleString()}</span>
                 </div>
                 <button
-                  onClick={() => { setShowCart(false); setView('checkout'); }}
+                  onClick={() => { setShowCart(false); setCheckoutStep('type'); setView('checkout'); }}
                   className="mt-4 w-full py-3.5 rounded-xl text-sm font-black text-white"
                   style={{ background: '#16a34a' }}
                 >

@@ -8,6 +8,7 @@ export type MenuItem = {
   price: number;
   description?: string;
   tag?: 'popular' | 'special';
+  image_url?: string;
 };
 
 export type MenuCategory = {
