@@ -136,9 +136,13 @@ function MenuCard({ item, qty, onAdd, onRemove, tabId }: {
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-100" style={{ boxShadow: '0 1px 6px rgba(0,0,0,0.07)' }}>
       {/* Image area */}
       <div className="relative" style={{ height: 148 }}>
-        <div className="w-full h-full flex items-center justify-center text-5xl" style={{ background: bg }}>
-          {emoji}
-        </div>
+        {item.image_url ? (
+          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-5xl" style={{ background: bg }}>
+            {emoji}
+          </div>
+        )}
         {badge && (
           <div
             className="absolute top-2.5 left-2.5 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold"
@@ -310,7 +314,7 @@ export default function RestaurantPage() {
         id: t.id, name: t.label, tab: t.id,
         items: dynamicMenu
           .filter((x: any) => x.tab === t.id)
-          .map((x: any) => ({ id: x.id, name: x.name, price: Number(x.price), description: x.description, tag: x.tag })),
+          .map((x: any) => ({ id: x.id, name: x.name, price: Number(x.price), description: x.description, tag: x.tag, image_url: x.image_url ?? undefined })),
       })).filter(c => c.items.length)
     : MENU_DATA;
 
@@ -762,7 +766,7 @@ export default function RestaurantPage() {
       <div className="bg-white">
 
         {/* ROW 3: Large circular category icons */}
-        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
           <div className="flex gap-5 px-4 pb-5 pt-2 min-w-max">
             {tabsForMenu.map(tab => (
               <button
@@ -788,7 +792,7 @@ export default function RestaurantPage() {
         </div>
 
         {/* Info strip */}
-        <div className="border-t border-gray-100 overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="border-t border-gray-100 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
           <div className="flex items-center gap-3 px-4 py-2.5 min-w-max">
             <span className="flex items-center gap-1 text-xs text-gray-400 whitespace-nowrap">
               <Clock className="w-3.5 h-3.5" /> 7 AM – 10 PM
@@ -820,7 +824,7 @@ export default function RestaurantPage() {
               See all <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
             <div className="flex gap-3 px-4" style={{ minWidth: 'max-content', paddingBottom: 4 }}>
               {popularItems.map(pItem => (
                 <PopularCard
@@ -840,7 +844,7 @@ export default function RestaurantPage() {
       <div style={{ height: 8, background: '#f4f4f4' }} />
 
       {/* ── Sticky mini tab bar (sticks below top bar when scrolling) ── */}
-      <div className="sticky z-30 bg-white border-b border-gray-100 overflow-x-auto" style={{ top: 56, WebkitOverflowScrolling: 'touch' as any }}>
+      <div className="sticky z-30 bg-white border-b border-gray-100 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ top: 56, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
         <div className="flex gap-1 px-4 py-2" style={{ minWidth: 'max-content' }}>
           {tabsForMenu.map(t => (
             <button
@@ -881,17 +885,20 @@ export default function RestaurantPage() {
                     {cats.length === 1 && cat.description && (
                       <p className="px-4 text-xs text-gray-400 -mt-1 mb-1">{cat.description}</p>
                     )}
-                    <div className="grid grid-cols-2 gap-3 px-4 pb-2">
-                      {cat.items.map(item => (
-                        <MenuCard
-                          key={item.id}
-                          item={item}
-                          tabId={tab.id}
-                          qty={cart.find(c => c.id === item.id)?.qty ?? 0}
-                          onAdd={() => dispatch({ type: 'ADD', item })}
-                          onRemove={() => dispatch({ type: 'REMOVE', id: item.id })}
-                        />
-                      ))}
+                    <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
+                      <div className="flex gap-3 px-4 pb-3" style={{ minWidth: 'max-content' }}>
+                        {cat.items.map(item => (
+                          <div key={item.id} style={{ width: 'min(47vw, 210px)', flexShrink: 0 }}>
+                            <MenuCard
+                              item={item}
+                              tabId={tab.id}
+                              qty={cart.find(c => c.id === item.id)?.qty ?? 0}
+                              onAdd={() => dispatch({ type: 'ADD', item })}
+                              onRemove={() => dispatch({ type: 'REMOVE', id: item.id })}
+                            />
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}

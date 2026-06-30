@@ -40,10 +40,11 @@ type MenuItem = {
   tag: 'popular' | 'special' | null;
   active: boolean;
   position: number;
+  image_url: string | null;
 };
 
 const EMPTY: Omit<MenuItem, 'id'> = {
-  tab: 'breakfast', category: '', name: '', description: '', price: 0, tag: null, active: true, position: 0,
+  tab: 'breakfast', category: '', name: '', description: '', price: 0, tag: null, active: true, position: 0, image_url: null,
 };
 
 export default function MenuPage() {
@@ -55,6 +56,8 @@ export default function MenuPage() {
   const [form, setForm]         = useState<Omit<MenuItem, 'id'>>(EMPTY);
   const [saving, setSaving]     = useState(false);
   const [error, setError]       = useState('');
+  const [uploadingItemId, setUploadingItemId] = useState<string | null>(null);
+  const [pendingUploadItem, setPendingUploadItem] = useState<MenuItem | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
   // ── Featured Dishes state ──────────────────────────────────────────────────
@@ -130,6 +133,33 @@ export default function MenuPage() {
     if (res.ok) setDishes(prev => prev.map(d => d.id === dish.id ? data.dish : d));
   };
 
+  const handleItemImageUpload = async (item: MenuItem, file: File) => {
+    if (file.size > 10 * 1024 * 1024) { alert('Image too large — max 10 MB'); return; }
+    setUploadingItemId(item.id);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { alert('Please log in'); return; }
+      const ext  = file.name.split('.').pop();
+      const path = `${user.id}/menu/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('property-photos').upload(path, file, { upsert: true });
+      if (upErr) { alert(`Upload failed: ${upErr.message}`); return; }
+      const { data: { publicUrl } } = supabase.storage.from('property-photos').getPublicUrl(path);
+      const res = await fetch(`/api/stay/menu/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_url: publicUrl }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setItems(prev => prev.map(i => i.id === item.id ? updated.item : i));
+      }
+    } finally {
+      setUploadingItemId(null);
+      setPendingUploadItem(null);
+    }
+  };
+
   const load = () => {
     setLoading(true);
     fetch('/api/stay/menu')
@@ -157,7 +187,7 @@ export default function MenuPage() {
 
   const openEdit = (item: MenuItem) => {
     setEditing(item);
-    setForm({ tab: item.tab, category: item.category, name: item.name, description: item.description, price: item.price, tag: item.tag, active: item.active, position: item.position });
+    setForm({ tab: item.tab, category: item.category, name: item.name, description: item.description, price: item.price, tag: item.tag, active: item.active, position: item.position, image_url: item.image_url });
     setShowForm(true);
     setError('');
   };
@@ -344,8 +374,28 @@ export default function MenuPage() {
         ) : (
           <div className="space-y-2">
             {visibleItems.map(item => (
-              <div key={item.id} className={`bg-white rounded-2xl p-4 border transition-all flex items-center gap-4 ${item.active ? 'border-gray-100' : 'border-gray-100 opacity-50'}`}>
-                <div className="flex-1 min-w-0">
+              <div key={item.id} className={`bg-white rounded-2xl border transition-all flex items-start gap-0 overflow-hidden ${item.active ? 'border-gray-100' : 'border-gray-100 opacity-50'}`}>
+                {/* Thumbnail */}
+                <label className="relative cursor-pointer flex-shrink-0" style={{ width: 80, height: 80 }}>
+                  {item.image_url ? (
+                    <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center gap-1">
+                      <ImagePlus className="w-5 h-5 text-gray-300" />
+                      <span className="text-[10px] text-gray-400">Add photo</span>
+                    </div>
+                  )}
+                  {uploadingItemId === item.id && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" className="hidden"
+                    disabled={uploadingItemId === item.id}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleItemImageUpload(item, f); e.target.value = ''; }}
+                  />
+                </label>
+                <div className="flex-1 min-w-0 p-3">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-gray-900 text-sm">{item.name}</span>
                     {item.tag === 'popular' && <span className="text-xs font-bold px-2 py-0.5 rounded-full text-white" style={{ background: '#D97706' }}>Popular</span>}
@@ -357,7 +407,7 @@ export default function MenuPage() {
                     {item.price === 0 ? 'Free' : `KSh ${item.price.toLocaleString()}`}
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex items-center gap-1 flex-shrink-0 pr-2 pt-2">
                   <button onClick={() => handleToggleActive(item)} title={item.active ? 'Deactivate' : 'Activate'}
                     className="p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600">
                     {item.active ? <ToggleRight className="w-5 h-5 text-green-500" /> : <ToggleLeft className="w-5 h-5" />}

@@ -18,6 +18,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     if (body.tab         !== undefined) updates.tab         = body.tab;
     if (body.active      !== undefined) updates.active      = body.active;
     if (body.position    !== undefined) updates.position    = Number(body.position);
+    if (body.image_url   !== undefined) updates.image_url   = body.image_url;
 
     const { data, error } = await supabase
       .from('menu_items')

@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         tag:         body.tag || null,
         position:    Number(body.position) || 0,
         active:      body.active !== false,
+        image_url:   body.image_url ?? null,
         host_user_id: session.user.id,
       })
       .select()
