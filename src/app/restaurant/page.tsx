@@ -259,8 +259,9 @@ export default function RestaurantPage() {
   const [cart, dispatch]              = useReducer(cartReducer, []);
   const [view, setView]               = useState<View>('menu');
   const [orderType, setOrderType]      = useState<OrderType>('dine_in');
-  const [checkoutStep, setCheckoutStep] = useState<'type' | 'details'>('type');
+  const [checkoutStep, setCheckoutStep] = useState<'type' | 'upsells' | 'details'>('type');
   const [activeTab, setActiveTab]      = useState<string>('all');
+  const [tabBarVisible, setTabBarVisible] = useState(false);
   const [showCart, setShowCart]        = useState(false);
   const [featuredDishes, setFeaturedDishes] = useState<any[]>([]);
   const [dynamicMenu, setDynamicMenu]  = useState<MenuCategory[] | null>(null);
@@ -324,6 +325,13 @@ export default function RestaurantPage() {
   const deliveryFee  = orderType === 'delivery' ? DELIVERY_FEE : 0;
   const total        = subtotal + serviceFee + deliveryFee;
   const cartCount    = cart.reduce((s, i) => s + i.qty, 0);
+
+  // ── Tab bar scroll visibility ───────────────────────────────────────────────
+  useEffect(() => {
+    const onScroll = () => setTabBarVisible(window.scrollY > 80);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // ── Sticky tab scroll ──────────────────────────────────────────────────────
   const scrollToSection = useCallback((tab: string) => {
@@ -515,7 +523,7 @@ export default function RestaurantPage() {
 
         {/* Room Service */}
         <button
-          onClick={() => { setOrderType('room_service'); setCheckoutStep('details'); }}
+          onClick={() => { setOrderType('room_service'); setCheckoutStep('upsells'); }}
           className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
           style={{ borderColor: '#e5e7eb' }}
         >
@@ -530,7 +538,7 @@ export default function RestaurantPage() {
 
         {/* Dine In */}
         <button
-          onClick={() => { setOrderType('dine_in'); setCheckoutStep('details'); }}
+          onClick={() => { setOrderType('dine_in'); setCheckoutStep('upsells'); }}
           className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
           style={{ borderColor: '#e5e7eb' }}
         >
@@ -545,7 +553,7 @@ export default function RestaurantPage() {
 
         {/* Delivery */}
         <button
-          onClick={() => { setOrderType('delivery'); setCheckoutStep('details'); }}
+          onClick={() => { setOrderType('delivery'); setCheckoutStep('upsells'); }}
           className="w-full text-left bg-white rounded-2xl p-4 flex items-center gap-4 border-2 transition-all hover:border-green-400 active:scale-[0.99]"
           style={{ borderColor: '#e5e7eb' }}
         >
@@ -562,12 +570,89 @@ export default function RestaurantPage() {
   );
 
   // ══════════════════════════════════════════════════════════════════════════
-  // RENDER: CHECKOUT — Step 2: details & confirm
+  // RENDER: CHECKOUT — Step 2: upsells
+  // ══════════════════════════════════════════════════════════════════════════
+  if (view === 'checkout' && checkoutStep === 'upsells') {
+    const upsellItems = menuData
+      .filter(c => c.tab === 'drinks')
+      .flatMap(c => c.items);
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3">
+          <button onClick={() => setCheckoutStep('type')} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <div>
+            <span className="font-black text-base text-gray-900">Anything else?</span>
+            <p className="text-[11px] text-gray-400 leading-none mt-0.5">Add drinks or sides to your order</p>
+          </div>
+        </header>
+
+        <div className="max-w-lg mx-auto px-4 pt-5 pb-32 space-y-4">
+          {/* Compact cart pill */}
+          <div className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between border border-gray-100">
+            <span className="text-sm text-gray-500">{cartCount} item{cartCount !== 1 ? 's' : ''} in cart</span>
+            <span className="font-black text-gray-900">KSh {subtotal.toLocaleString()}</span>
+          </div>
+
+          {/* Upsell grid */}
+          <div className="grid grid-cols-2 gap-3">
+            {upsellItems.map(item => {
+              const qty = cart.find(c => c.id === item.id)?.qty ?? 0;
+              return (
+                <div key={item.id} className="bg-white rounded-2xl p-3 flex flex-col gap-2 border border-gray-100">
+                  <div className="text-2xl">🥤</div>
+                  <div className="flex-1">
+                    <p className="text-sm font-black text-gray-900 leading-tight">{item.name}</p>
+                    {item.description && <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">{item.description}</p>}
+                    <p className="text-xs font-bold mt-1" style={{ color: '#16a34a' }}>KSh {item.price}</p>
+                  </div>
+                  {qty === 0 ? (
+                    <button
+                      onClick={() => dispatch({ type: 'ADD', item })}
+                      className="w-full py-1.5 rounded-xl text-xs font-black text-white"
+                      style={{ background: '#16a34a' }}
+                    >
+                      + Add
+                    </button>
+                  ) : (
+                    <div className="flex items-center justify-between bg-gray-100 rounded-xl px-2 py-1">
+                      <button onClick={() => dispatch({ type: 'REMOVE', id: item.id })} className="text-gray-500 hover:text-red-500 p-0.5">
+                        <Minus className="w-3.5 h-3.5" />
+                      </button>
+                      <span className="text-sm font-black text-gray-900">{qty}</span>
+                      <button onClick={() => dispatch({ type: 'ADD', item })} className="p-0.5" style={{ color: '#16a34a' }}>
+                        <Plus className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sticky continue button */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-3">
+          <button
+            onClick={() => setCheckoutStep('details')}
+            className="w-full py-3.5 rounded-xl text-sm font-black text-white flex items-center justify-center gap-2"
+            style={{ background: '#16a34a' }}
+          >
+            Continue <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // RENDER: CHECKOUT — Step 3: details & confirm
   // ══════════════════════════════════════════════════════════════════════════
   if (view === 'checkout') return (
     <div className="min-h-screen bg-gray-50">
       <header className="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 h-14 flex items-center gap-3">
-        <button onClick={() => setCheckoutStep('type')} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+        <button onClick={() => setCheckoutStep('upsells')} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
         <div>
@@ -844,7 +929,7 @@ export default function RestaurantPage() {
       <div style={{ height: 8, background: '#f4f4f4' }} />
 
       {/* ── Sticky mini tab bar (sticks below top bar when scrolling) ── */}
-      <div className="sticky z-30 bg-white border-b border-gray-100 overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ top: 56, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
+      <div className={`sticky z-30 bg-white border-b border-gray-100 overflow-x-auto [&::-webkit-scrollbar]:hidden transition-all duration-200 ${tabBarVisible ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-2 pointer-events-none'}`} style={{ top: 56, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' } as React.CSSProperties}>
         <div className="flex gap-1 px-4 py-2" style={{ minWidth: 'max-content' }}>
           {tabsForMenu.map(t => (
             <button
