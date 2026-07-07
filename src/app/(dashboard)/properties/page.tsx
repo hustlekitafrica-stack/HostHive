@@ -158,6 +158,30 @@ export default function PropertiesPage() {
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvDone, setCsvDone] = useState(0);
   const csvFileRef = useRef<HTMLInputElement>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Property | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+
+  const handleDeleteProperty = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch(`/api/properties/${deleteTarget.id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) {
+        setDeleteError(json.error?.message || 'Failed to delete property.');
+        setDeleting(false);
+        return;
+      }
+      setDeleteTarget(null);
+      loadProperties();
+    } catch {
+      setDeleteError('Network error — could not delete property.');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const loadProperties = useCallback(async () => {
     setLoading(true);
@@ -737,7 +761,7 @@ export default function PropertiesPage() {
                     <button onClick={() => handleEditProperty(p)} className="p-1.5 border border-gray-200 rounded-lg text-gray-500 hover:bg-gray-50 transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                     </button>
-                    <button className="p-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
+                    <button onClick={() => setDeleteTarget(p)} className="p-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                     </button>
                   </div>
@@ -813,7 +837,7 @@ export default function PropertiesPage() {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                         </button>
                       )}
-                      <button className="p-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
+                      <button onClick={() => setDeleteTarget(p)} className="p-1.5 border border-red-100 rounded-lg text-red-400 hover:bg-red-50 transition-colors">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                       </button>
                     </div>
@@ -871,7 +895,7 @@ export default function PropertiesPage() {
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M17 3a2.85 2.85 0 114 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                               </button>
                             )}
-                            <button className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
+                            <button onClick={() => setDeleteTarget(p)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition-colors">
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
                             </button>
                           </div>
@@ -964,6 +988,46 @@ export default function PropertiesPage() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="px-6 pt-6 pb-4 text-center">
+              <div className="mx-auto w-12 h-12 flex items-center justify-center rounded-full bg-red-100 mb-4">
+                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-1">Delete Property</h3>
+              <p className="text-sm text-gray-500">
+                Are you sure you want to delete <strong className="text-gray-800">{deleteTarget.name}</strong>? This action cannot be undone.
+              </p>
+              {deleteError && (
+                <p className="mt-3 text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{deleteError}</p>
+              )}
+            </div>
+            <div className="px-6 pb-6 flex gap-3">
+              <button
+                onClick={() => { setDeleteTarget(null); setDeleteError(''); }}
+                disabled={deleting}
+                className="flex-1 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteProperty}
+                disabled={deleting}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {deleting ? (
+                  <><svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>Deleting…</>
+                ) : (
+                  'Delete'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

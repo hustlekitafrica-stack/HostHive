@@ -338,6 +338,7 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
   const [stepError, setStepError] = useState('');
   const [publishing, setPublishing] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [addrSearch, setAddrSearch] = useState('');
   const [addrResults, setAddrResults] = useState<any[]>([]);
@@ -1007,7 +1008,52 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
 
           {/* Description */}
           <div className="mb-4">
-            <label className="block text-sm font-semibold text-gray-800 mb-1.5">Description <span className="text-red-500">*</span></label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-semibold text-gray-800">Description <span className="text-red-500">*</span></label>
+              <button
+                type="button"
+                disabled={aiLoading || !data.propertyType}
+                onClick={async () => {
+                  setAiLoading(true);
+                  try {
+                    const res = await fetch('/api/ai/description', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        propertyType: data.propertyType,
+                        location: data.location,
+                        amenities: data.amenities,
+                        basics: data.basics,
+                        title: data.title,
+                      }),
+                    });
+                    const json = await res.json();
+                    if (!res.ok) {
+                      showError(json.error?.message || 'AI generation failed.');
+                    } else if (json.description) {
+                      upd('description', json.description);
+                    }
+                  } catch {
+                    showError('Network error — could not reach AI service.');
+                  } finally {
+                    setAiLoading(false);
+                  }
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-medium hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {aiLoading ? (
+                  <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                    <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+                    <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z"/>
+                  </svg>
+                )}
+                {aiLoading ? 'Generating...' : 'AI Generate'}
+              </button>
+            </div>
             <textarea
               value={data.description}
               onChange={e => e.target.value.length <= 2000 && upd('description', e.target.value)}
