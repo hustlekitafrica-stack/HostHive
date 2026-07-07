@@ -220,6 +220,8 @@ export async function PUT(request: NextRequest) {
           sortRubbish: d.rules?.sortRubbish ?? false,
         },
         additional_rules: d.rules?.additionalRules || '',
+        ...(d.status && { status: d.status }),
+        ...(d.setup_step != null && { setup_step: d.setup_step }),
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

@@ -500,9 +500,9 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
     setPublishing(true);
     try {
       const res = await fetch('/api/properties/wizard', {
-        method: isEdit ? 'PUT' : 'POST',
+        method: propertyId ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(isEdit ? { id: propertyId, ...data, status: 'active' } : { ...data, status: 'active' }),
+        body: JSON.stringify({ ...(propertyId ? { id: propertyId } : {}), ...data, status: 'active' }),
       });
       const json = await res.json();
       if (!res.ok) {
