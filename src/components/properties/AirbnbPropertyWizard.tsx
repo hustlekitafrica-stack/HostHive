@@ -985,24 +985,13 @@ export function AirbnbPropertyWizard({ onClose, initialData, mode = 'add', initi
           {/* Listing Title */}
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-800 mb-1.5">Listing Title <span className="text-red-500">*</span></label>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <input
-                value={data.title}
-                onChange={e => e.target.value.length <= 80 && upd('title', e.target.value)}
-                maxLength={80}
-                placeholder="e.g. Cozy Studio in Kilimani with Fast Wi-Fi"
-                className="flex-1 min-w-0 px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
-              />
-              <button
-                type="button"
-                className="flex items-center justify-center gap-1.5 px-4 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-colors whitespace-nowrap flex-shrink-0"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-                  <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/><path d="M19 15l.75 2.25L22 18l-2.25.75L19 21l-.75-2.25L16 18l2.25-.75L19 15z"/>
-                </svg>
-                AI Suggest
-              </button>
-            </div>
+            <input
+              value={data.title}
+              onChange={e => e.target.value.length <= 80 && upd('title', e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Cozy Studio in Kilimani with Fast Wi-Fi"
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-1 focus:ring-green-600 focus:border-green-600"
+            />
             <p className="text-xs text-gray-400 mt-1">{data.title.length}/80 characters</p>
           </div>
 
