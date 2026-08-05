@@ -1,8 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
 import { updateSession } from '@/lib/supabase/middleware';
 
 const ADMIN_DOMAIN      = process.env.NEXT_PUBLIC_ADMIN_DOMAIN      || 'admin.kogelosuites.com';
-const GUEST_DOMAIN      = process.env.NEXT_PUBLIC_GUEST_DOMAIN      || 'kogelosuites.com';
 const RESTAURANT_DOMAIN = process.env.NEXT_PUBLIC_RESTAURANT_DOMAIN || 'restaurant.kogelosuites.com';
 
 const ADMIN_PATH_PREFIXES = [
@@ -10,7 +10,7 @@ const ADMIN_PATH_PREFIXES = [
   '/guests', '/payments', '/reports', '/reports-custom', '/settings', '/expenses',
   '/expenses-enhanced', '/properties', '/unit-types', '/unit-performance', '/discounts',
   '/tax', '/alerts', '/integrations', '/menu', '/data-management', '/dashboard-analytics',
-  '/balance-sheet', '/requests', '/onboarding', '/upgrade', '/auth/login', '/auth/register',
+  '/balance-sheet', '/requests', '/onboarding', '/upgrade', '/auth/login', '/admin',
 ];
 
 function isAdminPath(pathname: string): boolean {
@@ -56,7 +56,6 @@ export async function middleware(request: NextRequest) {
     if (
       url.pathname.startsWith('/dashboard') ||
       url.pathname.startsWith('/auth/login') ||
-      url.pathname.startsWith('/auth/register') ||
       url.pathname.startsWith('/guests') ||
       url.pathname.startsWith('/properties') ||
       url.pathname.startsWith('/reports') ||
@@ -78,9 +77,32 @@ export async function middleware(request: NextRequest) {
 
   const response = await updateSession(request);
 
-  // ── Add X-Robots-Tag: noindex for all admin/dashboard routes ─────────────
   if (isAdminPath(url.pathname)) {
     const res = response instanceof NextResponse ? response : NextResponse.next();
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              res.cookies.set(name, value, options)
+            );
+          },
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user && url.pathname !== '/auth/login') {
+      url.pathname = '/auth/login';
+      return NextResponse.redirect(url);
+    }
+
     res.headers.set('X-Robots-Tag', 'noindex, nofollow');
     return res;
   }
