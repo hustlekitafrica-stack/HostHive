@@ -38,9 +38,12 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
     const supabase = createRouteClient(request, response);
+    // Supabase requires ≥6-char passwords. Short PINs are padded with a fixed
+    // suffix that only exists server-side; users still type just their PIN.
+    const authPassword = pin.length < 6 ? pin + '__ks__' : pin;
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: member.email,
-      password: pin,
+      password: authPassword,
     });
 
     if (signInError) {

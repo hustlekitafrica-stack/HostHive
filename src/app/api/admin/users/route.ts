@@ -40,9 +40,10 @@ export async function POST(request: NextRequest) {
     const data = createTeamMemberSchema.parse(body);
 
     const admin = createAdminClient();
+    const authPassword = data.pin.length < 6 ? data.pin + '__ks__' : data.pin;
     const { data: authData, error: createError } = await admin.auth.admin.createUser({
       email: data.email,
-      password: data.pin,
+      password: authPassword,
       email_confirm: true,
       user_metadata: { full_name: data.fullName },
     });
@@ -115,8 +116,9 @@ export async function PATCH(request: NextRequest) {
 
     if (pin) {
       updates.pin_hash = bcrypt.hashSync(pin, 10);
+      const authPassword = pin.length < 6 ? pin + '__ks__' : pin;
       const { error: updateAuthError } = await admin.auth.admin.updateUserById(member.user_id, {
-        password: pin,
+        password: authPassword,
       });
       if (updateAuthError) {
         return NextResponse.json({ error: updateAuthError.message }, { status: 400 });
