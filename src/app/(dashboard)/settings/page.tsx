@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { createClient } from '@/lib/supabase/client';
 
-type Tab = 'general' | 'brand' | 'categories' | 'sms' | 'tax' | 'account';
+type Tab = 'general' | 'brand' | 'categories' | 'sms' | 'tax' | 'account' | 'pos';
 type TaxLine = { label: string; rate: string };
 type SmsTemplate = { key: string; label: string; body: string; variables: string[] };
 
@@ -92,12 +92,56 @@ export default function SettingsPage() {
   const [pwSaving,    setPwSaving]    = useState(false);
   const [showNewPw,   setShowNewPw]   = useState(false);
 
+  // POS Printer settings state
+  const [posSettings, setPosSettings] = useState({
+    kitchen_printer_ip: '', bar_printer_ip: '', printer_port: 9100,
+    receipt_header: 'BAR & RESTAURANT', receipt_footer: 'Thank you, see you again!',
+    tax_label: 'VAT', tax_rate: 0, currency: 'KSh',
+  });
+  const [posSaving,   setPosSaving]   = useState(false);
+  const [posTesting,  setPosTesting]  = useState<'kitchen' | 'bar' | null>(null);
+
   useEffect(() => {
     fetch('/api/expense-categories')
       .then(r => r.json())
       .then(d => { if (d.categories) setCategories(d.categories); })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    fetch('/api/pos/settings')
+      .then(r => r.json())
+      .then(d => { if (d.settings) setPosSettings(s => ({ ...s, ...d.settings })); })
+      .catch(() => {});
+  }, []);
+
+  const handleSavePosSettings = async () => {
+    setPosSaving(true);
+    try {
+      const res = await fetch('/api/pos/settings', {
+        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(posSettings),
+      });
+      const d = await res.json();
+      if (d.error) { toast.error(d.error); return; }
+      toast.success('POS settings saved');
+    } catch { toast.error('Network error'); }
+    finally { setPosSaving(false); }
+  };
+
+  const handleTestPrint = async (printer: 'kitchen' | 'bar') => {
+    setPosTesting(printer);
+    try {
+      const res = await fetch('/api/pos/print', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'test', printer }),
+      });
+      const d = await res.json();
+      if (d.printers_failed?.length) toast.error(`Printer failed: ${d.printers_failed[0]}`);
+      else toast.success(`Test print sent to ${printer} printer`);
+    } catch { toast.error('Network error'); }
+    finally { setPosTesting(null); }
+  };
 
   useEffect(() => {
     fetch('/api/sms-templates')
@@ -327,6 +371,7 @@ export default function SettingsPage() {
     { id: 'categories', label: 'Expenses' },
     { id: 'sms', label: 'SMS Templates' },
     { id: 'tax', label: 'Tax & KRA' },
+    { id: 'pos', label: 'POS Printers' },
     { id: 'account', label: 'Account' },
   ];
 
@@ -781,6 +826,96 @@ export default function SettingsPage() {
                 className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60"
               >
                 {taxSaving ? 'Saving…' : 'Save Tax Settings'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── POS PRINTERS TAB ── */}
+        {activeTab === 'pos' && (
+          <div className="space-y-6 max-w-2xl">
+            <div className="bg-white border border-gray-200 rounded-xl p-6">
+              <h2 className="text-base font-bold text-gray-900 mb-1">Ethernet Printer IPs</h2>
+              <p className="text-sm text-gray-500 mb-5">
+                Enter the local IP addresses of your ESC/POS thermal printers (port 9100).
+                Both printers must be on the same network as this PC.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Kitchen Printer IP</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={posSettings.kitchen_printer_ip}
+                      onChange={e => setPosSettings(s => ({ ...s, kitchen_printer_ip: e.target.value }))}
+                      placeholder="192.168.1.100"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    <button onClick={() => handleTestPrint('kitchen')} disabled={posTesting === 'kitchen'}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap">
+                      {posTesting === 'kitchen' ? '…' : 'Test'}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bar Printer IP</label>
+                  <div className="flex gap-2">
+                    <input type="text" value={posSettings.bar_printer_ip}
+                      onChange={e => setPosSettings(s => ({ ...s, bar_printer_ip: e.target.value }))}
+                      placeholder="192.168.1.101"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    <button onClick={() => handleTestPrint('bar')} disabled={posTesting === 'bar'}
+                      className="px-3 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 text-gray-700 text-xs rounded-lg transition-colors disabled:opacity-60 whitespace-nowrap">
+                      {posTesting === 'bar' ? '…' : 'Test'}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">TCP Port</label>
+                  <input type="number" value={posSettings.printer_port}
+                    onChange={e => setPosSettings(s => ({ ...s, printer_port: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  <p className="text-xs text-gray-400 mt-1">Default: 9100 (standard ESC/POS port)</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Currency Symbol</label>
+                  <input type="text" value={posSettings.currency}
+                    onChange={e => setPosSettings(s => ({ ...s, currency: e.target.value }))}
+                    placeholder="KSh"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+              </div>
+              <h3 className="text-sm font-semibold text-gray-800 mb-3 mt-4">Receipt Content</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Header</label>
+                  <input type="text" value={posSettings.receipt_header}
+                    onChange={e => setPosSettings(s => ({ ...s, receipt_header: e.target.value }))}
+                    placeholder="BAR & RESTAURANT"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Receipt Footer</label>
+                  <input type="text" value={posSettings.receipt_footer}
+                    onChange={e => setPosSettings(s => ({ ...s, receipt_footer: e.target.value }))}
+                    placeholder="Thank you, see you again!"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax Label</label>
+                  <input type="text" value={posSettings.tax_label}
+                    onChange={e => setPosSettings(s => ({ ...s, tax_label: e.target.value }))}
+                    placeholder="VAT"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                  <input type="number" min="0" max="100" step="0.5" value={posSettings.tax_rate}
+                    onChange={e => setPosSettings(s => ({ ...s, tax_rate: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
+                  <p className="text-xs text-gray-400 mt-1">Set 0 to disable tax on receipts</p>
+                </div>
+              </div>
+              <button onClick={handleSavePosSettings} disabled={posSaving}
+                className="px-5 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60">
+                {posSaving ? 'Saving…' : 'Save POS Settings'}
               </button>
             </div>
           </div>

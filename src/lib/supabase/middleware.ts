@@ -22,7 +22,13 @@ export const updateSession = async (request: NextRequest) => {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              // Share auth cookies across all *.kogelosuites.com subdomains in production
+              ...(process.env.NODE_ENV === 'production' && {
+                domain: '.kogelosuites.com',
+              }),
+            })
           );
         },
       },

@@ -4,6 +4,7 @@ import { updateSession } from '@/lib/supabase/middleware';
 
 const ADMIN_DOMAIN      = process.env.NEXT_PUBLIC_ADMIN_DOMAIN      || 'admin.kogelosuites.com';
 const RESTAURANT_DOMAIN = process.env.NEXT_PUBLIC_RESTAURANT_DOMAIN || 'restaurant.kogelosuites.com';
+const POS_DOMAIN        = process.env.NEXT_PUBLIC_POS_DOMAIN        || 'pos.kogelosuites.com';
 
 const ADMIN_PATH_PREFIXES = [
   '/dashboard', '/bookings', '/bookings-enhanced', '/calendar', '/booking-calendar',
@@ -11,6 +12,10 @@ const ADMIN_PATH_PREFIXES = [
   '/expenses-enhanced', '/properties', '/unit-types', '/unit-performance', '/discounts',
   '/tax', '/alerts', '/integrations', '/menu', '/data-management', '/dashboard-analytics',
   '/balance-sheet', '/requests', '/onboarding', '/upgrade', '/auth/login', '/admin',
+  // POS dashboard pages
+  '/pos-reports', '/pos-inventory', '/pos-staff',
+  // POS terminal routes (require Supabase session for API calls)
+  '/pos',
 ];
 
 function isAdminPath(pathname: string): boolean {
@@ -21,9 +26,33 @@ export async function middleware(request: NextRequest) {
   const url      = request.nextUrl.clone();
   const hostname = request.headers.get('host') ?? '';
 
-  const isRestaurant = hostname === RESTAURANT_DOMAIN || hostname.startsWith('restaurant.');
-  const isAdmin      = !isRestaurant && (hostname === ADMIN_DOMAIN || hostname.startsWith('admin.'));
-  const isGuest      = !isRestaurant && !isAdmin;
+  const isPOS        = hostname === POS_DOMAIN || hostname.startsWith('pos.');
+  const isRestaurant = !isPOS && (hostname === RESTAURANT_DOMAIN || hostname.startsWith('restaurant.'));
+  const isAdmin      = !isPOS && !isRestaurant && (hostname === ADMIN_DOMAIN || hostname.startsWith('admin.'));
+  const isGuest      = !isPOS && !isRestaurant && !isAdmin;
+
+  // ── POS subdomain ────────────────────────────────────────────────────────
+  if (isPOS) {
+    // Root → POS staff login
+    if (url.pathname === '/') {
+      url.pathname = '/pos';
+      return NextResponse.redirect(url);
+    }
+    // Allow POS pages and API routes; block everything else
+    const allowedOnPOS =
+      url.pathname.startsWith('/pos') ||
+      url.pathname.startsWith('/api/pos') ||
+      url.pathname.startsWith('/_next') ||
+      url.pathname.startsWith('/icons') ||
+      url.pathname === '/pos-manifest.json' ||
+      url.pathname === '/pos-sw.js';
+    if (!allowedOnPOS) {
+      url.pathname = '/pos';
+      return NextResponse.redirect(url);
+    }
+    // Refresh Supabase session (cookies shared via .kogelosuites.com domain)
+    return updateSession(request);
+  }
 
   // ── Restaurant subdomain ─────────────────────────────────────────────────
   if (isRestaurant) {
