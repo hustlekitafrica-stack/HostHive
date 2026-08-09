@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Briefcase, Loader2, Download, X } from 'lucide-react';
+import { ArrowLeft, Briefcase, Loader2, Download, X, Tablet, ExternalLink } from 'lucide-react';
 import { NumpadInput } from '@/components/pos/NumpadInput';
 
 /* --- Types ----------------------------------------------------------------- */
@@ -38,9 +38,11 @@ const ROLE_COLORS: Record<string, string> = {
 export default function POSLoginPage() {
   const router = useRouter();
 
-  /* staff list */
-  const [staff, setStaff]     = useState<StaffMember[]>([]);
-  const [loading, setLoading] = useState(true);
+  /* staff list + device setup state */
+  const [staff, setStaff]         = useState<StaffMember[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [deviceReady, setDeviceReady] = useState(true);   // false = needs setup
+  const [settingUp, setSettingUp] = useState(false);
 
   /* screen state machine */
   const [screen, setScreen]               = useState<Screen>('select');
@@ -82,14 +84,37 @@ export default function POSLoginPage() {
   const [openingFloat, setOpeningFloat]   = useState('');
   const [confirmingFloat, setConfirmingFloat] = useState(false);
 
-  /* -- Load staff list ------------------------------------------------------ */
+  /* -- Load staff list (handles device-not-set-up 401) --------------------- */
   useEffect(() => {
     fetch('/api/pos/staff')
-      .then(r => r.json())
-      .then(d => setStaff((d.staff ?? []).filter((s: StaffMember) => s.active)))
+      .then(async (r) => {
+        if (r.status === 401) {
+          setDeviceReady(false);
+          return;
+        }
+        const d = await r.json();
+        setStaff((d.staff ?? []).filter((s: StaffMember) => s.active));
+      })
       .catch(() => toast.error('Failed to load staff'))
       .finally(() => setLoading(false));
   }, []);
+
+  /* -- One-click device setup (admin must be logged in) --------------------- */
+  const handleSetupDevice = async () => {
+    setSettingUp(true);
+    try {
+      const res = await fetch('/api/pos/setup-device', { method: 'POST' });
+      if (res.ok) {
+        toast.success('Device registered! Reloading…');
+        setTimeout(() => window.location.reload(), 1200);
+      } else {
+        const { error } = await res.json().catch(() => ({ error: 'Unknown error' }));
+        toast.error(error ?? 'Setup failed. Make sure you are logged into the dashboard first.');
+      }
+    } finally {
+      setSettingUp(false);
+    }
+  };
 
   /* -- Auto-submit PIN when 4 digits are entered ---------------------------- */
   useEffect(() => {
@@ -232,11 +257,41 @@ export default function POSLoginPage() {
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Loading staff…</span>
               </div>
+            ) : !deviceReady ? (
+              /* ── Device not configured ── */
+              <div className="flex flex-col items-center gap-5 py-16 max-w-sm mx-auto text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center">
+                  <Tablet className="w-8 h-8 text-amber-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white mb-1">This device is not set up</h3>
+                  <p className="text-slate-400 text-sm leading-relaxed">
+                    The POS needs to be linked to your hotel account before staff can sign in.
+                    Log in to the dashboard first, then click the button below.
+                  </p>
+                </div>
+                <button
+                  onClick={handleSetupDevice}
+                  disabled={settingUp}
+                  className="w-full flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 text-white font-semibold rounded-xl transition-colors"
+                >
+                  {settingUp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Tablet className="w-4 h-4" />}
+                  {settingUp ? 'Setting up…' : 'Set Up This Device'}
+                </button>
+                <a
+                  href="https://app.kogelosuites.com/auth/login"
+                  className="flex items-center gap-1.5 text-slate-500 hover:text-slate-300 text-xs transition-colors"
+                  target="_blank" rel="noopener noreferrer"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  Open dashboard login
+                </a>
+              </div>
             ) : staff.length === 0 ? (
               <p className="text-center text-slate-500 py-16">
                 No active staff found.{' '}
-                <Link href="/dashboard" className="text-blue-400 hover:underline">
-                  Add staff from the dashboard.
+                <Link href="/pos-staff" className="text-blue-400 hover:underline">
+                  Add staff from the POS admin panel.
                 </Link>
               </p>
             ) : (

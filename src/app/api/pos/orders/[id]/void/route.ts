@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 import bcrypt from 'bcryptjs';
 
 export async function POST(
@@ -7,9 +7,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
     const body = await request.json();
@@ -24,7 +24,7 @@ export async function POST(
       .from('pos_orders')
       .select('*')
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     if (orderError || !order) {
@@ -43,7 +43,7 @@ export async function POST(
     const { data: manager, error: managerError } = await supabase
       .from('pos_staff')
       .select('id, pin_hash')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .eq('role', 'manager')
       .eq('active', true)
       .single();
@@ -68,7 +68,7 @@ export async function POST(
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select()
       .single();
 
@@ -86,7 +86,7 @@ export async function POST(
           updated_at: new Date().toISOString(),
         })
         .eq('id', order.table_id)
-        .eq('host_user_id', session.user.id);
+        .eq('host_user_id', host_user_id);
     }
 
     return NextResponse.json({ success: true, order: updatedOrder });

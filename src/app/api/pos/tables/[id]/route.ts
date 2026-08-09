@@ -1,14 +1,14 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
     const body = await request.json();
@@ -25,7 +25,7 @@ export async function PATCH(
       .from('pos_tables')
       .update(updates)
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select()
       .single();
 
@@ -39,13 +39,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
 
@@ -54,7 +54,7 @@ export async function DELETE(
       .from('pos_tables')
       .select('id, status')
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     if (fetchError || !table) return NextResponse.json({ error: 'Table not found' }, { status: 404 });
@@ -66,7 +66,7 @@ export async function DELETE(
       .from('pos_tables')
       .delete()
       .eq('id', id)
-      .eq('host_user_id', session.user.id);
+      .eq('host_user_id', host_user_id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 

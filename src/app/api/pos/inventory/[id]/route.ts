@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // PATCH /api/pos/inventory/[id]
 // Body: { item_name?, category?, unit?, quantity_in_stock?, reorder_level?, cost_price?, track_stock? }
@@ -8,9 +8,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
     const body = await request.json();
@@ -38,7 +38,7 @@ export async function PATCH(
       .from('pos_inventory')
       .update(updates)
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select()
       .single();
 
@@ -53,13 +53,13 @@ export async function PATCH(
 
 // DELETE /api/pos/inventory/[id]
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
 
@@ -67,7 +67,7 @@ export async function DELETE(
       .from('pos_inventory')
       .delete()
       .eq('id', id)
-      .eq('host_user_id', session.user.id);
+      .eq('host_user_id', host_user_id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 

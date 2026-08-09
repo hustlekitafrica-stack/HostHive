@@ -12,17 +12,14 @@ const ADMIN_PATH_PREFIXES = [
   '/expenses-enhanced', '/properties', '/unit-types', '/unit-performance', '/discounts',
   '/tax', '/alerts', '/integrations', '/menu', '/data-management', '/dashboard-analytics',
   '/balance-sheet', '/requests', '/onboarding', '/upgrade', '/auth/login', '/admin',
-  // POS dashboard pages
   '/pos-reports', '/pos-inventory', '/pos-staff',
-  // POS terminal routes (require Supabase session for API calls)
-  '/pos',
 ];
 
 function isAdminPath(pathname: string): boolean {
   return ADMIN_PATH_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + '/'));
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url      = request.nextUrl.clone();
   const hostname = request.headers.get('host') ?? '';
 
@@ -33,15 +30,14 @@ export async function middleware(request: NextRequest) {
 
   // ── POS subdomain ────────────────────────────────────────────────────────
   if (isPOS) {
-    // Root → POS staff login
+    // Root -> POS staff login page
     if (url.pathname === '/') {
       url.pathname = '/pos';
       return NextResponse.redirect(url);
     }
-    // Allow POS pages and API routes; block everything else
+    // Allow only POS pages and their static assets; block everything else
     const allowedOnPOS =
       url.pathname.startsWith('/pos') ||
-      url.pathname.startsWith('/api/pos') ||
       url.pathname.startsWith('/_next') ||
       url.pathname.startsWith('/icons') ||
       url.pathname === '/pos-manifest.json' ||
@@ -50,8 +46,8 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/pos';
       return NextResponse.redirect(url);
     }
-    // Refresh Supabase session (cookies shared via .kogelosuites.com domain)
-    return updateSession(request);
+    // Pass through (POS pages handle their own auth via device token cookie)
+    return NextResponse.next();
   }
 
   // ── Restaurant subdomain ─────────────────────────────────────────────────
@@ -63,12 +59,10 @@ export async function middleware(request: NextRequest) {
 
   // ── Admin subdomain ──────────────────────────────────────────────────────
   if (isAdmin) {
-    // Block guest routes on admin domain
     if (url.pathname.startsWith('/stay')) {
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
     }
-    // Root → dashboard
     if (url.pathname === '/') {
       url.pathname = '/dashboard';
       return NextResponse.redirect(url);
@@ -77,11 +71,9 @@ export async function middleware(request: NextRequest) {
 
   // ── Guest domain ─────────────────────────────────────────────────────────
   if (isGuest) {
-    // Redirect /stay/dining → restaurant subdomain
     if (url.pathname === '/stay/dining' || url.pathname.startsWith('/stay/dining/')) {
       return NextResponse.redirect(`https://${RESTAURANT_DOMAIN}`);
     }
-    // Block dashboard routes on guest domain
     if (
       url.pathname.startsWith('/dashboard') ||
       url.pathname.startsWith('/auth/login') ||
@@ -97,7 +89,6 @@ export async function middleware(request: NextRequest) {
       url.pathname = '/stay';
       return NextResponse.redirect(url);
     }
-    // Root → /stay
     if (url.pathname === '/') {
       url.pathname = '/stay';
       return NextResponse.redirect(url);

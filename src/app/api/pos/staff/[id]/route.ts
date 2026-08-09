@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 import bcrypt from 'bcryptjs';
 
 const VALID_ROLES = ['manager', 'cashier', 'waiter', 'barman', 'stock_manager'] as const;
@@ -10,9 +10,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
     const body = await request.json();
@@ -40,7 +40,7 @@ export async function PATCH(
       .from('pos_staff')
       .update(updates)
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select('id, host_user_id, name, role, active, created_at, updated_at')
       .single();
 
@@ -54,13 +54,13 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
 
@@ -68,7 +68,7 @@ export async function DELETE(
       .from('pos_staff')
       .update({ active: false, updated_at: new Date().toISOString() })
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select('id, host_user_id, name, role, active, created_at, updated_at')
       .single();
 

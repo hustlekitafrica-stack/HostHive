@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // ─── Env vars (same set as /api/stay/mpesa) ──────────────────────────────────
 // MPESA_CONSUMER_KEY=
@@ -37,9 +38,9 @@ function getTimestamp(): string {
 
 // POST /api/pos/mpesa
 // Body: { phone: string; amount: number; order_number?: string }
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const { phone, amount, order_number } = await req.json();
+    const { phone, amount, order_number } = await request.json();
 
     if (!phone || !amount) {
       return NextResponse.json({ error: 'phone and amount are required' }, { status: 400 });

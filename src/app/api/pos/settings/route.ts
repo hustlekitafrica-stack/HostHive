@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 const DEFAULT_SETTINGS = {
   kitchen_printer_ip: '',
@@ -13,22 +13,22 @@ const DEFAULT_SETTINGS = {
 };
 
 // GET /api/pos/settings
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { data, error } = await supabase
       .from('pos_settings')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
     // Return row if found, otherwise return defaults (without persisting them)
-    return NextResponse.json({ settings: data ?? { ...DEFAULT_SETTINGS, host_user_id: session.user.id } });
+    return NextResponse.json({ settings: data ?? { ...DEFAULT_SETTINGS, host_user_id: host_user_id } });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
@@ -38,9 +38,9 @@ export async function GET() {
 // Body: any subset of settings fields — upserted on host_user_id.
 export async function PATCH(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const body = await request.json();
 
@@ -49,7 +49,7 @@ export async function PATCH(request: NextRequest) {
       .upsert(
         {
           ...body,
-          host_user_id: session.user.id,
+          host_user_id: host_user_id,
           updated_at:   new Date().toISOString(),
         },
         { onConflict: 'host_user_id' }

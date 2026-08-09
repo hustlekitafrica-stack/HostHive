@@ -1,12 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // GET /api/pos/shifts?status=open|closed
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('pos_shifts')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .order('opened_at', { ascending: false })
       .limit(50);
 
@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 // Body: { staff_id, staff_name, opening_float? }
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const body = await request.json();
     const { staff_id, staff_name, opening_float } = body;
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     const { data: existing, error: checkError } = await supabase
       .from('pos_shifts')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .eq('staff_id', staff_id)
       .eq('status', 'open')
       .maybeSingle();
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('pos_shifts')
       .insert({
-        host_user_id:  session.user.id,
+        host_user_id:  host_user_id,
         staff_id,
         staff_name,
         opening_float: opening_float ?? 0,

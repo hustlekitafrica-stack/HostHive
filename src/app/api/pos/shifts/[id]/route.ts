@@ -1,16 +1,16 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // GET /api/pos/shifts/[id]
 // Returns the shift plus a total_orders count for the shift.
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
 
@@ -18,7 +18,7 @@ export async function GET(
       .from('pos_shifts')
       .select('*')
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     if (shiftError || !shift) {
@@ -47,9 +47,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { id } = await params;
     const body = await request.json();
@@ -64,7 +64,7 @@ export async function PATCH(
       .from('pos_shifts')
       .select('*')
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     if (shiftError || !shift) {
@@ -135,7 +135,7 @@ export async function PATCH(
         cash_variance,
       })
       .eq('id', id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .select()
       .single();
 

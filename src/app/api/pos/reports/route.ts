@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 interface OrderRow {
   id: string;
@@ -13,9 +13,9 @@ interface OrderRow {
 // GET /api/pos/reports?date_from=ISO&date_to=ISO&staff_id=optional
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { searchParams } = new URL(request.url);
     const date_from = searchParams.get('date_from');
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('pos_orders')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .eq('status', 'paid')
       .order('paid_at', { ascending: false })
       .limit(200);

@@ -1,19 +1,19 @@
-import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // POST /api/pos/inventory/seed
 // Seeds pos_inventory from menu_items for the current host, skipping duplicates.
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     // 1. Get menu_item_ids already tracked in inventory for this host
     const { data: existing, error: existingError } = await supabase
       .from('pos_inventory')
       .select('menu_item_id')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .not('menu_item_id', 'is', null);
 
     if (existingError) return NextResponse.json({ error: existingError.message }, { status: 400 });
@@ -32,7 +32,7 @@ export async function POST() {
     const toInsert = (menuItems ?? [])
       .filter((m: { id: string; name: string; tab: string; active: boolean }) => !existingIds.has(m.id))
       .map((m: { id: string; name: string; tab: string; active: boolean }) => ({
-        host_user_id:      session.user.id,
+        host_user_id:      host_user_id,
         menu_item_id:      m.id,
         item_name:         m.name,
         category:          m.tab === 'drinks' ? 'bar' : 'food',

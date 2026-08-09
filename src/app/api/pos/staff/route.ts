@@ -1,20 +1,20 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 import bcrypt from 'bcryptjs';
 
 const VALID_ROLES = ['manager', 'cashier', 'waiter', 'barman', 'stock_manager'] as const;
 const PIN_REGEX = /^\d{4}$/;
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { data, error } = await supabase
       .from('pos_staff')
       .select('id, host_user_id, name, role, active, created_at, updated_at')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .order('name', { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -27,9 +27,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const body = await request.json();
     const { name, role, pin } = body;
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('pos_staff')
       .insert({
-        host_user_id: session.user.id,
+        host_user_id: host_user_id,
         name,
         role,
         pin_hash,

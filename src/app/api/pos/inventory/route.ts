@@ -1,12 +1,12 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
 // GET /api/pos/inventory?category=food|bar
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('pos_inventory')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .order('category', { ascending: true })
       .order('item_name', { ascending: true });
 
@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
 // Body: { item_name, category?, unit?, quantity_in_stock?, reorder_level?, cost_price?, menu_item_id?, track_stock? }
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const body = await request.json();
     const {
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('pos_inventory')
       .insert({
-        host_user_id:      session.user.id,
+        host_user_id:      host_user_id,
         item_name,
         category:          category          ?? null,
         unit:              unit              ?? null,

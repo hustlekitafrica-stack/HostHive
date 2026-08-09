@@ -1,16 +1,16 @@
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const { data, error } = await supabase
       .from('pos_tables')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .order('section', { ascending: true })
       .order('name', { ascending: true });
 
@@ -24,9 +24,9 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
     const body = await request.json();
     const { name, section, capacity } = body;
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabase
       .from('pos_tables')
       .insert({
-        host_user_id: session.user.id,
+        host_user_id: host_user_id,
         name,
         section: section ?? null,
         capacity: capacity ?? null,

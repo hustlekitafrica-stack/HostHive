@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { getPosAuth } from '@/lib/pos/device-auth';
 import { sendToPrinter } from '@/lib/pos/printer';
 import {
   formatKitchenTicket,
@@ -17,20 +17,20 @@ const DEFAULT_SETTINGS: POSSettings = {
   currency: 'KSh',
 };
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const posAuth = await getPosAuth(request);
+    if (!posAuth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const { host_user_id, supabase } = posAuth;
 
-    const body = await req.json();
+    const body = await request.json();
     const { type, order_id, shift_id, printer } = body;
 
     // Fetch pos_settings
     const { data: settingsRow } = await supabase
       .from('pos_settings')
       .select('*')
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     const settings: POSSettings = settingsRow
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         .from('pos_shifts')
         .select('*')
         .eq('id', shift_id)
-        .eq('host_user_id', session.user.id)
+        .eq('host_user_id', host_user_id)
         .single();
       if (!shift) return NextResponse.json({ error: 'Shift not found' }, { status: 404 });
       const buf = formatZReport(shift, settings);
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       .from('pos_orders')
       .select('*')
       .eq('id', order_id)
-      .eq('host_user_id', session.user.id)
+      .eq('host_user_id', host_user_id)
       .single();
 
     if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
