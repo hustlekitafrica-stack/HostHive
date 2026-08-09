@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getPosAuth } from '@/lib/pos/device-auth';
 import bcrypt from 'bcryptjs';
 
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabase
       .from('pos_staff')
-      .select('id, host_user_id, name, role, active, created_at, updated_at')
+      .select('id, host_user_id, name, role, active, created_at')
       .eq('host_user_id', host_user_id)
       .order('name', { ascending: true });
 
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         pin_hash,
         active: true,
       })
-      .select('id, host_user_id, name, role, active, created_at, updated_at')
+      .select('id, host_user_id, name, role, active, created_at')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * POST /api/pos/setup-device
  *
  * Called once by the admin from the dashboard to register a POS device.
@@ -9,8 +9,8 @@
  * DELETE /api/pos/setup-device
  * Clears the cookie (revoke device access).
  */
-import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 import { signDeviceToken, POS_DEVICE_COOKIE } from '@/lib/pos/device-auth';
 
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days in seconds

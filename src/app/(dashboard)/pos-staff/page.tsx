@@ -23,6 +23,7 @@ interface StaffMember {
   role: Role;
   active: boolean;
   created_at: string;
+  host_user_id?: string;
 }
 
 interface StaffForm {

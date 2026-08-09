@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getPosAuth } from '@/lib/pos/device-auth';
 import bcrypt from 'bcryptjs';
 
@@ -28,7 +28,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'pin must be exactly 4 digits' }, { status: 400 });
     }
 
-    const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (role !== undefined) updates.role = role;
     if (active !== undefined) updates.active = active;
@@ -41,7 +41,7 @@ export async function PATCH(
       .update(updates)
       .eq('id', id)
       .eq('host_user_id', host_user_id)
-      .select('id, host_user_id, name, role, active, created_at, updated_at')
+      .select('id, host_user_id, name, role, active, created_at')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });
@@ -66,10 +66,10 @@ export async function DELETE(
 
     const { data, error } = await supabase
       .from('pos_staff')
-      .update({ active: false, updated_at: new Date().toISOString() })
+      .update({ active: false })
       .eq('id', id)
       .eq('host_user_id', host_user_id)
-      .select('id, host_user_id, name, role, active, created_at, updated_at')
+      .select('id, host_user_id, name, role, active, created_at')
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 400 });

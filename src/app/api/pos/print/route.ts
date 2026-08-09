@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 import { getPosAuth } from '@/lib/pos/device-auth';
 import { sendToPrinter } from '@/lib/pos/printer';
 import {
