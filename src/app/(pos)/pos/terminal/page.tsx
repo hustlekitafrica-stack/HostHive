@@ -1,12 +1,12 @@
 ﻿'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
-  LogOut, ShoppingBag, MapPin, UtensilsCrossed,
-  ChevronDown, Loader2, X,
+  LogOut, ShoppingBag, UtensilsCrossed,
+  ChefHat, LayoutGrid, Loader2,
 } from 'lucide-react';
 
 import { MenuGrid }       from '@/components/pos/MenuGrid';
@@ -36,22 +36,16 @@ export interface CartItem {
 }
 
 interface OpenOrder {
-  id:           string;
-  order_number: string;
-  table_id:     string | null;
-  table_name:   string;
-  order_type:   'dine-in' | 'takeaway' | 'bar';
-  total:        number;
-  status:       string;
-  items:        CartItem[];
-  discountType: 'percent' | 'fixed' | '';
+  id:            string;
+  order_number:  string;
+  table_id:      string | null;
+  table_name:    string;
+  order_type:    'dine_in' | 'takeaway' | 'bar' | 'room_service';
+  total:         number;
+  status:        string;
+  items:         CartItem[];
+  discountType:  'percent' | 'fixed' | '';
   discountValue: number;
-}
-
-interface POSTable {
-  id:     string;
-  name:   string;
-  status: string;
 }
 
 /* --- Helpers --------------------------------------------------------------- */
@@ -95,7 +89,7 @@ function blankOrder(): OpenOrder {
     order_number:  '',
     table_id:      null,
     table_name:    '',
-    order_type:    'dine-in',
+    order_type:    'dine_in',
     total:         0,
     status:        'open',
     items:         [],
@@ -105,12 +99,15 @@ function blankOrder(): OpenOrder {
 }
 
 function mapDbOrder(row: Record<string, unknown>): OpenOrder {
+  // Handle legacy 'dine-in' value from old data
+  let orderType = ((row.order_type as string) ?? 'dine_in') as OpenOrder['order_type'];
+  if ((orderType as string) === 'dine-in') orderType = 'dine_in';
   return {
     id:            row.id as string,
     order_number:  (row.order_number as string) ?? '',
     table_id:      (row.table_id as string | null) ?? null,
     table_name:    (row.table_name as string) ?? '',
-    order_type:    ((row.order_type as string) ?? 'dine-in') as OpenOrder['order_type'],
+    order_type:    orderType,
     total:         (row.total as number) ?? 0,
     status:        (row.status as string) ?? 'open',
     items:         (row.items as CartItem[]) ?? [],
@@ -119,10 +116,11 @@ function mapDbOrder(row: Record<string, unknown>): OpenOrder {
   };
 }
 
-const ORDER_TYPES: { id: OpenOrder['order_type']; label: string }[] = [
-  { id: 'dine-in',  label: '🪑 Dine-in'  },
-  { id: 'takeaway', label: '🥡 Takeaway' },
-  { id: 'bar',      label: '🍺 Bar'      },
+const ORDER_TYPES: { id: OpenOrder['order_type']; label: string; preset: string }[] = [
+  { id: 'room_service', label: '🛎️ Room',     preset: ''          },
+  { id: 'dine_in',      label: '🪑 Dine-in',  preset: ''          },
+  { id: 'bar',          label: '🍺 Bar',       preset: 'Bar'       },
+  { id: 'takeaway',     label: '🥡 Takeaway',  preset: 'Takeaway'  },
 ];
 
 /* --- Inner component (needs Suspense for useSearchParams) ------------------ */
@@ -134,24 +132,23 @@ function TerminalInner() {
   const [staff, setStaff] = useState<StaffSession | null>(null);
 
   /* orders */
-  const [openOrders, setOpenOrders]   = useState<OpenOrder[]>([]);
+  const [openOrders,    setOpenOrders]    = useState<OpenOrder[]>([]);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
 
   /* modals */
-  const [showPayment,     setShowPayment]     = useState(false);
-  const [showVoid,        setShowVoid]        = useState(false);
-  const [tableSelectOpen, setTableSelectOpen] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [showVoid,    setShowVoid]    = useState(false);
 
   /* settings */
   const [taxRate,  setTaxRate]  = useState(0);
   const [currency, setCurrency] = useState('KSh');
 
-  /* table selector data */
-  const [tables, setTables] = useState<POSTable[]>([]);
-
   /* loading */
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  /* room/location input ref (for auto-focus) */
+  const locationRef = useRef<HTMLInputElement>(null);
 
   /* -- Mount: read session, load settings + orders -------------------------- */
   useEffect(() => {
@@ -167,17 +164,15 @@ function TerminalInner() {
     }
     setStaff(session);
 
-    /* Load settings, tables, and open orders in parallel */
+    /* Load settings and open orders in parallel */
     Promise.all([
       fetch('/api/pos/settings').then(r => r.json()),
-      fetch('/api/pos/tables').then(r => r.json()),
       fetch(`/api/pos/orders?shift_id=${session.shiftId}&limit=50`).then(r => r.json()),
-    ]).then(([settingsData, tablesData, ordersData]) => {
+    ]).then(([settingsData, ordersData]) => {
       if (settingsData.settings) {
         setTaxRate(settingsData.settings.tax_rate ?? 0);
         setCurrency(settingsData.settings.currency ?? 'KSh');
       }
-      setTables(tablesData.tables ?? []);
 
       /* Restore open/in-progress orders for this shift */
       const existing: OpenOrder[] = (ordersData.orders ?? [])
@@ -188,8 +183,6 @@ function TerminalInner() {
 
       if (existing.length > 0) {
         setOpenOrders(existing);
-
-        /* If a table_id was passed via query param, activate that order */
         const paramTableId = searchParams.get('table_id');
         const matched = paramTableId
           ? existing.find(o => o.table_id === paramTableId)
@@ -223,12 +216,12 @@ function TerminalInner() {
   /* -- Cart operations ------------------------------------------------------ */
   const addItemToCart = useCallback((menuItem: POSMenuItem) => {
     setOpenOrders(prev => {
-      let orders = [...prev];
+      let orders   = [...prev];
       let targetId = activeOrderId;
 
       if (!targetId || !orders.find(o => o.id === targetId)) {
         const blank = blankOrder();
-        orders  = [...orders, blank];
+        orders   = [...orders, blank];
         targetId = blank.id;
         setActiveOrderId(blank.id);
       }
@@ -315,14 +308,17 @@ function TerminalInner() {
     setActiveOrderId(id);
   }, []);
 
-  /* -- Set table ------------------------------------------------------------ */
-  const handleSetTable = useCallback((table: POSTable) => {
+  /* -- Order type change: auto-fill preset location ------------------------- */
+  const handleOrderTypeChange = useCallback((newType: OpenOrder['order_type']) => {
     if (!activeOrder) return;
+    const preset = ORDER_TYPES.find(t => t.id === newType)?.preset ?? '';
     patchOrder(activeOrder.id, {
-      table_id:   table.id,
-      table_name: table.name,
+      order_type: newType,
+      table_name: preset,
     });
-    setTableSelectOpen(false);
+    if (newType === 'room_service' || (newType === 'dine_in' && !activeOrder.table_name)) {
+      setTimeout(() => locationRef.current?.focus(), 50);
+    }
   }, [activeOrder, patchOrder]);
 
   /* -- Save order to DB (create or update) ---------------------------------- */
@@ -332,18 +328,18 @@ function TerminalInner() {
     );
 
     const payload = {
-      shift_id:       staff?.shiftId ?? null,
-      staff_id:       staff?.staffId ?? null,
-      staff_name:     staff?.staffName ?? null,
-      table_id:       order.table_id,
-      table_name:     order.table_name || null,
-      order_type:     order.order_type,
-      items:          order.items,
+      shift_id:        staff?.shiftId ?? null,
+      staff_id:        staff?.staffId ?? null,
+      staff_name:      staff?.staffName ?? null,
+      table_id:        null,           // room_number stored in table_name
+      table_name:      order.table_name || null,
+      order_type:      order.order_type,
+      items:           order.items,
       subtotal,
-      discount_type:  order.discountType  || null,
-      discount_value: order.discountValue || 0,
+      discount_type:   order.discountType  || null,
+      discount_value:  order.discountValue || 0,
       discount_amount: discountAmt,
-      tax_amount:     taxAmount,
+      tax_amount:      taxAmount,
       total,
     };
 
@@ -381,50 +377,32 @@ function TerminalInner() {
     const prevId = activeOrder.id;
 
     try {
-      /* 1. Save/create the order */
       const realId = await saveOrderToDB(activeOrder);
 
-      /* 2. Mark sent_to_kitchen */
       await fetch(`/api/pos/orders/${realId}`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          status:           'sent_to_kitchen',
-          kitchen_sent_at:  new Date().toISOString(),
+          status:          'sent_to_kitchen',
+          kitchen_sent_at: new Date().toISOString(),
         }),
       });
 
-      /* 3. Print kitchen + bar tickets (fire-and-forget) */
+      /* Print kitchen + bar tickets (fire-and-forget) */
       fetch('/api/pos/print', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ type: 'both_tickets', order_id: realId }),
-      }).catch(() => { /* printing is best-effort */ });
+      }).catch(() => {});
 
-      /* 4. Mark table occupied */
-      if (activeOrder.table_id) {
-        await fetch(`/api/pos/tables/${activeOrder.table_id}`, {
-          method:  'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ status: 'occupied', current_order_id: realId }),
-        });
-        setTables(prev => prev.map(t =>
-          t.id === activeOrder.table_id ? { ...t, status: 'occupied' } : t,
-        ));
-      }
-
-      /* 5. Update local state (swap temp id for real id if newly created) */
       setOpenOrders(prev => prev.map(o =>
-        o.id === prevId
-          ? { ...o, id: realId, status: 'sent_to_kitchen' }
-          : o,
+        o.id === prevId ? { ...o, id: realId, status: 'sent_to_kitchen' } : o,
       ));
       if (prevId !== realId) setActiveOrderId(realId);
 
-      toast.success('Sent to kitchen! 🍳');
+      toast.success('Sent to kitchen!');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unexpected error';
-      toast.error(message);
+      toast.error(err instanceof Error ? err.message : 'Unexpected error');
     } finally {
       setIsSending(false);
     }
@@ -445,10 +423,8 @@ function TerminalInner() {
     const prevId = activeOrder.id;
 
     try {
-      /* 1. Ensure order exists in DB */
       const realId = await saveOrderToDB(activeOrder);
 
-      /* 2. Mark paid */
       const { total } = calcAmounts(
         activeOrder.items, activeOrder.discountType, activeOrder.discountValue, taxRate,
       );
@@ -466,39 +442,24 @@ function TerminalInner() {
         }),
       });
 
-      /* 3. Print customer receipt (fire-and-forget) */
+      /* Print customer receipt */
       fetch('/api/pos/print', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ type: 'customer_receipt', order_id: realId }),
-      }).catch(() => { /* printing is best-effort */ });
+      }).catch(() => {});
 
-      /* 4. Free the table */
-      if (activeOrder.table_id) {
-        await fetch(`/api/pos/tables/${activeOrder.table_id}`, {
-          method:  'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ status: 'available', current_order_id: null }),
-        });
-        setTables(prev => prev.map(t =>
-          t.id === activeOrder.table_id ? { ...t, status: 'available' } : t,
-        ));
-      }
-
-      /* 5. Remove order from tabs */
       setOpenOrders(prev => {
         const remaining = prev.filter(o => o.id !== prevId && o.id !== realId);
-        const next = remaining[0] ?? null;
-        setActiveOrderId(next?.id ?? null);
+        setActiveOrderId(remaining[0]?.id ?? null);
         return remaining;
       });
 
       setShowPayment(false);
-      toast.success('Payment complete! 🎉');
+      toast.success('Payment complete!');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unexpected error';
-      toast.error(message);
-      throw err; /* let PaymentModal know to keep loading false */
+      toast.error(err instanceof Error ? err.message : 'Unexpected error');
+      throw err;
     }
   }, [activeOrder, saveOrderToDB, taxRate]);
 
@@ -506,20 +467,11 @@ function TerminalInner() {
   const handleVoided = useCallback(() => {
     if (!activeOrder) return;
     const voided = activeOrder.id;
-
     setOpenOrders(prev => {
       const remaining = prev.filter(o => o.id !== voided);
-      const next      = remaining[0] ?? null;
-      setActiveOrderId(next?.id ?? null);
+      setActiveOrderId(remaining[0]?.id ?? null);
       return remaining;
     });
-
-    /* Refresh tables */
-    fetch('/api/pos/tables')
-      .then(r => r.json())
-      .then(d => setTables(d.tables ?? []))
-      .catch(() => {});
-
     setShowVoid(false);
     toast.success('Order voided.');
   }, [activeOrder]);
@@ -559,21 +511,40 @@ function TerminalInner() {
           />
         </div>
 
-        {/* Staff info + actions */}
-        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-          <span className="text-slate-300 text-sm hidden md:block">{staff?.staffName}</span>
-          <span className="hidden md:block text-xs bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full capitalize">
-            {staff?.role}
-          </span>
+        {/* Nav + staff actions */}
+        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1">
+          <span className="text-slate-300 text-sm hidden lg:block">{staff?.staffName}</span>
 
+          {/* Kitchen link */}
+          <Link
+            href="/pos/kitchen"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
+            title="Kitchen Display"
+          >
+            <ChefHat className="w-3.5 h-3.5" />
+            <span className="hidden md:block">Kitchen</span>
+          </Link>
+
+          {/* Dashboard link */}
+          <Link
+            href="/pos/dashboard"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
+            title="POS Dashboard"
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            <span className="hidden md:block">Dashboard</span>
+          </Link>
+
+          {/* Close shift */}
           <Link
             href="/pos/close-shift"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
           >
             <ShoppingBag className="w-3.5 h-3.5" />
             <span className="hidden sm:block">Close Shift</span>
           </Link>
 
+          {/* Logout */}
           <Link
             href="/pos"
             title="Exit POS"
@@ -603,25 +574,29 @@ function TerminalInner() {
           {/* Order header */}
           <div className="px-3 py-2.5 border-b border-slate-700 space-y-2">
 
-            {/* Table selector */}
-            <button
-              onClick={() => setTableSelectOpen(true)}
-              className="w-full flex items-center gap-2 px-3 py-2 bg-slate-900 hover:bg-slate-700 border border-slate-700 hover:border-slate-500 rounded-xl text-sm transition-all"
-            >
-              <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-              <span className={activeOrder?.table_name ? 'text-white font-medium' : 'text-slate-500'}>
-                {activeOrder?.table_name || 'Assign Table…'}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-500 ml-auto" />
-            </button>
+            {/* Room / Location input */}
+            <div className="relative">
+              <input
+                ref={locationRef}
+                type="text"
+                value={activeOrder?.table_name ?? ''}
+                onChange={e => activeOrder && patchOrder(activeOrder.id, { table_name: e.target.value })}
+                placeholder={
+                  activeOrder?.order_type === 'room_service' ? 'Room number (e.g. 101)…' :
+                  activeOrder?.order_type === 'dine_in'      ? 'Room or table…' :
+                  'Location (optional)…'
+                }
+                className="w-full bg-slate-900 border border-slate-700 hover:border-slate-500 focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
+              />
+            </div>
 
             {/* Order type pills */}
-            <div className="flex gap-1.5">
+            <div className="grid grid-cols-4 gap-1">
               {ORDER_TYPES.map(t => (
                 <button
                   key={t.id}
-                  onClick={() => activeOrder && patchOrder(activeOrder.id, { order_type: t.id })}
-                  className={`flex-1 py-1 rounded-lg text-xs font-medium transition-all
+                  onClick={() => handleOrderTypeChange(t.id)}
+                  className={`py-1 rounded-lg text-xs font-medium transition-all text-center
                     ${activeOrder?.order_type === t.id
                       ? 'bg-blue-600 text-white'
                       : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
@@ -682,75 +657,7 @@ function TerminalInner() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          TABLE SELECTOR MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
-      {tableSelectOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 rounded-2xl w-full max-w-sm shadow-2xl border border-slate-700">
-
-            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700">
-              <h3 className="font-bold text-white flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-blue-400" />
-                Select Table
-              </h3>
-              <button
-                onClick={() => setTableSelectOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-4">
-              {/* Clear table */}
-              <button
-                onClick={() => {
-                  if (activeOrder) {
-                    patchOrder(activeOrder.id, { table_id: null, table_name: '' });
-                  }
-                  setTableSelectOpen(false);
-                }}
-                className="w-full mb-3 py-2 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-xl text-slate-400 hover:text-white text-sm transition-all"
-              >
-                No Table (Takeaway / Counter)
-              </button>
-
-              {tables.length === 0 ? (
-                <p className="text-center text-slate-500 text-sm py-4">
-                  No tables configured.{' '}
-                  <Link href="/pos/tables" className="text-blue-400 hover:underline">
-                    Add tables →
-                  </Link>
-                </p>
-              ) : (
-                <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto">
-                  {tables.map(t => (
-                    <button
-                      key={t.id}
-                      onClick={() => handleSetTable(t)}
-                      className={`py-2.5 rounded-xl text-sm font-medium transition-all border
-                        ${t.status === 'occupied'
-                          ? 'border-red-500/50 bg-red-500/10 text-red-300 hover:bg-red-500/20'
-                          : t.status === 'reserved'
-                          ? 'border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20'
-                          : 'border-green-500/50 bg-green-500/10 text-green-300 hover:bg-green-500/20'
-                        }`}
-                    >
-                      {t.name}
-                      <span className="block text-xs opacity-60 mt-0.5 capitalize">{t.status}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-          PAYMENT MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* Payment Modal */}
       <PaymentModal
         open={showPayment}
         order={activeOrder}
@@ -760,9 +667,7 @@ function TerminalInner() {
         onConfirm={handleConfirmPayment}
       />
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          VOID MODAL
-      ══════════════════════════════════════════════════════════════════════ */}
+      {/* Void Modal */}
       <VoidModal
         open={showVoid}
         order={activeOrder

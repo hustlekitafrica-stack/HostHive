@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS pos_orders (
   staff_id              uuid          REFERENCES pos_staff(id),
   staff_name            text          DEFAULT '',
   order_type            text          DEFAULT 'dine_in'
-                                      CHECK (order_type IN ('dine_in','takeaway','bar')),
+                                      CHECK (order_type IN ('dine_in','takeaway','bar','room_service')),
   status                text          DEFAULT 'open'
                                       CHECK (status IN ('open','sent_to_kitchen','ready','paid','void')),
   items                 jsonb         NOT NULL DEFAULT '[]',
@@ -141,6 +141,7 @@ CREATE TABLE IF NOT EXISTS pos_inventory (
   quantity_in_stock numeric(10,2) DEFAULT 0,
   reorder_level     numeric(10,2) DEFAULT 5,
   cost_price        numeric(10,2) DEFAULT 0,
+  selling_price     numeric(10,2),
   track_stock       boolean       DEFAULT true,
   created_at        timestamptz   DEFAULT now(),
   updated_at        timestamptz   DEFAULT now()
@@ -189,6 +190,19 @@ CREATE TABLE IF NOT EXISTS pos_settings (
 ALTER TABLE pos_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "pos_settings_owner" ON pos_settings
   USING (host_user_id = auth.uid());
+
+-- ──────────────────────────────────────────────
+-- PATCH for existing databases (safe to re-run)
+-- ──────────────────────────────────────────────
+ALTER TABLE pos_inventory
+  ADD COLUMN IF NOT EXISTS selling_price numeric(10,2);
+
+ALTER TABLE pos_orders
+  DROP CONSTRAINT IF EXISTS pos_orders_order_type_check;
+
+ALTER TABLE pos_orders
+  ADD CONSTRAINT pos_orders_order_type_check
+  CHECK (order_type IN ('dine_in', 'takeaway', 'bar', 'room_service'));
 
 -- ──────────────────────────────────────────────
 -- Done! Verify with:

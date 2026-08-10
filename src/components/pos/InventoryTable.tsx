@@ -10,6 +10,7 @@ export interface InventoryItem {
   quantity_in_stock: number;
   reorder_level: number;
   cost_price: number;
+  selling_price?: number | null;
   track_stock: boolean;
   menu_item_id?: string | null;
 }

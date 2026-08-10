@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 
-type Tab = 'breakfast' | 'mains' | 'snacks' | 'drinks' | 'sides';
+type Tab = 'breakfast' | 'mains' | 'snacks' | 'drinks' | 'sides' | 'bar';
 
 export interface POSMenuItem {
   id: string;
@@ -28,19 +28,21 @@ const TABS: { id: Tab; emoji: string; label: string }[] = [
   { id: 'mains',     emoji: '🍽️', label: 'Mains'     },
   { id: 'snacks',    emoji: '🥗', label: 'Bites'     },
   { id: 'drinks',    emoji: '🥤', label: 'Drinks'    },
-  { id: 'sides',     emoji: '�', label: 'Sides'     },
+  { id: 'sides',     emoji: '🍟', label: 'Sides'     },
+  { id: 'bar',       emoji: '🍺', label: 'Bar'       },
 ];
 
 export function MenuGrid({ onAddItem, currency = 'KSh' }: MenuGridProps) {
-  const [items, setItems]       = useState<POSMenuItem[]>([]);
-  const [loading, setLoading]   = useState(true);
+  const [items, setItems]         = useState<POSMenuItem[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('mains');
-  const [search, setSearch]     = useState('');
+  const [search, setSearch]       = useState('');
 
   useEffect(() => {
-    fetch('/api/stay/menu')
+    fetch('/api/pos/menu')
       .then(r => r.json())
       .then(d => setItems(d.items ?? []))
+      .catch(() => {/* silent — empty state shown */})
       .finally(() => setLoading(false));
   }, []);
 
@@ -73,10 +75,12 @@ export function MenuGrid({ onAddItem, currency = 'KSh' }: MenuGridProps) {
         {TABS.map(t => (
           <button
             key={t.id}
-            onClick={() => setActiveTab(t.id)}
+            onClick={() => { setActiveTab(t.id); setSearch(''); }}
             className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all
               ${activeTab === t.id
-                ? 'bg-blue-600 text-white'
+                ? t.id === 'bar'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-blue-600 text-white'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700'
               }`}
           >
@@ -93,8 +97,12 @@ export function MenuGrid({ onAddItem, currency = 'KSh' }: MenuGridProps) {
           <span>Loading menu…</span>
         </div>
       ) : visible.length === 0 ? (
-        <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
-          {search ? 'No items match your search.' : 'No items in this category.'}
+        <div className="flex-1 flex items-center justify-center text-slate-500 text-sm px-4 text-center">
+          {search
+            ? 'No items match your search.'
+            : activeTab === 'bar'
+            ? 'No bar items yet. Add bar drinks in Inventory and set a selling price.'
+            : 'No items in this category.'}
         </div>
       ) : (
         <div className="grid grid-cols-2 xl:grid-cols-3 gap-2.5 overflow-y-auto flex-1 pb-2 content-start">
@@ -124,7 +132,7 @@ export function MenuGrid({ onAddItem, currency = 'KSh' }: MenuGridProps) {
                 <p className="text-slate-500 text-xs line-clamp-1">{item.description}</p>
               )}
 
-              <p className="text-green-400 font-bold text-sm mt-auto pt-1">
+              <p className={`font-bold text-sm mt-auto pt-1 ${item.tab === 'bar' ? 'text-amber-400' : 'text-green-400'}`}>
                 {currency} {item.price.toFixed(2)}
               </p>
             </button>

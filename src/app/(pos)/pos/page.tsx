@@ -201,11 +201,7 @@ export default function POSLoginPage() {
         'pos_session',
         JSON.stringify({ staffId, staffName, role, shiftId }),
       );
-      if (role === 'stock_manager') {
-        router.push('/pos/stock');
-      } else {
-        router.push('/pos/terminal');
-      }
+      router.push('/pos/dashboard');
     },
     [router],
   );
