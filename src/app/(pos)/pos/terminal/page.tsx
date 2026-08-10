@@ -16,6 +16,7 @@ import { VoidModal }      from '@/components/pos/VoidModal';
 import { OpenOrdersTabs } from '@/components/pos/OpenOrdersTabs';
 import type { POSMenuItem }    from '@/components/pos/MenuGrid';
 import type { PaymentPayload } from '@/components/pos/PaymentModal';
+import { canAccess } from '@/lib/pos/session';
 
 /* --- Types ----------------------------------------------------------------- */
 interface StaffSession {
@@ -162,6 +163,13 @@ function TerminalInner() {
       router.replace('/pos');
       return;
     }
+
+    // stock_manager cannot use the terminal
+    if (!canAccess(session.role, 'terminal')) {
+      router.replace('/pos/inventory');
+      return;
+    }
+
     setStaff(session);
 
     /* Load settings and open orders in parallel */

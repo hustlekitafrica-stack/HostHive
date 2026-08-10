@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { POSNav } from '@/components/pos/POSNav';
 import { InventoryTable, InventoryItem } from '@/components/pos/InventoryTable';
+import { getPOSSession, getDefaultRoute } from '@/lib/pos/session';
 
 // -- Types ---------------------------------------------------------------------
 
@@ -95,6 +96,7 @@ export default function PosInventoryPage() {
   const [items,    setItems]    = useState<InventoryItem[]>([]);
   const [loading,  setLoading]  = useState(true);
   const [currency, setCurrency] = useState('KSh');
+  const [role,     setRole]     = useState<string>('');
 
   const [activeTab,     setActiveTab]     = useState<ActiveTab>('all');
   const [showAddModal,  setShowAddModal]  = useState(false);
@@ -110,9 +112,18 @@ export default function PosInventoryPage() {
   const [restockNote, setRestockNote] = useState('');
   const [saving,      setSaving]      = useState(false);
 
-  // Auth guard
+  // Auth guard — manager, stock_manager, barman only
   useEffect(() => {
-    if (!sessionStorage.getItem('pos_session')) { router.replace('/pos'); return; }
+    const session = getPOSSession();
+    if (!session) { router.replace('/pos'); return; }
+    const allowed = ['manager', 'stock_manager', 'barman'];
+    if (!allowed.includes(session.role)) {
+      router.replace(getDefaultRoute(session.role)); // cashier/waiter → terminal
+      return;
+    }
+    setRole(session.role);
+    // Barman starts on the bar tab
+    if (session.role === 'barman') setActiveTab('bar');
   }, [router]);
 
   const loadItems = useCallback(() => {
@@ -131,8 +142,20 @@ export default function PosInventoryPage() {
     }).catch(() => {});
   }, [loadItems]);
 
-  const filtered = activeTab === 'all' ? items : items.filter(i => i.category === activeTab);
-  const lowCount = items.filter(i => i.track_stock && (i.quantity_in_stock ?? 0) <= (i.reorder_level ?? 5)).length;
+  // Role-derived permissions
+  const isManager  = role === 'manager';
+  const isBarman   = role === 'barman';
+  const canManage  = isManager;                   // add / edit / delete
+  const showTabs   = !isBarman;                    // barman sees bar only
+
+  // Barman always sees bar items regardless of activeTab
+  const filtered = isBarman
+    ? items.filter(i => i.category === 'bar')
+    : (activeTab === 'all' ? items : items.filter(i => i.category === activeTab));
+
+  // Low-stock counts scoped by what the current role can see
+  const visibleItems = isBarman ? items.filter(i => i.category === 'bar') : items;
+  const lowCount = visibleItems.filter(i => i.track_stock && (i.quantity_in_stock ?? 0) <= (i.reorder_level ?? 5)).length;
 
   const handleSeed = async () => {
     const tid = toast.loading('Seeding from menu…');
@@ -249,8 +272,10 @@ export default function PosInventoryPage() {
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-blue-500/20 rounded-xl"><Package className="w-5 h-5 text-blue-400" /></div>
             <div>
-              <h1 className="text-xl font-bold">Inventory Management</h1>
-              <p className="text-xs text-slate-400">Full stock control &amp; reorder management</p>
+              <h1 className="text-xl font-bold">Inventory{isBarman ? ' — Bar Stock' : ''}</h1>
+              <p className="text-xs text-slate-400">
+                {canManage ? 'Full stock control & reorder management' : 'Restock items'}
+              </p>
             </div>
             {lowCount > 0 && (
               <span className="flex items-center gap-1 bg-red-500/20 text-red-400 text-xs font-semibold px-2.5 py-1 rounded-full border border-red-500/30">
@@ -258,43 +283,54 @@ export default function PosInventoryPage() {
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={handleSeed}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm text-slate-300 hover:text-white transition-colors border border-slate-600">
-              <Sprout className="w-4 h-4 text-green-400" /> Seed from Menu
-            </button>
-            <button onClick={() => { setAddForm(EMPTY_FORM); setShowAddModal(true); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">
-              <Plus className="w-4 h-4" /> Add Item
-            </button>
-          </div>
+          {canManage && (
+            <div className="flex items-center gap-3">
+              <button onClick={handleSeed}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-sm text-slate-300 hover:text-white transition-colors border border-slate-600">
+                <Sprout className="w-4 h-4 text-green-400" /> Seed from Menu
+              </button>
+              <button onClick={() => { setAddForm(EMPTY_FORM); setShowAddModal(true); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-sm font-semibold transition-colors">
+                <Plus className="w-4 h-4" /> Add Item
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Category tabs */}
-        <div className="flex gap-1 bg-slate-800 rounded-xl p-1 w-fit border border-slate-700">
-          {(['all', 'food', 'bar'] as ActiveTab[]).map(tab => {
-            const tabLow = tab === 'all' ? lowCount
-              : items.filter(i => i.category === tab && i.track_stock && (i.quantity_in_stock ?? 0) <= (i.reorder_level ?? 5)).length;
-            return (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
-                {tab === 'all' ? 'All' : tab === 'food' ? 'Food' : 'Bar'}
-                {tabLow > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
-                    {tabLow}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
+        {/* Category tabs — hidden for barman (they only see bar) */}
+        {showTabs && (
+          <div className="flex gap-1 bg-slate-800 rounded-xl p-1 w-fit border border-slate-700">
+            {(['all', 'food', 'bar'] as ActiveTab[]).map(tab => {
+              const tabLow = tab === 'all' ? lowCount
+                : items.filter(i => i.category === tab && i.track_stock && (i.quantity_in_stock ?? 0) <= (i.reorder_level ?? 5)).length;
+              return (
+                <button key={tab} onClick={() => setActiveTab(tab)}
+                  className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>
+                  {tab === 'all' ? 'All' : tab === 'food' ? 'Food' : 'Bar'}
+                  {tabLow > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[9px] font-bold rounded-full min-w-[16px] h-4 flex items-center justify-center px-0.5">
+                      {tabLow}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Table */}
         {loading ? (
           <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-slate-500" /></div>
         ) : (
-          <InventoryTable items={filtered} loading={false} readOnly={false} showCategory={true}
-            onRestock={openRestock} onEdit={openEdit} onDelete={item => setDeleteConfirm(item)} />
+          <InventoryTable
+            items={filtered}
+            loading={false}
+            readOnly={!canManage}
+            showCategory={showTabs}
+            onRestock={openRestock}
+            onEdit={canManage ? openEdit : undefined}
+            onDelete={canManage ? item => setDeleteConfirm(item) : undefined}
+          />
         )}
 
         {/* Modals */}

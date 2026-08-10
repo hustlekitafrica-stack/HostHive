@@ -6,6 +6,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Briefcase, Loader2, Download, X, Tablet, ExternalLink } from 'lucide-react';
 import { NumpadInput } from '@/components/pos/NumpadInput';
+import { getDefaultRoute } from '@/lib/pos/session';
 
 /* --- Types ----------------------------------------------------------------- */
 interface StaffMember {
@@ -201,7 +202,7 @@ export default function POSLoginPage() {
         'pos_session',
         JSON.stringify({ staffId, staffName, role, shiftId }),
       );
-      router.push('/pos/dashboard');
+      router.push(getDefaultRoute(role));
     },
     [router],
   );

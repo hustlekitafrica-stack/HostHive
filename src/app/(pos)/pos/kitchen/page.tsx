@@ -7,6 +7,7 @@ import toast         from 'react-hot-toast';
 import { RefreshCw, ChefHat, ArrowLeft, Loader2, Wifi } from 'lucide-react';
 import { KitchenOrderCard } from '@/components/pos/KitchenOrderCard';
 import type { KitchenOrder } from '@/components/pos/KitchenOrderCard';
+import { canAccess } from '@/lib/pos/session';
 
 /* --- Types ----------------------------------------------------------------- */
 interface StaffSession {
@@ -59,6 +60,11 @@ export default function KitchenPage() {
     let session: StaffSession | null = null;
     try { session = JSON.parse(raw); } catch { /* ignore */ }
     if (!session) { router.replace('/pos'); return; }
+    // stock_manager cannot access kitchen display
+    if (!canAccess(session.role, 'kitchen')) {
+      router.replace('/pos/inventory');
+      return;
+    }
   }, [router]);
 
   /* -- Fetch orders ---------------------------------------------------------- */

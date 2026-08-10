@@ -7,6 +7,7 @@ import {
   Users, Plus, Pencil, ToggleLeft, ToggleRight, X, Loader2, ShieldCheck,
 } from 'lucide-react';
 import { POSNav } from '@/components/pos/POSNav';
+import { getPOSSession, getDefaultRoute } from '@/lib/pos/session';
 
 // -- Types ---------------------------------------------------------------------
 
@@ -114,9 +115,11 @@ export default function PosStaffPage() {
   const [saving,        setSaving]        = useState(false);
   const [togglingId,    setTogglingId]    = useState<string | null>(null);
 
-  // Auth guard
+  // Auth guard — manager only
   useEffect(() => {
-    if (!sessionStorage.getItem('pos_session')) { router.replace('/pos'); return; }
+    const session = getPOSSession();
+    if (!session) { router.replace('/pos'); return; }
+    if (session.role !== 'manager') { router.replace(getDefaultRoute(session.role)); return; }
   }, [router]);
 
   const loadStaff = useCallback(() => {

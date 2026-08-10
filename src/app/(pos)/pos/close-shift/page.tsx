@@ -15,6 +15,7 @@ import {
   Printer,
   ChevronRight,
 } from 'lucide-react';
+import { getPOSSession, canAccess } from '@/lib/pos/session';
 
 // -- Types ---------------------------------------------------------------------
 
@@ -70,21 +71,25 @@ export default function CloseShiftPage() {
   // -- Read sessionStorage & guard ------------------------------------------
 
   useEffect(() => {
-    const sId   = sessionStorage.getItem('staffId')   ?? '';
-    const sName = sessionStorage.getItem('staffName') ?? '';
-    const shId  = sessionStorage.getItem('shiftId')   ?? '';
+    const session = getPOSSession();
 
-    if (!sId || !shId) {
+    if (!session || !session.staffId || !session.shiftId) {
       router.replace('/pos');
       return;
     }
 
-    setStaffId(sId);
-    setStaffName(sName);
-    setShiftId(shId);
+    // stock_manager doesn't have a sales shift to close
+    if (!canAccess(session.role, 'close_shift')) {
+      router.replace('/pos/inventory');
+      return;
+    }
+
+    setStaffId(session.staffId);
+    setStaffName(session.staffName);
+    setShiftId(session.shiftId);
 
     // Fetch shift
-    fetch(`/api/pos/shifts/${shId}`)
+    fetch(`/api/pos/shifts/${session.shiftId}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.shift) setShift(data.shift);

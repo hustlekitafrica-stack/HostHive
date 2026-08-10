@@ -9,6 +9,7 @@ import {
   Banknote, Smartphone, CreditCard, Loader2,
 } from 'lucide-react';
 import { POSNav } from '@/components/pos/POSNav';
+import { getDefaultRoute } from '@/lib/pos/session';
 
 /* --- Types ----------------------------------------------------------------- */
 interface StaffSession {
@@ -118,6 +119,13 @@ export default function POSDashboardPage() {
 
     let sess: StaffSession;
     try { sess = JSON.parse(raw); } catch { router.replace('/pos'); return; }
+
+    // Only managers can view the dashboard
+    if (sess.role !== 'manager') {
+      router.replace(getDefaultRoute(sess.role));
+      return;
+    }
+
     setSession(sess);
 
     const today = isoToday();

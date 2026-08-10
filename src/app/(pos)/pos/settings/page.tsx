@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Settings, Loader2, Save, Printer, DollarSign, Receipt } from 'lucide-react';
 import { POSNav } from '@/components/pos/POSNav';
+import { getPOSSession, getDefaultRoute } from '@/lib/pos/session';
 
 interface POSSettings {
   kitchen_printer_ip: string;
@@ -36,9 +37,11 @@ export default function POSSettingsPage() {
   const [loading,  setLoading]  = useState(true);
   const [saving,   setSaving]   = useState(false);
 
-  // Auth guard
+  // Auth guard — manager only
   useEffect(() => {
-    if (!sessionStorage.getItem('pos_session')) { router.replace('/pos'); return; }
+    const session = getPOSSession();
+    if (!session) { router.replace('/pos'); return; }
+    if (session.role !== 'manager') { router.replace(getDefaultRoute(session.role)); return; }
   }, [router]);
 
   useEffect(() => {

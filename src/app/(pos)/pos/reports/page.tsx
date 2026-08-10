@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { POSNav }        from '@/components/pos/POSNav';
 import { POSSalesChart } from '@/components/pos/POSSalesChart';
+import { getPOSSession, getDefaultRoute } from '@/lib/pos/session';
 
 // -- Types ---------------------------------------------------------------------
 
@@ -97,9 +98,11 @@ export default function PosReportsPage() {
   const pageOrders = orders.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE));
 
-  // Auth guard
+  // Auth guard — manager only
   useEffect(() => {
-    if (!sessionStorage.getItem('pos_session')) { router.replace('/pos'); return; }
+    const session = getPOSSession();
+    if (!session) { router.replace('/pos'); return; }
+    if (session.role !== 'manager') { router.replace(getDefaultRoute(session.role)); return; }
   }, [router]);
 
   // Staff list + settings (once)
