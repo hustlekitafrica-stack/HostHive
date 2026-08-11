@@ -4,11 +4,9 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import {
-  LogOut, ShoppingBag, UtensilsCrossed,
-  ChefHat, LayoutGrid, Loader2,
-} from 'lucide-react';
+import { Clock, Lock, Loader2 } from 'lucide-react';
 
+import { POSNav }         from '@/components/pos/POSNav';
 import { MenuGrid }       from '@/components/pos/MenuGrid';
 import { CartPanel }      from '@/components/pos/CartPanel';
 import { PaymentModal }   from '@/components/pos/PaymentModal';
@@ -148,8 +146,8 @@ function TerminalInner() {
   const [isSending, setIsSending] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  /* room/location input ref (for auto-focus) */
-  const locationRef = useRef<HTMLInputElement>(null);
+  /* room/location input ref (kept for potential future auto-focus) */
+  const locationRef = useRef<HTMLInputElement>(null); // eslint-disable-line @typescript-eslint/no-unused-vars
 
   /* -- Mount: read session, load settings + orders -------------------------- */
   useEffect(() => {
@@ -484,6 +482,41 @@ function TerminalInner() {
     toast.success('Order voided.');
   }, [activeOrder]);
 
+  /* -- Hold for later -------------------------------------------------------- */
+  const handleHold = useCallback(async () => {
+    if (!activeOrder || activeOrder.items.length === 0) {
+      toast.error('Add at least one item first.');
+      return;
+    }
+    try {
+      const realId = await saveOrderToDB(activeOrder);
+      await fetch(`/api/pos/orders/${realId}`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: 'on_hold' }),
+      });
+      setOpenOrders(prev => {
+        const remaining = prev.filter(o => o.id !== activeOrder.id && o.id !== realId);
+        setActiveOrderId(remaining[0]?.id ?? null);
+        return remaining;
+      });
+      toast.success('Order held.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to hold order');
+    }
+  }, [activeOrder, saveOrderToDB]);
+
+  /* -- Split bill (placeholder) --------------------------------------------- */
+  const handleSplit = useCallback(() => {
+    toast('Split by item coming soon.', { icon: '✂️' });
+  }, []);
+
+  /* -- Clear cart ------------------------------------------------------------ */
+  const handleClear = useCallback(() => {
+    if (!activeOrderId) return;
+    patchOrder(activeOrderId, { items: [], total: 0, discountType: '', discountValue: 0 });
+  }, [activeOrderId, patchOrder]);
+
   /* -- Loading screen ------------------------------------------------------- */
   if (isLoading) {
     return (
@@ -496,21 +529,16 @@ function TerminalInner() {
 
   /* -- Layout --------------------------------------------------------------- */
   return (
-    <div className="h-screen flex flex-col bg-slate-900 overflow-hidden">
+    <div className="h-screen flex overflow-hidden bg-slate-900">
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          TOP BAR
-      ══════════════════════════════════════════════════════════════════════ */}
-      <header className="bg-slate-800 border-b border-slate-700 px-4 py-2 flex items-center gap-3 min-h-[52px] flex-shrink-0">
+      {/* ── LEFT SIDEBAR ─────────────────────────────────────────────── */}
+      <POSNav />
 
-        {/* Logo */}
-        <span className="font-bold text-white text-sm tracking-tight whitespace-nowrap hidden sm:block">
-          Kogelo POS
-        </span>
-        <div className="hidden sm:block w-px h-5 bg-slate-600" />
+      {/* ── CENTER: order tabs + menu grid ───────────────────────────── */}
+      <div className="flex-1 flex flex-col overflow-hidden border-r border-slate-800">
 
-        {/* Open order tabs (fills middle) */}
-        <div className="flex-1 overflow-hidden">
+        {/* Thin order-tabs row */}
+        <div className="px-3 py-1.5 border-b border-slate-800 bg-slate-900 flex-shrink-0">
           <OpenOrdersTabs
             orders={openOrders}
             activeOrderId={activeOrderId}
@@ -519,149 +547,75 @@ function TerminalInner() {
           />
         </div>
 
-        {/* Nav + staff actions */}
-        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1">
-          <span className="text-slate-300 text-sm hidden lg:block">{staff?.staffName}</span>
+        {/* Order type pills */}
+        <div className="px-3 py-1.5 border-b border-slate-800 bg-slate-900 flex-shrink-0">
+          <div className="flex gap-1">
+            {ORDER_TYPES.map(t => (
+              <button
+                key={t.id}
+                onClick={() => handleOrderTypeChange(t.id)}
+                className={`px-3 py-1 rounded-md text-xs font-medium transition-all
+                  ${activeOrder?.order_type === t.id
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700'
+                  }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-          {/* Kitchen link */}
-          <Link
-            href="/pos/kitchen"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
-            title="Kitchen Display"
-          >
-            <ChefHat className="w-3.5 h-3.5" />
-            <span className="hidden md:block">Kitchen</span>
-          </Link>
+        {/* Menu grid */}
+        <div className="flex-1 overflow-y-auto p-3">
+          <MenuGrid onAddItem={addItemToCart} currency={currency} />
+        </div>
+      </div>
 
-          {/* Dashboard link */}
-          <Link
-            href="/pos/dashboard"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
-            title="POS Dashboard"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span className="hidden md:block">Dashboard</span>
-          </Link>
+      {/* ── RIGHT: cart column ───────────────────────────────────────── */}
+      <div className="w-72 xl:w-80 flex flex-col bg-[#1e2436] flex-shrink-0">
 
-          {/* Close shift */}
+        {/* Time Clock + Lock row */}
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-700/60">
           <Link
             href="/pos/close-shift"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 border border-slate-600 rounded-lg text-slate-300 text-xs font-medium transition-all"
+            className="flex items-center gap-1.5 flex-1 px-2.5 py-1.5 bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-slate-300 text-xs font-medium transition-all"
           >
-            <ShoppingBag className="w-3.5 h-3.5" />
-            <span className="hidden sm:block">Close Shift</span>
+            <Clock className="w-3.5 h-3.5" />
+            Time clock
           </Link>
-
-          {/* Logout */}
           <Link
             href="/pos"
-            title="Exit POS"
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-all"
+            onClick={() => sessionStorage.removeItem('pos_session')}
+            title="Lock terminal"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-700/60 hover:bg-slate-700 border border-slate-600/50 rounded-lg text-slate-300 text-xs font-medium transition-all"
           >
-            <LogOut className="w-4 h-4" />
+            <Lock className="w-3.5 h-3.5" />
+            Lock
           </Link>
         </div>
-      </header>
 
-      {/* ══════════════════════════════════════════════════════════════════════
-          MAIN AREA
-      ══════════════════════════════════════════════════════════════════════ */}
-      <div className="flex-1 flex overflow-hidden">
-
-        {/* -- LEFT PANEL: Menu -- */}
-        <div className="flex-1 overflow-y-auto p-3 border-r border-slate-700">
-          <MenuGrid
-            onAddItem={addItemToCart}
+        {/* Cart panel (fills remaining height) */}
+        <div className="flex-1 overflow-hidden flex flex-col">
+          <CartPanel
+            order={activeOrder}
+            role={staff?.role ?? ''}
             currency={currency}
+            taxRate={taxRate}
+            tableName={activeOrder?.table_name ?? ''}
+            onTableNameChange={v => activeOrder && patchOrder(activeOrder.id, { table_name: v })}
+            onUpdateQty={updateQty}
+            onUpdateNotes={updateNotes}
+            onRemoveItem={removeItem}
+            onApplyDiscount={handleApplyDiscount}
+            onClear={handleClear}
+            onCharge={handleCharge}
+            onSendToKitchen={handleSendToKitchen}
+            onHold={handleHold}
+            onSplit={handleSplit}
+            onVoid={() => setShowVoid(true)}
+            isSending={isSending}
           />
-        </div>
-
-        {/* -- RIGHT PANEL: Cart -- */}
-        <div className="w-80 xl:w-96 flex flex-col bg-slate-800 flex-shrink-0">
-
-          {/* Order header */}
-          <div className="px-3 py-2.5 border-b border-slate-700 space-y-2">
-
-            {/* Room / Location input */}
-            <div className="relative">
-              <input
-                ref={locationRef}
-                type="text"
-                value={activeOrder?.table_name ?? ''}
-                onChange={e => activeOrder && patchOrder(activeOrder.id, { table_name: e.target.value })}
-                placeholder={
-                  activeOrder?.order_type === 'room_service' ? 'Room number (e.g. 101)…' :
-                  activeOrder?.order_type === 'dine_in'      ? 'Room or table…' :
-                  'Location (optional)…'
-                }
-                className="w-full bg-slate-900 border border-slate-700 hover:border-slate-500 focus:border-blue-500 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none transition-colors"
-              />
-            </div>
-
-            {/* Order type pills */}
-            <div className="grid grid-cols-4 gap-1">
-              {ORDER_TYPES.map(t => (
-                <button
-                  key={t.id}
-                  onClick={() => handleOrderTypeChange(t.id)}
-                  className={`py-1 rounded-lg text-xs font-medium transition-all text-center
-                    ${activeOrder?.order_type === t.id
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-700 text-slate-400 hover:bg-slate-600 hover:text-white'
-                    }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cart items + totals */}
-          <div className="flex-1 overflow-hidden flex flex-col">
-            <CartPanel
-              order={activeOrder}
-              onUpdateQty={updateQty}
-              onUpdateNotes={updateNotes}
-              onRemoveItem={removeItem}
-              onApplyDiscount={handleApplyDiscount}
-              taxRate={taxRate}
-              currency={currency}
-            />
-          </div>
-
-          {/* Action buttons */}
-          <div className="p-3 border-t border-slate-700 space-y-2">
-            {/* Send to kitchen */}
-            <button
-              onClick={handleSendToKitchen}
-              disabled={isSending || !activeOrder || activeOrder.items.length === 0}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-amber-600 hover:bg-amber-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-semibold transition-all"
-            >
-              {isSending
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <UtensilsCrossed className="w-4 h-4" />}
-              {isSending ? 'Sending…' : 'Send to Kitchen'}
-            </button>
-
-            {/* Charge */}
-            <button
-              onClick={handleCharge}
-              disabled={!activeOrder || activeOrder.items.length === 0}
-              className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-40 disabled:cursor-not-allowed rounded-xl text-white font-bold text-base transition-all shadow-lg shadow-green-600/20"
-            >
-              Charge · {currency} {(activeOrder?.total ?? 0).toFixed(2)}
-            </button>
-
-            {/* Void */}
-            {activeOrder && !activeOrder.id.startsWith('new-') && (
-              <button
-                onClick={() => setShowVoid(true)}
-                className="w-full py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl text-sm font-medium transition-all"
-              >
-                Void Order
-              </button>
-            )}
-          </div>
         </div>
       </div>
 

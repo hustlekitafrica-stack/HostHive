@@ -262,10 +262,10 @@ export default function PosInventoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+    <div className="h-screen bg-slate-900 text-white flex overflow-hidden">
       <POSNav />
 
-      <div className="p-6 space-y-5">
+      <div className="flex-1 overflow-auto p-6 space-y-5">
 
         {/* Header */}
         <div className="flex items-center justify-between">

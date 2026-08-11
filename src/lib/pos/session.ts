@@ -59,3 +59,29 @@ const ACCESS_RULES: Record<POSPage, POSRole[]> = {
 export function canAccess(role: POSRole | string, page: POSPage): boolean {
   return (ACCESS_RULES[page] as string[]).includes(role);
 }
+
+/* ─── Terminal action-level permissions ─────────────────────────────────── */
+
+export type TerminalAction =
+  | 'charge'
+  | 'apply_discount'
+  | 'split_bill'
+  | 'void_order'
+  | 'send_to_kitchen'
+  | 'hold_order';
+
+const ACTION_RULES: Record<TerminalAction, POSRole[]> = {
+  charge:           ['manager', 'cashier'],
+  apply_discount:   ['manager', 'cashier'],
+  split_bill:       ['manager', 'cashier'],
+  void_order:       ['manager'],
+  send_to_kitchen:  ['manager', 'cashier', 'waiter', 'barman'],
+  hold_order:       ['manager', 'cashier', 'waiter', 'barman'],
+};
+
+export function canPerformTerminalAction(
+  role: POSRole | string,
+  action: TerminalAction,
+): boolean {
+  return (ACTION_RULES[action] as string[]).includes(role);
+}

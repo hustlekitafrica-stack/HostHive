@@ -195,10 +195,10 @@ export default function PosStaffPage() {
   const inactiveCount = staff.length - activeCount;
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+    <div className="h-screen bg-slate-900 text-white flex overflow-hidden">
       <POSNav />
 
-      <div className="p-6 space-y-6">
+      <div className="flex-1 overflow-auto p-6 space-y-6">
 
         {/* Header */}
         <div className="flex items-center justify-between">

@@ -145,10 +145,10 @@ export default function POSDashboardPage() {
   const visibleTiles = TILES.filter(t => t.roles.length === 0 || t.roles.includes(role));
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="h-screen bg-slate-900 flex overflow-hidden">
       <POSNav />
 
-      <div className="flex-1 p-5 space-y-6 max-w-4xl mx-auto w-full">
+      <div className="flex-1 overflow-auto p-5 space-y-6 max-w-4xl mx-auto w-full">
 
         {/* Welcome */}
         <div>
