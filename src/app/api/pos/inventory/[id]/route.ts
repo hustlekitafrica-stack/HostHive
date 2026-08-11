@@ -2,7 +2,7 @@
 import { getPosAuth } from '@/lib/pos/device-auth';
 
 // PATCH /api/pos/inventory/[id]
-// Body: { item_name?, category?, unit?, quantity_in_stock?, reorder_level?, cost_price?, track_stock? }
+// Body: { item_name?, category?, unit?, quantity_in_stock?, reorder_level?, cost_price?, selling_price?, track_stock? }
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,6 +21,7 @@ export async function PATCH(
       quantity_in_stock,
       reorder_level,
       cost_price,
+      selling_price,
       track_stock,
     } = body;
 
@@ -32,6 +33,7 @@ export async function PATCH(
     if (quantity_in_stock !== undefined) updates.quantity_in_stock = quantity_in_stock;
     if (reorder_level    !== undefined) updates.reorder_level    = reorder_level;
     if (cost_price       !== undefined) updates.cost_price       = cost_price;
+    if (selling_price    !== undefined) updates.selling_price    = selling_price;
     if (track_stock      !== undefined) updates.track_stock      = track_stock;
 
     const { data, error } = await supabase

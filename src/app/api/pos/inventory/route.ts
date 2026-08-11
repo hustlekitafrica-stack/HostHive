@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       quantity_in_stock,
       reorder_level,
       cost_price,
+      selling_price,
       menu_item_id,
       track_stock,
     } = body;
@@ -66,6 +67,7 @@ export async function POST(request: NextRequest) {
         quantity_in_stock: quantity_in_stock ?? 0,
         reorder_level:     reorder_level     ?? null,
         cost_price:        cost_price        ?? null,
+        selling_price:     selling_price     ?? null,
         menu_item_id:      menu_item_id      ?? null,
         track_stock:       track_stock       ?? false,
       })
