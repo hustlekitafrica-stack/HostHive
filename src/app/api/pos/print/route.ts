@@ -96,14 +96,14 @@ export async function POST(request: NextRequest) {
     const orderData = { ...order, items };
 
     if (type === 'kitchen_ticket' || type === 'both_tickets') {
-      const foodItems = items.filter((i: { tab?: string }) => i.tab !== 'drinks');
+      const foodItems = items.filter((i: { tab?: string }) => i.tab !== 'bar');
       if (foodItems.length > 0) {
         await trySend(kitchenIp, 'kitchen', formatKitchenTicket(orderData, settings));
       }
     }
 
     if (type === 'bar_ticket' || type === 'both_tickets') {
-      const barItems = items.filter((i: { tab?: string }) => i.tab === 'drinks');
+      const barItems = items.filter((i: { tab?: string }) => i.tab === 'bar');
       if (barItems.length > 0) {
         await trySend(barIp, 'bar', formatBarTicket(orderData, settings));
       }

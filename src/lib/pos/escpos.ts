@@ -166,7 +166,7 @@ export function formatKitchenTicket(order: POSOrderData, settings: POSSettings):
 // ──────────────────────────────────────────────────────────────
 
 export function formatBarTicket(order: POSOrderData, settings: POSSettings): Buffer {
-  const barItems = order.items.filter((i) => i.tab === 'drinks');
+  const barItems = order.items.filter((i) => i.tab === 'bar');
 
   const parts: Buffer[] = [
     ...buildHeader('** BAR TICKET **', order, settings),
