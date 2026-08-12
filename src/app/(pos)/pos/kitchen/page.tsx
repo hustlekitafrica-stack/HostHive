@@ -263,7 +263,11 @@ export default function KitchenPage() {
         {/* ── Tab bar ── */}
         {!loading && orders.length > 0 && (
           <div className="flex items-center gap-2 mb-5">
-            {([\['all', 'All', LayoutGrid], ['kitchen', 'Kitchen', UtensilsCrossed], ['bar', 'Bar', Beer]] as const).map(([tab, label, Icon]) => {
+            {([
+              { tab: 'all' as const,     label: 'All',     Icon: LayoutGrid },
+              { tab: 'kitchen' as const, label: 'Kitchen', Icon: UtensilsCrossed },
+              { tab: 'bar' as const,     label: 'Bar',     Icon: Beer },
+            ]).map(({ tab, label, Icon }) => {
               const count = tab === 'all'
                 ? orders.length
                 : tab === 'kitchen'
