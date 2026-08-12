@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link          from 'next/link';
 import toast         from 'react-hot-toast';
-import { RefreshCw, ChefHat, ArrowLeft, Loader2, Wifi } from 'lucide-react';
+import { RefreshCw, ChefHat, ArrowLeft, Loader2, Wifi, Beer, UtensilsCrossed, LayoutGrid } from 'lucide-react';
 import { KitchenOrderCard } from '@/components/pos/KitchenOrderCard';
 import type { KitchenOrder } from '@/components/pos/KitchenOrderCard';
 import { canAccess } from '@/lib/pos/session';
@@ -55,6 +55,7 @@ export default function KitchenPage() {
   const [loading,     setLoading]     = useState(true);
   const [refreshing,  setRefreshing]  = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [activeTab,   setActiveTab]   = useState<'all' | 'kitchen' | 'bar'>('all');
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -259,116 +260,97 @@ export default function KitchenPage() {
           </div>
         )}
 
-        {/* Orders grid */}
+        {/* ── Tab bar ── */}
         {!loading && orders.length > 0 && (
-          <>
-            {/* ── Kitchen section ── */}
-            {orders.some(o => hasFoodItems(o)) && (
-              <div className="mb-8">
-                <h2 className="text-sm uppercase tracking-widest text-amber-400 font-bold mb-4 flex items-center gap-2">
-                  🍳 Kitchen
-                </h2>
-
-                {orders.some(o => o.status === 'sent_to_kitchen' && hasFoodItems(o)) && (
-                  <section className="mb-6">
-                    <h3 className="text-xs uppercase tracking-widest text-amber-300 font-semibold mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                      Cooking ({orders.filter(o => o.status === 'sent_to_kitchen' && hasFoodItems(o)).length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {orders
-                        .filter(o => o.status === 'sent_to_kitchen' && hasFoodItems(o))
-                        .map(order => (
-                          <KitchenOrderCard
-                            key={order.id}
-                            order={order}
-                            section="kitchen"
-                            onMarkReady={handleMarkReady}
-                            onMarkDone={handleMarkDone}
-                          />
-                        ))}
-                    </div>
-                  </section>
-                )}
-
-                {orders.some(o => o.status === 'ready' && hasFoodItems(o)) && (
-                  <section>
-                    <h3 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                      Ready to Serve ({orders.filter(o => o.status === 'ready' && hasFoodItems(o)).length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {orders
-                        .filter(o => o.status === 'ready' && hasFoodItems(o))
-                        .map(order => (
-                          <KitchenOrderCard
-                            key={order.id}
-                            order={order}
-                            section="kitchen"
-                            onMarkReady={handleMarkReady}
-                            onMarkDone={handleMarkDone}
-                          />
-                        ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-
-            {/* ── Bar section ── */}
-            {orders.some(o => hasBarItems(o)) && (
-              <div>
-                <h2 className="text-sm uppercase tracking-widest text-amber-500 font-bold mb-4 flex items-center gap-2">
-                  🍺 Bar
-                </h2>
-
-                {orders.some(o => o.status === 'sent_to_kitchen' && hasBarItems(o)) && (
-                  <section className="mb-6">
-                    <h3 className="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                      Preparing ({orders.filter(o => o.status === 'sent_to_kitchen' && hasBarItems(o)).length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {orders
-                        .filter(o => o.status === 'sent_to_kitchen' && hasBarItems(o))
-                        .map(order => (
-                          <KitchenOrderCard
-                            key={`bar-${order.id}`}
-                            order={order}
-                            section="bar"
-                            onMarkReady={handleMarkReady}
-                            onMarkDone={handleMarkDone}
-                          />
-                        ))}
-                    </div>
-                  </section>
-                )}
-
-                {orders.some(o => o.status === 'ready' && hasBarItems(o)) && (
-                  <section>
-                    <h3 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                      Ready ({orders.filter(o => o.status === 'ready' && hasBarItems(o)).length})
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {orders
-                        .filter(o => o.status === 'ready' && hasBarItems(o))
-                        .map(order => (
-                          <KitchenOrderCard
-                            key={`bar-${order.id}`}
-                            order={order}
-                            section="bar"
-                            onMarkReady={handleMarkReady}
-                            onMarkDone={handleMarkDone}
-                          />
-                        ))}
-                    </div>
-                  </section>
-                )}
-              </div>
-            )}
-          </>
+          <div className="flex items-center gap-2 mb-5">
+            {([\['all', 'All', LayoutGrid], ['kitchen', 'Kitchen', UtensilsCrossed], ['bar', 'Bar', Beer]] as const).map(([tab, label, Icon]) => {
+              const count = tab === 'all'
+                ? orders.length
+                : tab === 'kitchen'
+                ? orders.filter(o => hasFoodItems(o)).length
+                : orders.filter(o => hasBarItems(o)).length;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeTab === tab
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {label}
+                  {count > 0 && (
+                    <span className={`text-xs px-1.5 rounded-full ${
+                      activeTab === tab ? 'bg-white/20' : 'bg-slate-700'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
+
+        {/* Orders grid */}
+        {!loading && orders.length > 0 && (() => {
+          const tabFiltered = activeTab === 'all'
+            ? orders
+            : activeTab === 'kitchen'
+            ? orders.filter(o => hasFoodItems(o))
+            : orders.filter(o => hasBarItems(o));
+
+          const sectionProp = activeTab === 'kitchen' ? 'kitchen' : activeTab === 'bar' ? 'bar' : undefined;
+
+          const cooking = tabFiltered.filter(o => o.status === 'sent_to_kitchen');
+          const ready   = tabFiltered.filter(o => o.status === 'ready');
+
+          return (
+            <>
+              {cooking.length > 0 && (
+                <section className="mb-6">
+                  <h3 className="text-xs uppercase tracking-widest text-amber-300 font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                    {activeTab === 'bar' ? 'Preparing' : 'Cooking'} ({cooking.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {cooking.map(order => (
+                      <KitchenOrderCard
+                        key={order.id}
+                        order={order}
+                        section={sectionProp}
+                        onMarkReady={handleMarkReady}
+                        onMarkDone={handleMarkDone}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {ready.length > 0 && (
+                <section>
+                  <h3 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                    Ready to Serve ({ready.length})
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {ready.map(order => (
+                      <KitchenOrderCard
+                        key={order.id}
+                        order={order}
+                        section={sectionProp}
+                        onMarkReady={handleMarkReady}
+                        onMarkDone={handleMarkDone}
+                      />
+                    ))}
+                  </div>
+                </section>
+              )}
+            </>
+          );
+        })()}
       </main>
 
       {/* -- Subtle footer showing refresh countdown --------------------------- */}
