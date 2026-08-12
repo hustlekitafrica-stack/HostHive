@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Minus, Plus, Trash2, MessageSquare, X, UserPlus, Loader2, UtensilsCrossed } from 'lucide-react';
+import { Minus, Plus, Trash2, MessageSquare, X, UserPlus, Loader2, UtensilsCrossed, Beer } from 'lucide-react';
 import { canPerformTerminalAction } from '@/lib/pos/session';
 
 /* ─── Types ─────────────────────────────────────────────────────────────── */
@@ -113,7 +113,15 @@ export function CartPanel({
   const canSend     = canPerformTerminalAction(role, 'send_to_kitchen');
   const canHold     = canPerformTerminalAction(role, 'hold_order');
 
-  const hasItems  = (order?.items.length ?? 0) > 0;
+  const hasItems     = (order?.items.length ?? 0) > 0;
+  const hasBarItems  = (order?.items ?? []).some(i => i.tab === 'bar');
+  const hasKitchItems = (order?.items ?? []).some(i => i.tab !== 'bar');
+  const sendLabel = hasBarItems && hasKitchItems
+    ? 'Send to Kitchen & Bar'
+    : hasBarItems
+    ? 'Send to Bar'
+    : 'Send to Kitchen';
+  const SendIcon  = hasBarItems && !hasKitchItems ? Beer : UtensilsCrossed;
   const totals    = order ? calcTotals(order, taxRate) : null;
 
   const applyDiscount = () => {
@@ -352,13 +360,13 @@ export function CartPanel({
             >
               {isSending
                 ? <Loader2 className="w-3 h-3 animate-spin" />
-                : <UtensilsCrossed className="w-3 h-3" />}
-              <span>{isSending ? 'Sending…' : 'Send to kitchen'}</span>
+                : <SendIcon className="w-3 h-3" />}
+              <span>{isSending ? 'Sending…' : sendLabel}</span>
             </button>
           ) : (
             <DisabledBtn className="py-2 bg-slate-700 rounded-lg text-slate-200 text-xs font-medium flex items-center justify-center gap-1">
-              <UtensilsCrossed className="w-3 h-3" />
-              Send to kitchen
+              <SendIcon className="w-3 h-3" />
+              {sendLabel}
             </DisabledBtn>
           )}
 

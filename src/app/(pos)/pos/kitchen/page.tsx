@@ -37,9 +37,14 @@ function deduplicateOrders(orders: KitchenOrder[]): KitchenOrder[] {
   });
 }
 
-/** Filter to orders that have at least one non-drinks item. */
+/** Filter to orders that have at least one non-bar (kitchen) item. */
 function hasFoodItems(order: KitchenOrder): boolean {
-  return order.items.some(i => i.tab !== 'drinks');
+  return order.items.some(i => i.tab !== 'bar');
+}
+
+/** Filter to orders that have at least one bar item. */
+function hasBarItems(order: KitchenOrder): boolean {
+  return order.items.some(i => i.tab === 'bar');
 }
 
 /* --- Component ------------------------------------------------------------- */
@@ -83,13 +88,13 @@ export default function KitchenPage() {
 
       const all: KitchenOrder[] = (data.orders ?? []) as KitchenOrder[];
 
-      /* Filter to active kitchen statuses + food-only */
+      /* Filter to active kitchen statuses */
+      const activeOrders = all.filter(o =>
+        ['sent_to_kitchen', 'ready'].includes(o.status),
+      );
+
       const filtered = deduplicateOrders(
-        all.filter(
-          o =>
-            ['sent_to_kitchen', 'ready'].includes(o.status) &&
-            hasFoodItems(o),
-        ),
+        activeOrders.filter(o => hasFoodItems(o) || hasBarItems(o)),
       ).sort(
         (a, b) =>
           new Date(a.kitchen_sent_at).getTime() - new Date(b.kitchen_sent_at).getTime(),
@@ -257,48 +262,110 @@ export default function KitchenPage() {
         {/* Orders grid */}
         {!loading && orders.length > 0 && (
           <>
-            {/* Status section: sent_to_kitchen */}
-            {orders.some(o => o.status === 'sent_to_kitchen') && (
-              <section className="mb-6">
-                <h2 className="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
-                  Cooking ({orders.filter(o => o.status === 'sent_to_kitchen').length})
+            {/* ── Kitchen section ── */}
+            {orders.some(o => hasFoodItems(o)) && (
+              <div className="mb-8">
+                <h2 className="text-sm uppercase tracking-widest text-amber-400 font-bold mb-4 flex items-center gap-2">
+                  🍳 Kitchen
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {orders
-                    .filter(o => o.status === 'sent_to_kitchen')
-                    .map(order => (
-                      <KitchenOrderCard
-                        key={order.id}
-                        order={order}
-                        onMarkReady={handleMarkReady}
-                        onMarkDone={handleMarkDone}
-                      />
-                    ))}
-                </div>
-              </section>
+
+                {orders.some(o => o.status === 'sent_to_kitchen' && hasFoodItems(o)) && (
+                  <section className="mb-6">
+                    <h3 className="text-xs uppercase tracking-widest text-amber-300 font-semibold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
+                      Cooking ({orders.filter(o => o.status === 'sent_to_kitchen' && hasFoodItems(o)).length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {orders
+                        .filter(o => o.status === 'sent_to_kitchen' && hasFoodItems(o))
+                        .map(order => (
+                          <KitchenOrderCard
+                            key={order.id}
+                            order={order}
+                            section="kitchen"
+                            onMarkReady={handleMarkReady}
+                            onMarkDone={handleMarkDone}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+
+                {orders.some(o => o.status === 'ready' && hasFoodItems(o)) && (
+                  <section>
+                    <h3 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                      Ready to Serve ({orders.filter(o => o.status === 'ready' && hasFoodItems(o)).length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {orders
+                        .filter(o => o.status === 'ready' && hasFoodItems(o))
+                        .map(order => (
+                          <KitchenOrderCard
+                            key={order.id}
+                            order={order}
+                            section="kitchen"
+                            onMarkReady={handleMarkReady}
+                            onMarkDone={handleMarkDone}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </div>
             )}
 
-            {/* Status section: ready */}
-            {orders.some(o => o.status === 'ready') && (
-              <section>
-                <h2 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
-                  Ready to Serve ({orders.filter(o => o.status === 'ready').length})
+            {/* ── Bar section ── */}
+            {orders.some(o => hasBarItems(o)) && (
+              <div>
+                <h2 className="text-sm uppercase tracking-widest text-amber-500 font-bold mb-4 flex items-center gap-2">
+                  🍺 Bar
                 </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                  {orders
-                    .filter(o => o.status === 'ready')
-                    .map(order => (
-                      <KitchenOrderCard
-                        key={order.id}
-                        order={order}
-                        onMarkReady={handleMarkReady}
-                        onMarkDone={handleMarkDone}
-                      />
-                    ))}
-                </div>
-              </section>
+
+                {orders.some(o => o.status === 'sent_to_kitchen' && hasBarItems(o)) && (
+                  <section className="mb-6">
+                    <h3 className="text-xs uppercase tracking-widest text-amber-400 font-semibold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                      Preparing ({orders.filter(o => o.status === 'sent_to_kitchen' && hasBarItems(o)).length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {orders
+                        .filter(o => o.status === 'sent_to_kitchen' && hasBarItems(o))
+                        .map(order => (
+                          <KitchenOrderCard
+                            key={`bar-${order.id}`}
+                            order={order}
+                            section="bar"
+                            onMarkReady={handleMarkReady}
+                            onMarkDone={handleMarkDone}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+
+                {orders.some(o => o.status === 'ready' && hasBarItems(o)) && (
+                  <section>
+                    <h3 className="text-xs uppercase tracking-widest text-green-400 font-semibold mb-3 flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-green-400 inline-block" />
+                      Ready ({orders.filter(o => o.status === 'ready' && hasBarItems(o)).length})
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {orders
+                        .filter(o => o.status === 'ready' && hasBarItems(o))
+                        .map(order => (
+                          <KitchenOrderCard
+                            key={`bar-${order.id}`}
+                            order={order}
+                            section="bar"
+                            onMarkReady={handleMarkReady}
+                            onMarkDone={handleMarkDone}
+                          />
+                        ))}
+                    </div>
+                  </section>
+                )}
+              </div>
             )}
           </>
         )}

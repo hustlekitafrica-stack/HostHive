@@ -18,6 +18,7 @@ interface KitchenOrderCardProps {
   order: KitchenOrder;
   onMarkReady: (id: string) => Promise<void>;
   onMarkDone?: (id: string) => Promise<void>;
+  section?: 'kitchen' | 'bar';
 }
 
 function getAgeStyle(sentAt: string): string {
@@ -33,9 +34,13 @@ function getAgeLabel(sentAt: string): string {
   return `${mins} min ago`;
 }
 
-export function KitchenOrderCard({ order, onMarkReady, onMarkDone }: KitchenOrderCardProps) {
+export function KitchenOrderCard({ order, onMarkReady, onMarkDone, section }: KitchenOrderCardProps) {
   const [loading, setLoading] = useState(false);
-  const foodItems = order.items.filter(i => i.tab !== 'drinks');
+  const foodItems = section === 'bar'
+    ? order.items.filter(i => i.tab === 'bar')
+    : section === 'kitchen'
+    ? order.items.filter(i => i.tab !== 'bar')
+    : order.items.filter(i => i.tab !== 'drinks');
 
   const handle = async (fn: (id: string) => Promise<void>) => {
     setLoading(true);
